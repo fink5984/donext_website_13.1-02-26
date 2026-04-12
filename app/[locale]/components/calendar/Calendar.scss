@@ -1,0 +1,427 @@
+.calendar-container input[type="text"] {
+    width: 239px;
+    border-radius: 30px;
+
+    .input-field {
+        border-radius: 30px;
+    }
+}
+
+
+
+.reactJewishDatePicker.isHebrew,
+.english-calendar {
+    .selectedDate {
+        display: none;
+    }
+
+    .navigation {
+        display: flex;
+        padding: 0;
+        justify-content: flex-start;
+        width: 120px;
+        align-self: flex-start;
+        right: 15px;
+        gap: 5px;
+        position: relative;
+        top: 10px;
+        cursor: pointer;
+
+        .monthYearSelection {
+            display: flex;
+            width: 87px;
+            justify-content: space-between;
+
+            select {
+                cursor: pointer;
+                -webkit-appearance: none;
+                color: var(--Text-able-Text);
+                text-align: center;
+                font-family: var(--font-ping);
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: 14px;
+                letter-spacing: -0.14px;
+                border: 0px;
+                outline: 0px;
+
+                &:hover {
+                    background: none;
+                }
+            }
+        }
+
+        div {
+            color: #6E99EC;
+            font-weight: bold;
+
+            &:hover {
+                background: none;
+            }
+
+            span {
+                border-color: var(--Icon-difault-icon);
+
+                &:hover {
+                    border-color: #0C4AD5;
+                }
+            }
+        }
+    }
+
+    .monthWrapper.open {
+        border: none;
+        background: none;
+        box-shadow: none;
+        top: -50px;
+        transform: scaleY(1);
+        border-radius: 5px;
+        position: absolute;
+        z-index: 1;
+        display: grid;
+        transform-origin: top;
+        transition: all .3s ease-in-out;
+
+        // מיקסין שמחיל את התוכן גם סלקטור "רגיל" וגם כשהוא בתוך .monthContainer
+        @mixin both($sel) {
+            #{$sel} {
+                @content;
+            }
+
+            // כשהאלמנט לא בתוך monthContainer
+            .monthContainer #{$sel} {
+                @content;
+            }
+
+            // כשהוא כן בתוך monthContainer
+        }
+
+        // ----- שימוש בפועל -----
+
+        .monthContainer {
+            all: unset; // איפוס לספרייה החיצונית כשיש קונטיינר
+        }
+
+        // weekdayWrapper
+        @include both('.weekdayWrapper') {
+            display: flex;
+            background: none;
+            padding: 0;
+            position: relative;
+            bottom: -20px;
+        }
+
+        // weekday
+        @include both('.weekday') {
+            padding: 0;
+            color: var(--Text-Default);
+            text-align: center;
+            font-family: var(--font-ping);
+            font-size: 13.601px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 19.783px;
+            width: 28.326px;
+            height: 28.326px;
+            cursor: default;
+            display: grid;
+            margin: 1px;
+            padding: 1px 1px 0 0;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            border-radius: 7px;
+        }
+
+        // month
+        @include both('.month') {
+            background: none;
+            width: 210px;
+            height: 105px;
+            padding: 0;
+            position: relative;
+            bottom: -20px;
+            color: var(--color);
+            grid-template-columns: repeat(7, 1fr);
+            z-index: 2;
+            display: grid;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        // day (כולל מצבים פנימיים עם &)
+        @include both('.day') {
+            font-size: 13.601px;
+            color: var(--Gray-Blue-300-2);
+            text-align: center;
+            font-family: var(--font-ping);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 19.783px;
+            height: 28.326px;
+            border-radius: var(--Border-Radius-s);
+            display: grid;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+
+            &.startDay,
+            &.hoverEnd {
+                border-radius: var(--Border-Radius) var(--Border-Radius-s) var(--Border-Radius-s) var(--Border-Radius);
+                background: var(--Bg-Button-Primary);
+                color: var(--Text-button);
+                margin: 0;
+            }
+
+            &.isInRange:not(.hoverEnd) {
+                border-radius: var(--Border-Radius);
+                background: var(--Bg-Button-hover-2);
+                color: var(--Gray-Blue-300-2);
+                margin: 0;
+            }
+
+            &.endDay {
+                border-radius: var(--Border-Radius-s) var(--Border-Radius) var(--Border-Radius) var(--Border-Radius-s);
+                background: var(--Bg-Button-Primary);
+                color: var(--Text-button);
+                margin: 0;
+            }
+
+            &.noSelect {
+                background-color: unset;
+                cursor: not-allowed;
+            }
+
+            &:hover:not(.startDay):not(.endDay):not(.isInRange):not(.selectedDate):not(.hoverEnd):not(.noSelect) {
+                background: var(--Bg-Button-hover-2);
+            }
+        }
+
+    }
+
+
+
+    .six-rows {
+        .day {
+            height: 25px;
+        }
+    }
+
+    .otherMonth {
+        visibility: hidden;
+        cursor: default;
+    }
+
+    .selectedDay {
+        color: var(--Text-button);
+        font-size: 14px;
+        line-height: 18px;
+        background: var(--Bg-Button-Primary);
+
+        &:hover {
+            background: var(--Bg-Button-Primary);
+        }
+    }
+
+    .today:not(.selectedDay):not(.startDay):not(.endDay) {
+        color: var(--Text-able-Text);
+    }
+}
+
+.english-calendar {
+    .weekdayWrapper {
+        flex-direction: row-reverse;
+    }
+
+    .month {
+        // direction: ltr;
+        transform: scaleX(-1);
+
+        .day {
+            transform: scaleX(-1);
+        }
+    }
+
+    .day {
+        &.startDay {
+            border-radius: var(--Border-Radius-s) var(--Border-Radius) var(--Border-Radius) var(--Border-Radius-s);
+        }
+
+        &.endDay {
+            border-radius: var(--Border-Radius) var(--Border-Radius-s) var(--Border-Radius-s) var(--Border-Radius-s);
+        }
+    }
+}
+
+.calendar-switch {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 85px;
+    height: 23px;
+    border-radius: 12.883px;
+    background: var(--color-Blue-Blue-30, #CFDEFF);
+    padding: 2px;
+    cursor: pointer;
+
+    input {
+        display: none;
+    }
+
+    .slider {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+        box-sizing: border-box;
+
+        span {
+            color: #0C4AD5;
+            font-size: 12px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        &::before {
+            content: "";
+            position: absolute;
+            height: 19px;
+            width: 40px;
+            border-radius: 12.883px;
+            background: #FFF;
+            transition: transform 0.3s ease;
+            left: 2px;
+            z-index: 1;
+        }
+    }
+
+    input:checked+.slider::before {
+        transform: translateX(41px);
+    }
+}
+
+.calendar-switch span,
+.switch-text {
+    display: initial;
+}
+
+.calendar-container {
+    position: relative;
+}
+
+.calendar-dropdown {
+    position: absolute;
+}
+
+.calendar-wrapper {
+    border-radius: 30px;
+    border: var(--Strock-Width-1) solid var(--Border-able-field);
+    background: var(--Bg-Button-disable);
+    width: 239px;
+    height: 240px;
+    position: absolute;
+    top: -3px;
+    z-index: 5;
+}
+
+.calendar-content {
+    padding: 10px;
+    position: relative;
+    top: 40px;
+}
+
+.hebrew-calendar {
+    // הוספת סגנונות אם יש צורך, אחרת אפשר להשאיר ריק
+}
+
+.english-calendar {
+    position: relative;
+    top: 2px;
+
+    .navigation {
+
+        .arrowLeft,
+        .arrowRight {
+            transform: scaleX(-1);
+            position: relative;
+            top: -3px;
+            cursor: pointer;
+
+            span {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                position: relative;
+
+                &::before,
+                &::after {
+                    content: '';
+                    position: absolute;
+                    width: 6px;
+                    height: 1.5px;
+                    background-color: var(--Icon-difault-icon);
+                    border-radius: 0.5px;
+                }
+            }
+        }
+
+        .arrowLeft span {
+            &::before {
+                transform: rotate(-45deg);
+                top: 1px;
+            }
+
+            &::after {
+                transform: rotate(45deg);
+                bottom: 1px;
+            }
+        }
+
+        .arrowRight span {
+            &::before {
+                transform: rotate(45deg);
+                top: 1px;
+            }
+
+            &::after {
+                transform: rotate(-45deg);
+                bottom: 1px;
+            }
+        }
+    }
+}
+
+.calendar-header {
+    position: absolute;
+    top: -15px;
+    right: 25px;
+    z-index: 10;
+    background-color: white;
+    padding: 0 5px;
+}
+
+.calendar-title {
+    color: var(--Impel-Brand-Primary-blue, #0C4AD5);
+    text-align: right;
+    font-family: var(--font-ping);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+}

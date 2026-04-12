@@ -1,0 +1,99 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem 1.5rem;
+  border-radius: 1rem;
+  position: relative;
+  max-width: 684px;
+  min-height: 234px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    max-width: 95vw;
+    min-height: auto;
+    padding: 24px 16px;
+    margin: 0;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 20px 12px;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  @media (max-width: 480px) {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+}
+
+.title {
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #1d4ed8;
+  margin-bottom: 4rem;
+  
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.buttonsContainer {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    
+    button {
+      width: 100%;
+    }
+  }
+}

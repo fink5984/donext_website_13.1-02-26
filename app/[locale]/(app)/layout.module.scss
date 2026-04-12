@@ -1,0 +1,686 @@
+.layout {
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+    overflow: hidden;
+    direction: ltr; // Isolate flexbox from dir attribute
+    
+    &.rtl {
+        flex-direction: row-reverse; // RTL: sidebar on right
+    }
+}
+
+// ---- Contacts page layout (minimal sidebar) ----
+.contactsLayoutWrapper {
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+    overflow: hidden;
+    direction: ltr;
+
+    &.rtl {
+        flex-direction: row-reverse;
+    }
+}
+
+.contactsSidebarWrapper {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    z-index: 40;
+    height: 100vh;
+
+    &.rtl {
+        flex-direction: row-reverse;
+    }
+}
+
+.contactsSidebarNav {
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
+    flex-shrink: 0;
+    background: var(--Impel-Brand-white, #FFF);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    justify-content: flex-start;
+    border-left: 1px solid #e9ecef;
+
+    :global([dir="rtl"]) & {
+        border-left: none;
+        border-right: 1px solid #e9ecef;
+    }
+}
+
+.contactsSidebarSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--Spacing-Spacing-6, 16px);
+    width: 100%;
+}
+
+.contactsSidebarItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--Icon-difault-icon, #6E99EC);
+    padding: 10px;
+    width: 100%;
+    height: 80px;
+    justify-content: center;
+    transition: all 0.2s;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--Icon-able-Icon, #0C4AD5);
+    }
+
+    &.active {
+        color: var(--Icon-able-Icon, #0C4AD5);
+        background-color: var(--Surface-02, #EDF5FD);
+        box-shadow: 41px 25px 13px 0px rgba(131, 146, 180, 0.00),
+            26px 16px 12px 0px rgba(131, 146, 180, 0.03),
+            15px 9px 10px 0px rgba(131, 146, 180, 0.10),
+            7px 4px 8px 0px rgba(131, 146, 180, 0.17),
+            2px 1px 4px 0px rgba(131, 146, 180, 0.20);
+    }
+}
+
+.contactsMain {
+    flex: 1;
+    overflow: hidden;
+    height: 100vh;
+}
+
+// Sub-sidebar for contacts page (matches campaign selection sub-sidebar)
+.contactsSubSidebar {
+    width: 250px;
+    height: 100vh;
+    background: var(--Surface-02, #EDF5FD);
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    gap: 24px;
+    direction: rtl;
+    order: 1;
+
+    :global([dir="ltr"]) & {
+        direction: ltr;
+        order: 1;
+    }
+
+    :global([dir="rtl"]) & {
+        order: 1;
+    }
+}
+
+.contactsSubSidebarMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    direction: inherit;
+}
+
+.contactsSubSidebarItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--Gray-Blue-350, #76A0FF);
+    padding: 10px 33px 10px 0;
+    text-align: right;
+    text-decoration: none;
+    transition: color 0.2s;
+    direction: inherit;
+
+    &.active {
+        color: var(--Border-able-field, #0C4AD5);
+    }
+
+    :global([dir="ltr"]) & {
+        padding: 10px 0 10px 33px;
+        text-align: left;
+    }
+}
+
+.contactsLogoutButton {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    margin: 8px 16px;
+    width: calc(100% - 32px);
+    font-family: var(--font-ping);
+    font-size: 14px;
+    transition: background 0.2s;
+    text-align: center;
+
+    &:hover {
+        background: #d32f2f;
+    }
+}
+
+// Mobile header bar
+.mobileHeader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--Impel-Brand-white, #FFF);
+    z-index: 1002;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-direction: row-reverse;
+    
+    &.rtl {
+        flex-direction: row;
+    }
+    
+    .mobileHeaderLogo {
+        display: flex;
+        align-items: center;
+        
+        svg {
+            width: 120px;
+            height: 36px;
+            color: var(--Bg-Button-Primary, #0C4AD5);
+        }
+    }
+    
+    .mobileHeaderMenuButton {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: var(--Bg-Button-Primary, #0C4AD5);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            background: var(--Bg-Button-hover, #283680);
+        }
+        
+        .hamburgerIcon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            
+            span {
+                display: block;
+                width: 20px;
+                height: 2px;
+                background: white;
+                border-radius: 2px;
+                transition: all 0.3s ease;
+            }
+        }
+        
+        &.open .hamburgerIcon {
+            span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+            span:nth-child(2) {
+                opacity: 0;
+            }
+            span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+        }
+    }
+}
+
+// Mobile hamburger button (legacy - hidden on mobile when mobileHeader is shown)
+.mobileMenuButton {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--Bg-Button-Primary, #0C4AD5);
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(12, 74, 213, 0.3);
+    transition: all 0.3s ease;
+    
+    &:hover {
+        background: var(--Bg-Button-hover, #283680);
+        transform: scale(1.05);
+    }
+    
+    &.rtl {
+        left: auto;
+        right: 16px;
+    }
+    
+    .hamburgerIcon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        
+        span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+    }
+    
+    &.open .hamburgerIcon {
+        span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+        span:nth-child(2) {
+            opacity: 0;
+        }
+        span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+    }
+}
+
+// Mobile overlay
+.mobileOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    
+    &.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.navWrapper {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    direction: ltr; // Isolate flexbox from dir attribute
+    
+    &.rtl {
+        flex-direction: row-reverse; // RTL: sidebar icons on right
+    }
+
+    .sidebar {
+            width: 64px;
+            min-width: 64px;
+            max-width: 64px;
+            flex-shrink: 0;
+            background: var(--Impel-Brand-white, #FFF);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: space-between;
+
+            // border-left: 1px solid #e9ecef;
+            .section {
+                display: flex;
+                flex-direction: column;
+                gap: var(--Spacing-Spacing-6);
+
+                .topNav {
+                    display: flex;
+                    flex-direction: column;
+                    // gap: 20px;
+                    width: 100%;
+                }
+
+                .middleNav {
+                    display: flex;
+                    flex-direction: column;
+                    // gap: 20px;
+                    width: 100%;
+                }
+
+                .bottomNav {
+                    display: flex;
+                    flex-direction: column;
+                    // gap: 20px;
+                    width: 100%;
+                }
+
+                .navItemWrapper {
+                    position: relative;
+                    width: 100%;
+                    height: 80px;
+                    display: flex;
+                    align-items: center;
+
+                    .navItem {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        text-decoration: none;
+                        color: var(--Icon-difault-icon, #6E99EC);
+                        padding: 10px;
+                        width: 100%;
+                        transition: all 0.2s;
+                        // background-color: #EDEDED;
+                        cursor: pointer;
+
+                        &:hover {
+                            color: var(--Icon-able-Icon, #0C4AD5);
+                        }
+
+                        &.active {
+                            color: var(--Icon-able-Icon, #0C4AD5);
+                            background-color: var(--Surface-02, #EDF5FD);
+                            box-shadow: 41px 25px 13px 0px rgba(131, 146, 180, 0.00),
+                                26px 16px 12px 0px rgba(131, 146, 180, 0.03),
+                                15px 9px 10px 0px rgba(131, 146, 180, 0.10),
+                                7px 4px 8px 0px rgba(131, 146, 180, 0.17),
+                                2px 1px 4px 0px rgba(131, 146, 180, 0.20);
+                        }
+                    }
+
+                }
+            }
+        }
+
+        .menuSidebar {
+            width: 250px;
+            height: 100vh;
+            background: var(--Surface-02, #EDF5FD);
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            gap: 58px;
+
+            .menuItem {
+                display: block;
+                color: var(--Gray-Blue-350, #76A0FF);
+                padding: 10px 0 10px 33px;
+                text-align: left;
+
+                &:hover,
+                &.activeMenuItem {
+                    color: var(--Border-able-field, #0C4AD5);
+                }
+            }
+
+            .menuItemButton {
+                display: flex !important;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 8px;
+                background: none;
+                border: none;
+                cursor: pointer;
+                width: 100%;
+                font-family: var(--font-ping);
+                font-size: 16px;
+                font-weight: 400;
+                line-height: 20px;
+                padding: 10px 0 10px 33px;
+                text-align: left;
+                color: var(--Gray-Blue-350, #76A0FF);
+                
+                &:hover {
+                    color: var(--Border-able-field, #0C4AD5);
+                }
+            }
+
+            .menuBadge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 22px;
+                height: 22px;
+                padding: 0 6px;
+                border-radius: 11px;
+                background: var(--Border-able-field, #0C4AD5);
+                color: white;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .menuWarning {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                vertical-align: middle;
+                margin-inline-end: 6px;
+                cursor: pointer;
+
+                svg {
+                    flex-shrink: 0;
+                    vertical-align: middle;
+                }
+
+                .menuWarningTooltip {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    inset-inline-start: calc(100% + 8px);
+                    background: var(--tooltip-Bg, #2B3BA2);
+                    color: var(--tooltip-Text, #FFF);
+                    padding: 6px 12px;
+                    border-radius: var(--Border-Radius-xs, 4px);
+                    font-size: 13px;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    z-index: 100;
+                    pointer-events: none;
+                    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                }
+
+                &:hover .menuWarningTooltip,
+                &:focus .menuWarningTooltip,
+                &:active .menuWarningTooltip {
+                    display: block;
+                }
+            }
+            
+            // RTL specific styles for menuItem
+            :global([dir="rtl"]) & .menuItem {
+                padding: 10px 33px 10px 0;
+                text-align: right;
+            }
+
+            // RTL specific styles for menuItemButton (needs higher specificity)
+            :global([dir="rtl"]) & .menuItem.menuItemButton {
+                padding: 10px 33px 10px 0;
+                flex-direction: row-reverse;
+                justify-content: flex-start;
+            }
+        }
+}
+
+.main {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    background: var(--Surface-01);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    
+    // Hide scrollbar - internal components handle their own scrolling
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    
+    // Restore direction from HTML for proper table/content layout
+    :global([dir="rtl"]) & {
+        direction: rtl;
+    }
+    
+    :global([dir="ltr"]) & {
+        direction: ltr;
+    }
+}
+
+.pageHeader {
+    // padding: 20px;
+    // border-bottom: 1px solid #e0e0e0;
+    // margin-bottom: 20px;
+    width: 1320px;
+    display: none;
+}
+
+.pageMainTitle {
+    // font-size: 20px;
+    // font-weight: bold;
+    margin: 0;
+    color: #0C4AD5;
+}
+
+.pageSubTitle {
+    // font-size: 16px;
+    color: #6e6e6e;
+    // margin: 4px 0 0 0;
+}
+
+@media (max-width: 1700px) {
+    .navWrapper {
+        &:hover .menuSidebar {
+            display: flex !important;
+        }
+
+        .sidebar {
+            overflow: visible;
+            position: relative;
+        }
+
+        .menuSidebar {
+            position: absolute;
+            top: 0;
+            z-index: 999;
+            display: none !important;
+            flex-direction: column;
+            left: 64px; // LTR: menuSidebar to the right of sidebar
+            
+            // RTL: menuSidebar appears to the left of sidebar (sidebar is on right)
+            :global([dir="rtl"]) & {
+                left: auto;
+                right: 64px;
+            }
+        }
+    }
+}
+
+@media (max-height: 786px) {
+    .navItemWrapper {
+        height: fit-content !important;
+    }
+}
+
+// ========== MOBILE RESPONSIVE ==========
+@media (max-width: 1024px) {
+    .mobileHeader {
+        display: flex;
+    }
+    
+    .mobileMenuButton {
+        display: none; // Hide legacy button when mobileHeader is shown
+    }
+    
+    .mobileOverlay {
+        display: block;
+        pointer-events: none;
+        top: 56px; // Below mobile header
+        z-index: 1000;
+        
+        &.visible {
+            pointer-events: auto;
+        }
+    }
+    
+    .navWrapper {
+        position: fixed;
+        top: 56px; // Below mobile header
+        left: 0;
+        z-index: 1001;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        height: calc(100vh - 56px);
+        
+        &.rtl {
+            left: auto;
+            right: 0;
+            transform: translateX(100%);
+        }
+        
+        &.mobileOpen {
+            transform: translateX(0);
+        }
+        
+        .sidebar {
+            height: calc(100vh - 56px);
+            height: calc(100dvh - 56px);
+        }
+        
+        .menuSidebar {
+            display: flex !important;
+            position: relative !important;
+            left: 0 !important;
+            right: auto !important;
+            height: calc(100vh - 56px);
+            
+            :global([dir="rtl"]) & {
+                left: auto !important;
+                right: 0 !important;
+            }
+        }
+    }
+    
+    .main {
+        width: 100%;
+        padding-top: 70px; // Space for mobile header
+    }
+}
+
+@media (max-width: 768px) {
+    .pageHeader {
+        width: 100% !important;
+        padding: 0 16px;
+    }
+    
+    .main {
+        padding-top: 72px; // Adjusted for mobile header
+    }
+}
+
+.campaignLogo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+}

@@ -1,0 +1,12 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Book body -->
+  <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/>
+  <!-- Book spine binding tabs -->
+  <rect x="2" y="5.5" width="4" height="1.4" rx="0.7" fill="currentColor"/>
+  <rect x="2" y="11.3" width="4" height="1.4" rx="0.7" fill="currentColor"/>
+  <rect x="2" y="17.1" width="4" height="1.4" rx="0.7" fill="currentColor"/>
+  <!-- Person head -->
+  <circle cx="12" cy="9" r="2.4" fill="currentColor"/>
+  <!-- Person body -->
+  <path d="M8 16.5c0-2.21 1.79-3.5 4-3.5s4 1.29 4 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+</svg>

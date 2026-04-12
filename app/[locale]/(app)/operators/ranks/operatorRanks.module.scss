@@ -1,0 +1,341 @@
+.pageContainer {
+    padding: 0;
+    width: 100%;
+    margin: 0;
+    background: #f5f7fa;
+    max-height: min(100vh, 823px);
+
+    overflow: hidden;
+    display: flex;
+    max-width: 1320px;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--Spacing-Spacing-6, 16px);
+    flex-shrink: 0;
+    max-height: 100vh;
+    height: 100vh;
+    padding-bottom: 115px;
+
+    .loading {
+        text-align: center;
+        padding: 60px 20px;
+        font-size: 18px;
+        color: #666;
+    }
+
+    :global(.contentWrapper) {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        flex: 1;
+        overflow: visible;
+        direction: ltr;
+        padding-left: 12px;
+
+        & > * {
+            direction: rtl;
+            width: 100%;
+        }
+
+        .tableWrapper {
+            display: flex;
+            padding: var(--Spacing-Spacing-5, 12px);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: var(--Spacing-Spacing-5, 12px);
+            align-self: stretch;
+            border-radius: var(--Border-Radius-lg, 24px);
+            background: var(--Text-button, #FFF);
+
+            .header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                align-self: stretch;
+
+                .title {
+                    flex: 1 0 0;
+                    color: var(--Gray-Blue-300-2, #AFC5F8);
+                }
+            }
+
+            .tableContainer {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                gap: var(--Spacing-Spacing-5, 12px);
+                align-self: stretch;
+                overflow-y: auto;
+                overflow-x: hidden;
+                max-height: calc(100vh - 300px);
+                direction: ltr;
+                padding-right: 12px;
+                
+                & > * {
+                    direction: rtl;
+                    width: 100%;
+                }
+
+                .tableRow {
+                    transition: all 0.3s ease;
+                    position: relative;
+                    display: flex;
+                    padding: var(--Spacing-Spacing-7, 20px) var(--Spacing-Spacing-9, 32px);
+                    justify-content: flex-start;
+                    align-items: center;
+                    gap: var(--Spacing-Spacing-13, 64px);
+                    flex: 1 0 0;
+                    align-self: stretch;
+                    border-radius: var(--Border-Radius-m, 16px);
+                    background: var(--Surface-01, #F6F9FC);
+                    height: 104px;
+                    border: 1px solid transparent;
+
+                    &:hover:not(.editingRow) {
+                        background: var(--Bg-Button-hover-2, #EDF5FD);
+
+                        .actions {
+                            opacity: 1;
+                        }
+                    }
+
+                    &.editingRow {
+                        border: 1px solid var(--Border-Select-field, #0C4AD5);
+                        background: var(--Bg-Button-disable, #FFF);
+
+                        .actions {
+                            opacity: 1;
+                        }
+                    }
+
+                    &.addNewRankRow {
+                        height: 200px !important;
+                        border: var(--Strock-Width-3, 2px) solid var(--Border-able-field, #0C4AD5);
+                        position: relative;
+                        display: flex;
+                        gap: var(--Spacing-Spacing-10, 40px);
+                        justify-content: center;
+                        align-items: center;
+                        padding: var(--Spacing-Spacing-7, 20px) var(--Spacing-Spacing-13, 64px);
+                        background: var(--Bg-Button-disable, #FFF);
+
+                        .closeButton {
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            width: 24px;
+                            height: 24px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: var(--Icon-difault-icon, #6E99EC);
+                            transition: color 0.2s ease;
+
+                            &:hover {
+                                color: var(--Text-able-Text, #0C4AD5);
+                            }
+                        }
+
+                        .rankInfo {
+
+                            .addRankText {
+                                color: var(--Text-able-Text, #0C4AD5);
+                            }
+
+                            .input {
+                                width: 250px;
+                                margin: 0;
+                            }
+                        }
+                    }
+
+                    .rankInfo {
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: center;
+                        gap: 64px;
+                        flex: 1 0 0;
+
+                        .rightSide {
+                            display: flex;
+                            padding-inline-end: var(--Spacing-Spacing-9, 32px);
+                            justify-content: flex-end;
+                            align-items: center;
+                            gap: var(--Spacing-Spacing-8, 24px);
+                            border-inline-end: 1px solid var(--Gray-Blue-200, #C5D7F8);
+
+                            .rankIcon {
+                                width: 50px;
+                                height: 50px;
+                                border-radius: 50%;
+                                background: linear-gradient(135deg, #ffd700, #ffed4e);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: white;
+                                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                                margin-inline-start: 8px;
+                            }
+
+                            .innerRightSide {
+                                display: flex;
+                                align-items: center;
+                                gap: var(--Spacing-Spacing-9, 32px);
+                                align-self: stretch;
+
+                                .rankName {
+                                    display: flex;
+                                    width: 180px;
+                                    flex-direction: column;
+                                    align-items: flex-start;
+                                    gap: var(--Spacing-Spacing-3, 4px);
+                                    color: var(--Text-able-Text, #0C4AD5);
+
+                                    .title {
+                                        color: var(--Gray-Blue-300, #9DBDF3);
+                                    }
+                                }
+
+                                .rankAmount {
+                                    display: flex;
+                                    width: 168px;
+                                    flex-direction: column;
+                                    align-items: flex-start;
+                                    gap: var(--Spacing-Spacing-3, 4px);
+                                    color: var(--Text-able-Text, #0C4AD5);
+
+                                    .title {
+                                        color: var(--Gray-Blue-300, #9DBDF3);
+                                    }
+
+                                    .amountDisplay {
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 4px;
+                                    }
+                                }
+                            }
+                        }
+
+                        .rankRange {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: var(--Spacing-Spacing-4, 8px);
+                            flex: 1 0 0;
+                            color: var(--Gray-Blue-300, #9DBDF3);
+
+                            .rankRangeText {
+                                display: flex;
+                                justify-content: center;
+                                align-items: flex-end;
+                                gap: var(--Spacing-Spacing-7, 20px);
+
+                                .amount {
+                                    color: var(--Text-Default, #6E99EC);
+                                }
+                            }
+                        }
+                    }
+
+                    .actions {
+                        display: flex;
+                        width: 72px;
+                        justify-content: center;
+                        align-items: center;
+                        gap: var(--Spacing-Spacing-5, 12px);
+                        opacity: 0.5;
+                        color: var(--Icon-difault-icon, #6E99EC);
+                        transition: all 0.2s ease;
+                        z-index: 5;
+                    }
+                }
+
+                .emptyState {
+                    text-align: center;
+                    padding: 80px 40px;
+                    color: #6c757d;
+                    background: white;
+                    border-radius: 12px;
+                    margin: 40px;
+
+                    p {
+                        margin: 12px 0;
+
+                        &:first-child {
+                            font-size: 20px;
+                            font-weight: 600;
+                            color: #2c3e50;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.inputs {
+    display: flex;
+    align-items: center;
+    gap: var(--Spacing-Spacing-9, 32px);
+
+    .customInputWrapper {
+        position: relative;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--Spacing-Spacing-3, 4px);
+    }
+
+    .inputLabel {
+        color: var(--Gray-Blue-300, #9DBDF3);
+    }
+
+    .characterCount {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        color: var(--Gray-Blue-300, #9DBDF3);
+        font-family: var(--font-ping);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 12px;
+        letter-spacing: 0.1px;
+        border-bottom: 1px solid var(--Border-Default, #6E99EC);
+        text-align: left;
+        width: 25px;
+    }
+
+    .errorText {
+        color: var(--other-Error, #FF1F00);
+        position: absolute;
+        bottom: -15px;
+    }
+
+    .editInput {
+        border: none;
+        border-bottom: 1px solid var(--Border-Default, #6E99EC);
+        background: transparent;
+        color: var(--Text-able-Text, #0C4AD5);
+        text-align: right;
+        transition: all 0.3s ease;
+        max-width: calc(100% - 25px);
+        outline: none;
+
+        &:focus {
+            outline: none;
+        }
+
+        &::placeholder {
+            color: var(--Gray-Blue-300, #9DBDF3);
+        }
+    }
+}

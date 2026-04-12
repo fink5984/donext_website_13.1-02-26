@@ -1,0 +1,114 @@
+.searchWrapper {
+    position: relative;
+    width: 240px;
+    height: var(--Heigt-Heigt-6);
+    color: var(--Text-Default);
+    
+    @media (max-width: 768px) {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    &.long {
+        width: 480px;
+        
+        @media (max-width: 768px) {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .searchField {
+            border: 1px solid var(--Border-Default);
+
+            &:hover,
+            &:focus,
+            &:not(:placeholder-shown) {
+                border: 1px solid var(--Border-able-field);
+            }
+        }
+    }
+
+    &.big {
+        height: var(--Heigt-Heigt-8, 48px);
+    }
+
+    .searchField {
+        width: 100%;
+        border-radius: var(--Border-Radius-lg);
+        height: 100%;
+        background: var(--Gray-Blue-35);
+        border: none;
+        padding: 0 14px;
+        color: var(--Text-able-Text);
+        outline: none;
+
+        &:focus,
+        &:not(:placeholder-shown) {
+            border: 1px solid var(--Border-able-field);
+        }
+
+        &::placeholder {
+            color: transparent;
+        }
+    }
+
+    .searchPlaceholder {
+        position: absolute;
+        top: 50%;
+        inset-inline-start: 0;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+        padding: 0 14px;
+    }
+
+    &:hover,
+    &:focus-within {
+        .searchPlaceholder {
+            color: var(--Text-able-Text);
+        }
+    }
+}
+
+.searchList {
+    position: absolute;
+    top: calc(100% + 12px);
+    inset-inline-start: 0;
+    width: 100%;
+    max-height: 278px;
+    overflow-y: auto;
+    border: 1px solid var(--Border-Default, #6E99EC);
+    background: #FFF;
+    border-radius: var(--Border-Radius-lg, 24px);
+    z-index: 5;
+
+}
+
+.searchItem {
+    width: 100%;
+    text-align: start;
+    /* תומך RTL דרך direction של הקונטיינר */
+    background: transparent;
+    border: none;
+    padding: var(--Spacing-Spacing-5, 12px) 10px;
+    color: var(--Text-Default, #6E99EC);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+
+    &:hover {
+        background: rgba(12, 74, 213, .06);
+        color: var(--Text-able-Text, #0C4AD5);
+    }
+}
+
+.searchItemActive {
+    background: rgba(12, 74, 213, .10);
+    color: var(--Text-able-Text, #0C4AD5);
+}
+
+.empty {
+    cursor: default;
+    opacity: .7;
+}

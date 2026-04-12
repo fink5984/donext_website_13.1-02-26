@@ -1,0 +1,638 @@
+.donorForecastWrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    
+    @media (max-width: 768px) {
+        padding: 16px;
+    }
+    
+    @media (max-width: 480px) {
+        padding: 12px;
+    }
+}
+
+.donorForecastScreen {
+    width: 100%;
+    max-width: 1320px;
+    min-height: 825px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible;
+    position: relative;
+    padding: 0;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) var(--Border-Radius-lg) var(--Border-Radius-lg);
+    background: var(--Bg-Button-disable);
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    
+    @media (min-width: 1400px) {
+        height: min(825px, calc(100vh - 134px));
+    }
+
+    &:has(.welcomeBg) {
+        padding: 75px;
+        
+        @media (max-width: 768px) {
+            padding: 40px 20px;
+        }
+    }
+
+    .welcomeBg {
+        background: linear-gradient(120deg, #1a237e 60%, #512da8 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+
+        .welcomeText {
+            color: var(--Text-button);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+    }
+
+    .rankPage {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        padding-bottom: var(--Spacing-Spacing-6);
+        flex-direction: column;
+        align-items: center;
+        gap: var(--Spacing-Spacing-6);
+        flex-shrink: 0;
+        border-radius: var(--Border-Radius-s) var(--Border-Radius-s) var(--Border-Radius-lg) var(--Border-Radius-lg);
+        background: var(--Bg-Button-disable);
+        position: relative;
+        overflow: visible;
+
+        .progressBarWrapper {
+            width: 100%;
+            height: 6px;
+            border-radius: var(--Border-Radius-xl);
+            background: var(--Surface-02);
+            overflow: hidden;
+
+            .progressBarFill {
+                height: 100%;
+                border-radius: var(--Border-Radius-xl);
+                transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+                background: var(--Icon-able-Icon);
+            }
+        }
+
+        .rankContent {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--Spacing-Spacing-7);
+            flex: 1 0 0;
+            align-self: stretch;
+
+            .rankWalletHeader {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: var(--Spacing-Spacing-1);
+                align-self: stretch;
+
+                .wheaderWalletWrapper {
+                    padding-left: var(--Spacing-Spacing-9);
+                }
+
+                .rankHeader {
+                    display: flex;
+                    padding: 0px 96px;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: var(--Spacing-Spacing-4);
+                    align-self: stretch;
+                    color: var(--Text-Select-Text);
+                }
+            }
+
+            .amountRow {
+                display: flex;
+                max-height: 68px;
+                justify-content: center;
+                align-items: flex-end;
+                gap: var(--Spacing-Spacing-2);
+                flex: 1 0 0;
+                align-self: stretch;
+                color: var(--Text-able-Text);
+            }
+
+            .rankMain {
+                display: flex;
+                width: 100%;
+                padding: 21px 96px;
+                flex: 1 0 0;
+                min-height: 200px;
+                max-height: 422px;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 96px;
+                overflow: hidden;
+
+                .donorListWrapper {
+                    border-radius: var(--Border-Radius-lg);
+                    border: 1px solid var(--Border-able-field);
+                    background: var(--Bg-Button-Primary);
+                    // min-height: 200px;
+                    padding: var(--Spacing-Spacing-7) var(--Spacing-Spacing-8) var(--Spacing-Spacing-7) var(--Spacing-Spacing-7);
+                    flex: 1 0 0;
+                    max-height: 100%;
+                    direction: inherit; // Inherit from parent for RTL/LTR support
+                    display: flex;
+                    flex-direction: row-reverse;
+                    align-items: flex-end;
+                    position: relative;
+                    padding-right: 6px;
+                    height: 100%;
+
+                    .scrollArrow {
+                        position: absolute;
+                        left: 20px;
+                        bottom: 8px;
+                        z-index: 10;
+                        cursor: pointer;
+                        animation: arrowBounce 1.4s infinite ease-in-out;
+                        transition: background 0.2s;
+                    }
+
+                    .donorList {
+                        display: flex;
+                        align-self: stretch;
+                        justify-content: flex-end;
+                        align-items: flex-start;
+                        align-content: flex-start;
+                        gap: 10px 8px;
+                        flex-wrap: wrap;
+                        user-select: none;
+                        -webkit-user-select: none;
+                        -ms-user-select: none;
+                        max-height: 100%;
+                        overflow-y: auto;
+                        direction: inherit; // Inherit from parent for RTL/LTR support
+                        padding-right: 6px;
+                    }
+
+                    .scrollValidation {
+                        position: absolute;
+                        color: var(--Text-error);
+                        bottom: -20px;
+                    }
+                }
+
+                .selectedListWrapper {
+                    border-radius: var(--Border-Radius-lg);
+                    background: var(--Surface-01);
+                    // min-height: 200px;
+                    padding: var(--Spacing-Spacing-7) var(--Spacing-Spacing-8);
+                    flex: 1 0 0;
+                    max-height: 100%;
+                    direction: inherit; // Inherit from parent for RTL/LTR support
+                    display: flex;
+                    flex-direction: row-reverse;
+                    align-items: flex-end;
+                    position: relative;
+                    padding-right: 6px;
+                    border: var(--Strock-Width-2) transparent;
+                    height: 100%;
+                    padding-right: 6px;
+
+                    .selectedList {
+                        display: flex;
+                        // min-height: 200px;
+                        justify-content: flex-end;
+                        align-items: flex-start;
+                        align-content: flex-start;
+                        gap: var(--Spacing-Spacing-4);
+                        align-self: stretch;
+                        flex-wrap: wrap;
+                        user-select: none;
+                        -webkit-user-select: none;
+                        -ms-user-select: none;
+                        height: 100%;
+                        max-height: 100%;
+                        padding-right: 6px;
+                        direction: inherit; // Inherit from parent for RTL/LTR support
+                        overflow-y: auto;
+                    }
+
+                    &.dragOver {
+                        border: var(--Strock-Width-2) dashed var(--Border-Default);
+                        background: var(--Gray-Blue-80);
+                        transition: background 0.2s, border 0.2s;
+                    }
+                }
+
+                .donorRankCard {
+                    cursor: pointer;
+                    display: flex;
+                    transition: all 0.2s;
+                    position: relative;
+                    height: 53px;
+                    padding: var(--Spacing-Spacing-4);
+                    justify-content: flex-start;
+                    align-items: center;
+                    gap: var(--Spacing-Spacing-3);
+                    flex-shrink: 0;
+                    border-radius: var(--Border-Radius-m);
+                    background: var(--Bg-Button-disable);
+                    width: fit-content;
+                    border: 1px solid transparent;
+                    user-select: none;
+                    -webkit-user-select: none;
+                    -ms-user-select: none;
+
+                    &:hover:not(.disabled):not(.selected):not(.dragSource):not(.dragPreview) {
+                        border: 1px solid var(--Border-Default);
+                        background: var(--Text-disable-Text);
+                    }
+
+                    &.selected {
+                        border: 1px solid var(--Border-disable-field);
+
+                        &:hover {
+                            border: 1px solid var(--Border-Default);
+                            background: var(--Surface-02);
+                        }
+                    }
+
+                    &.disabled {
+                        opacity: 0.5;
+                        pointer-events: none;
+                    }
+
+                    &.dragSource {
+                        z-index: 10;
+                        position: relative;
+                        border: 1px solid var(--Border-Default);
+                        background: var(--Border-Default);
+                    }
+
+                    &.dragPreview {
+                        pointer-events: none;
+                        z-index: 100;
+                        transform: scale(1.08);
+                        opacity: 0.5;
+                        background: var(--Bg-Button-disable);
+                    }
+
+                    .donorName {
+                        color: var(--Text-able-Text);
+
+                        .lastName {
+                            margin-top: -4px;
+                        }
+                    }
+
+                    .rankIcon {
+                        width: 34px;
+                        height: 34px;
+                    }
+
+                    .tooltip {
+                        position: absolute;
+                        top: 120%;
+                        right: 0;
+                        padding: 10px;
+                        z-index: 1000;
+                        border-radius: var(--border-radius-sm);
+                        background: var(--Bg-Button-disable);
+                        box-shadow: 0px 48px 14px 0px rgba(107, 124, 168, 0.00), 0px 31px 12px 0px rgba(107, 124, 168, 0.01), 0px 17px 10px 0px rgba(107, 124, 168, 0.05), 0px 8px 8px 0px rgba(107, 124, 168, 0.09), 0px 2px 4px 0px rgba(107, 124, 168, 0.10);
+                        cursor: default;
+                        max-width: 180px;
+                        width: max-content;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 300ms linear;
+
+                        &.tooltipVisible {
+                            opacity: 1;
+                            pointer-events: auto;
+                            transition: opacity 300ms ease-out;
+                        }
+
+                        p {
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            color: var(--Brand-Primary-blue);
+                            text-align: right;
+                            font-family: var(--font-ping);
+                            font-size: 12px;
+                            font-style: normal;
+                            font-weight: 400;
+                            line-height: 14px;
+                            letter-spacing: 0.12px;
+                            margin-bottom: 8px;
+
+                            &:last-child {
+                                margin-bottom: 0;
+                            }
+
+                            svg {
+                                color: var(--Gray-Blue-350);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .buttonWrapper {
+            display: flex;
+            min-height: 12px;
+            max-height: 100px;
+            justify-content: center;
+            align-items: center;
+            flex: 1 0 0;
+            align-self: stretch;
+        }
+
+        .timerBarWrapper {
+            position: absolute;
+            left: 40px;
+            bottom: 27px;
+
+            .timerCircleWrapper {
+                position: relative;
+                display: inline-block;
+                width: 34px;
+                height: 34px;
+                user-select: none;
+
+                svg {
+                    display: block;
+                }
+
+                .timerCircleText {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                    color: var(--Text-disable-Text);
+                    text-align: center;
+                    font-family: var(--font-ping);
+                    font-size: 25.92px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 15.12px;
+                }
+            }
+        }
+    }
+
+    .totalAmount {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1976d2;
+        margin: 24px 0 16px 0;
+    }
+
+    .finishRanks {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 32px;
+
+        .finishRank {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+    }
+
+    .confetti {
+        display: none;
+    }
+
+    .high,
+    .medium,
+    .low {
+        display: none;
+    }
+}
+
+@keyframes arrowBounce {
+    0% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.avatarWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.avatarIcon {
+    display: block;
+    //   width: 56px;
+    //   height: 56px;
+}
+
+.medalIconWrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    top: calc(100% - 12px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.medalSvg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+// .finishScreen {
+//     position: relative;
+//     width: 100%;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     animation: fadeIn 0.4s ease;
+
+.progressBar {
+    width: 100%;
+    height: 4px;
+    background: #E6F0FF;
+    position: relative;
+
+    .coins {
+        position: absolute;
+        top: -28px;
+        right: 24px;
+        display: flex;
+        gap: 16px;
+        direction: rtl;
+
+        span {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    }
+
+    .progress {
+        height: 100%;
+        width: 100%;
+        background-color: #4CAF50;
+    }
+}
+
+.content {
+    padding: 48px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    direction: rtl;
+
+    h1 {
+        font-size: 40px;
+        color: #0C4AD5;
+        margin-bottom: 24px;
+        font-weight: bold;
+    }
+
+    .subtitle {
+        font-size: 18px;
+        color: #0C4AD5;
+        margin-bottom: 32px;
+        line-height: 1.5;
+    }
+
+    .amount {
+        font-size: 72px;
+        color: #0C4AD5;
+        font-weight: bold;
+        margin-bottom: 48px;
+        direction: ltr; // Keep LTR for numbers display
+        text-align: center;
+        background: linear-gradient(90deg, #0C4AD5 0%, #02E4FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    h2 {
+        font-size: 24px;
+        color: #0C4AD5;
+        margin-bottom: 16px;
+    }
+
+    .description {
+        font-size: 18px;
+        color: #0C4AD5;
+        margin-bottom: 48px;
+        line-height: 1.6;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .continueButton {
+        background: linear-gradient(90deg, #0C4AD5 0%, #02E4FF 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 16px 32px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(12, 74, 213, 0.2);
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.finishContent {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    padding: var(--Spacing-Spacing-7) 0px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(0px, 100%, 40px);
+    flex: 1 0 0;
+    align-self: stretch;
+    color: var(--Brand-Primary-blue);
+
+    .finishHeader {
+        display: flex;
+        padding: var(--Spacing-Spacing-7) 0px;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--Spacing-Spacing-9);
+        align-self: stretch;
+
+        .finishHeaderContent {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--Spacing-Spacing-5);
+            align-self: stretch;
+            text-align: center;
+        }
+    }
+
+    .description {
+        text-align: center;
+
+        .title {
+            font-family: var(--font-ping);
+            font-size: 36px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 28px;
+            /* 77.778% */
+        }
+    }
+}

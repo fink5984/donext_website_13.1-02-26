@@ -1,0 +1,236 @@
+.input-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    @media (max-width: 768px) {
+        width: 100%;
+    }
+
+    .inputIcon {
+        display: inline-flex;
+        position: relative;
+        width: 100%;
+    }
+
+    // padding: 10px var(--Spacing-Spacing-6);
+    // justify-content: flex-end;
+    &.full-width {
+        width: 100%;
+    }
+
+    .input-icon {
+        position: absolute;
+        // left: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 1;
+        padding: 0 4px;
+
+        &.icon-hidden {
+            display: none;
+        }
+
+        &.bottom-border {
+            color: var(--Text-Default);
+        }
+    }
+
+    .input-icon {
+        right: 16px; // מרחק מהצד השמאלי
+        color: var(--Text-able-Text);
+
+        &.bottom-border {
+            color: var(--Text-Default);
+        }
+    }
+
+    .input-field {
+        height: var(--Heigt-Heigt-8);
+        padding: 16px;
+        padding-left: 40px;
+        border-radius: var(--Border-Radius-lg);
+        border: var(--Strock-Width-1) solid var(--Border-Default);
+        background: transparent;
+    }
+
+    &.bottom-border {
+        .input-icon {
+            color: var(--Text-Default);
+        }
+
+        .input-field::placeholder {
+            color: var(--Text-Default);
+        }
+
+        .input-field:focus::placeholder,
+        .input-field:focus:hover::placeholder {
+            color: transparent;
+        }
+
+        .input-field:hover::placeholder {
+            color: var(--Text-Select-Text);
+        }
+
+        .input-field:focus+.floating-label,
+        .input-field.filled+.floating-label {
+            color: var(--Text-Select-Text);
+        }
+
+        .input-field:focus+.input-icon,
+        .input-field.filled+.input-icon {
+            display: none;
+        }
+    }
+}
+
+.input-field.bottom-border {
+    border: none;
+    border-bottom: var(--Strock-Width-1) solid var(--Border-Default);
+    border-radius: 0;
+    transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+}
+
+.input-field {
+    height: var(--Heigt-Heigt-8);
+    width: 280px;
+    padding: 16px;
+    border: var(--Strock-Width-1) solid var(--Border-Default);
+    border-radius: var(--Border-Radius-lg);
+    
+    @media (max-width: 768px) {
+        width: 100%;
+    }
+    transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+    position: relative;
+    color: var(--Text-able-Text);
+
+    &.bottom-border {
+        color: var(--Text-Default);
+        height: var(--Heigt-Heigt-6);
+
+        &.filled {
+            color: var(--Text-Select-Text);
+
+        }
+    }
+
+    &.full-width {
+        width: 100%;
+    }
+
+    &.small {
+        width: 100px;
+    }
+
+    &::placeholder {
+        color: var(--Text-able-Text);
+
+        &.bottom-border {
+            color: var(--Text-Default);
+        }
+    }
+
+    &:focus {
+        outline: none;
+        border: var(--Strock-Width-3) solid var(--Border-Select-field);
+    }
+
+    &:focus::placeholder,
+    &:focus:hover::placeholder {
+        color: transparent;
+    }
+
+    &:hover::placeholder {
+        color: var(--Text-Select-Text);
+    }
+
+    &:focus+.floating-label,
+    &.filled+.floating-label {
+        top: -8px;
+        right: 20px;
+        font-size: 12px;
+        background: white;
+        padding: 0 5px;
+        visibility: visible;
+        opacity: 1;
+        z-index: 20;
+    }
+
+    &.filled+.floating-label {
+        color: var(--Text-Default);
+    }
+
+    // מצב Disabled
+    &:disabled {
+        color: var(--Text-disable-Text);
+        border: var(--Strock-Width-1) solid var(--Border-disable-field);
+        cursor: not-allowed;
+
+    }
+
+    &:not(:disabled):not(:focus):hover {
+        border: var(--Strock-Width-3) solid var(--Border-hover-field);
+        color: var(--Text-Select-Text);
+    }
+
+    &.bottom-border:focus,
+    &.bottom-border:not(:disabled):hover {
+        border: none;
+        border-bottom: var(--Strock-Width-1) solid var(--Border-Select-field);
+        border-radius: 0;
+        transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+    }
+}
+
+.floating-label {
+    position: absolute;
+    top: 45%; // מיקום התחלתית במרכז השדה
+    right: 38px;
+    color: var(--Text-Select-Text);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: 0.5s ease all;
+    width: fit-content;
+
+    .input-field:disabled+& {
+        color: #ccc; // צבע עבור מצב Disabled
+    }
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.input-field.has-icon {
+    padding-right: 50px; // מרווח בשביל האייקון
+}
+
+.input-container {
+    &.bottom-border {
+        .floating-label {
+            background: transparent !important; // מבטל את הרקע הלבן כשהקונטיינר הוא bottom-border
+        }
+    }
+}
+
+.error {
+    border-color: var(--Text-error) !important;
+}
+
+.error-message {
+    color: var(--Text-error);
+    top: 33px;
+    position: absolute;
+    text-align: right;
+    white-space: nowrap;
+}

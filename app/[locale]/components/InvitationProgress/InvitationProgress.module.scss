@@ -1,0 +1,115 @@
+.timeline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    padding: 16px 0;
+    background: transparent;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    gap: var(--Spacing-Spacing-3);
+    flex-shrink: 0;
+
+    .visual {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--Spacing-Spacing-4);
+        position: relative;
+        width: 100%;
+    }
+}
+
+.checksContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 24px;
+    min-height: 24px;
+}
+
+.checkIcon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    
+    &.gray {
+        color: #CDCEE1 !important;
+        
+        path {
+            fill: #CDCEE1 !important;
+        }
+    }
+    
+    &.blue {
+        color: #0C4AD5 !important;
+        
+        path {
+            fill: #0C4AD5 !important;
+        }
+    }
+    
+    &.center {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    z-index: 2;
+    border: 1.115px solid var(--Border-disable-field, #C5D7F8);
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+        transform: scale(1.2);
+        box-shadow: 0 2px 8px rgba(12, 74, 213, 0.3);
+    }
+
+    &.done {
+        background: var(--Brand-Primary-blue, #0C4AD5);
+        border: 1.115px solid var(--Brand-Primary-blue, #0C4AD5);
+    }
+}
+
+.connector {
+    flex: 1;
+    height: 2px;
+    background: var(--Border-disable-field, #C5D7F8);
+    z-index: 0;
+    width: 100%;
+    position: absolute;
+    right: 50%;
+    bottom: 7px;
+
+    &.lineActive {
+        background: var(--Border-able-field, #0C4AD5);
+    }
+}
+
+.label {
+    text-align: center;
+    color: var(--Text-disable-Text, #C5D7F8);
+    font-size: 12px;
+    line-height: 1.3;
+
+    &.labelActive {
+        color: #2563eb;
+    }
+}

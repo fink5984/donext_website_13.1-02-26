@@ -1,0 +1,645 @@
+/* Wrapper and card styles aligned to the original page styles and Figma spec */
+.cards {
+    height: auto;
+    min-height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    gap: 20px;
+    flex: 0 0 auto;
+
+    @media (max-width: 1200px) {
+        gap: 16px;
+    }
+
+    // Short desktop viewport compression
+    @media (max-height: 800px) and (min-width: 769px) {
+        min-height: auto;
+        gap: 12px;
+    }
+    @media (max-height: 700px) and (min-width: 769px) {
+        gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+        min-height: 0;
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+.card {
+    position: relative;
+    border-radius: var(--Border-Radius-m);
+    background: var(--other-White, #FFF);
+    padding: var(--Spacing-Spacing-6) var(--Spacing-Spacing-8);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--Spacing-Spacing-6);
+    flex-shrink: 1;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+
+    // Short desktop viewport compression
+    @media (max-height: 800px) and (min-width: 769px) {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+    @media (max-height: 700px) and (min-width: 769px) {
+        padding: 8px 12px;
+        gap: 4px;
+    }
+
+    @media (max-width: 768px) {
+        padding: var(--Spacing-Spacing-5) var(--Spacing-Spacing-6);
+        overflow: visible;
+    }
+
+    &:hover {
+        border: var(--Strock-Width-3) solid var(--Border-hover-field, #228CFF) !important;
+    }
+
+    &.good,
+    &.above {
+        border: var(--Strock-Width-3) solid #00FBAE;
+    }
+
+    &.lots {
+        border: var(--Strock-Width-3) solid var(--Text-error, #F92323);
+    }
+}
+
+/* Card sizing - flex-based for responsive wrapping */
+.card:nth-child(1) {
+    flex: 1 1 200px;
+    min-width: 200px;
+
+    @media (max-width: 768px) {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+.card:nth-child(2) {
+    flex: 1.5 1 300px;
+    min-width: 280px;
+
+    @media (max-width: 768px) {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+.card:nth-child(3) {
+    flex: 2 1 400px;
+    min-width: 350px;
+
+    @media (max-width: 1200px) {
+        flex: 1 1 100%;
+    }
+
+    @media (max-width: 768px) {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+.cardContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex: 1 0 0;
+    align-self: stretch;
+
+    // Short desktop viewport compression
+    @media (max-height: 800px) and (min-width: 769px) {
+        gap: 4px;
+    }
+
+    @media (max-width: 768px) {
+        flex: 0 0 auto;
+        gap: 8px;
+    }
+
+    h2 {
+        color: var(--Text-able-Text, #0C4AD5);
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-end;
+        gap: var(--Spacing-Spacing-3);
+        align-self: stretch;
+    }
+
+    h1 {
+        color: var(--Text-able-Text, #0C4AD5);
+        letter-spacing: 0;
+
+        @media (max-height: 700px) and (min-width: 769px) {
+            font-size: 28px !important;
+        }
+
+        @media (max-width: 768px) {
+            font-size: 36px !important;
+        }
+
+        @media (max-width: 480px) {
+            font-size: 28px !important;
+        }
+    }
+
+    h3 {
+        color: var(--Border-Fundraiser-able, #009FC0);
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-end;
+        align-self: stretch;
+
+        @media (max-height: 700px) and (min-width: 769px) {
+            font-size: 50px !important;
+        }
+
+        @media (max-width: 768px) {
+            font-size: 32px !important;
+            word-break: break-all;
+        }
+
+        @media (max-width: 480px) {
+            font-size: 24px !important;
+        }
+    }
+
+    p {
+        color: var(--Gray-Blue-350, #76A0FF);
+    }
+}
+
+.card.good h1 {
+    color: #00FBAE;
+}
+
+.card:nth-child(2) {
+    .cardContent {
+        flex-direction: row;
+        /* text block + bars side-by-side */
+        align-items: stretch;
+        gap: var(--Spacing-Spacing-6);
+    }
+}
+
+.contentCard2 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Warning icon and tooltip */
+.warningIconWrapper {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px;
+
+    .warningIcon {
+        cursor: pointer;
+    }
+
+    .tooltip {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        inset-inline-start: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--Text-able-Text, #0C4AD5);
+        padding: 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        z-index: 10;
+        box-shadow: 0px 0px 4px 0px rgba(205, 206, 225, 0.25);
+    }
+
+    &:hover .tooltip {
+        display: block;
+    }
+}
+
+/* Questionnaire bars */
+.chart {
+    height: 120px;
+    overflow: hidden;
+    /* prevent bars from escaping card on extreme values */
+    display: flex;
+    padding: var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-1, 0) var(--Spacing-Spacing-4, 8px);
+    justify-content: center;
+    align-items: flex-end;
+    gap: var(--Spacing-Spacing-5, 12px);
+
+    // Short desktop viewport compression
+    @media (max-height: 800px) and (min-width: 769px) {
+        height: 90px;
+    }
+    @media (max-height: 700px) and (min-width: 769px) {
+        height: 70px;
+        padding: 4px 8px 0 8px;
+    }
+
+    &.opacity {
+        opacity: 0.5;
+    }
+}
+
+.barDiagram {
+    width: 13px;
+    background-color: #E2EBFF;
+    // border-radius: 4px;
+    position: relative;
+    transition: height 0.3s ease;
+    max-height: 112px;
+    /* cap visual height to match figma */
+
+    &.red {
+        background-color: var(--traffic-light-Red);
+    }
+
+    &.orange {
+        background-color: var(--traffic-light-Orange);
+    }
+
+    &.green {
+        background-color: var(--traffic-light-Green);
+    }
+
+    &.gray {
+        background-color: var(--Icon-library-2);
+    }
+
+    &.blue {
+        background-color: var(--Primary-blue);
+    }
+
+    .diagramTooltip {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--Text-able-Text, #0C4AD5);
+        padding: 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        z-index: 10;
+        box-shadow: 0px 0px 4px 0px rgba(205, 206, 225, 0.25);
+    }
+
+    &:hover .diagramTooltip {
+        display: block;
+    }
+}
+
+.card3Wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 16px;
+
+    @media (max-width: 640px) {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+.content3Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--Spacing-Spacing-6);
+}
+
+.doughnut {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 1;
+    min-width: 0;
+
+    canvas {
+        max-width: 100% !important;
+    }
+
+    // Short desktop viewport compression
+    @media (max-height: 700px) and (min-width: 769px) {
+        canvas {
+            max-width: 110px !important;
+            max-height: 110px !important;
+        }
+    }
+
+    @media (max-width: 640px) {
+        align-self: center;
+
+        canvas {
+            max-width: 140px !important;
+            max-height: 140px !important;
+        }
+    }
+}
+
+.doughnutText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    text-align: center;
+    color: var(--Text-able-Text, #0C4AD5);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    .percent {
+        color: var(--Gray-Blue-150, #CFDEFF);
+        font-family: var(--font-ping);
+        font-size: 20.231px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 14.611px;
+        word-break: keep-all;
+        overflow: hidden;
+        text-overflow: clip;
+    }
+}
+
+/* ───── Card 3 – Donation Ratio styles ───── */
+.donationCard {
+    min-height: 204px;
+    align-items: center;
+    
+    .cardContent {
+        justify-content: flex-start;
+        gap: 0;
+        width: 100%;
+    }
+}
+
+.cardGraphContent {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 25px;
+    height: 118px;
+    justify-content: space-between;
+    width: calc(100% - 48px);
+    left: 24px;
+    right: 24px;
+    
+    @media (max-width: 1200px) {
+        top: 18px;
+        height: auto;
+        width: calc(100% - 32px);
+        left: 16px;
+        right: 16px;
+        gap: 8px;
+    }
+
+    @media (max-height: 800px) and (min-width: 769px) {
+        top: 12px;
+        height: auto;
+        gap: 4px;
+    }
+
+    @media (max-height: 700px) and (min-width: 769px) {
+        top: 8px;
+        gap: 2px;
+    }
+    
+    @media (max-width: 1100px) {
+        position: relative;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        gap: 10px;
+    }
+    
+    @media (max-width: 768px) {
+        position: relative !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        gap: 12px;
+        display: flex !important;
+    }
+
+    &.veryGood {
+        .cardHeader .cardAmount {
+            color: var(--Brand-Secondary-Green);
+        }
+
+        .graphBar .actualBar,
+        .legend button:nth-child(1) span {
+            background: var(--Brand-Secondary-Green);
+        }
+    }
+}
+
+.cardHeader {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    align-self: center;
+
+    @media (max-height: 800px) and (min-width: 769px) {
+        gap: 2px;
+    }
+}
+
+.cardTitle span {
+    display: flex;
+    gap: var(--Spacing-Spacing-2);
+    align-items: center;
+
+    @media (max-height: 800px) and (min-width: 769px) {
+        font-size: 12px;
+    }
+}
+
+.cardAmount {
+    @media (max-width: 1200px) {
+        font-size: 28px;
+    }
+    
+    @media (max-width: 1024px) {
+        font-size: 24px;
+    }
+
+    @media (max-height: 800px) and (min-width: 769px) {
+        font-size: 22px;
+    }
+
+    @media (max-height: 700px) and (min-width: 769px) {
+        font-size: 18px;
+    }
+}
+
+.cardSubText {
+    color: var(--Gray-Blue-350, #76A0FF);
+}
+
+.barLegend {
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 392px;
+    align-self: center;
+    
+    @media (max-width: 1024px) {
+        height: auto;
+        gap: 8px;
+        max-width: 100%;
+    }
+}
+
+.graphBar {
+    position: relative;
+    height: 12px;
+    background: rgba(229, 229, 232, 0.5);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 392px;
+    
+    @media (max-width: 1200px) {
+        max-width: 100%;
+    }
+}
+
+.expectedBar {
+    position: absolute;
+    width: 6px;
+    height: 24px;
+    border-radius: var(--border-radius-sm);
+    background: var(--fund-raiser-hover, #037E9B);
+    top: -50%;
+    z-index: 3;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s ease, border 0.2s ease, right 0.3s ease;
+
+    &:hover {
+        border: 1px solid var(--Text-button);
+        box-shadow: 0px 3.5px 2px -2px rgba(137, 145, 164, 0.40);
+    }
+}
+
+.actualBar {
+    position: absolute;
+    height: 12px;
+    background: var(--Donor-default);
+    top: 0;
+    border-radius: 24px;
+    right: 0;
+    z-index: 2;
+    transition: box-shadow 0.2s ease, border 0.2s ease, width 0.3s ease;
+
+    &:hover {
+        border: 1px solid var(--Text-button);
+        box-shadow: 0px 3.5px 2px -2px rgba(137, 145, 164, 0.40);
+    }
+}
+
+.targetMarker {
+    position: absolute;
+    width: 6px;
+    height: 24px;
+    border-radius: var(--border-radius-sm);
+    background: var(--Text-disable-Text);
+    top: -50%;
+    z-index: 3;
+    transition: box-shadow 0.2s ease, border 0.2s ease, right 0.3s ease;
+
+    &:hover {
+        border: 1px solid var(--Text-button);
+        box-shadow: 0px 3.5px 2px -2px rgba(137, 145, 164, 0.40);
+    }
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: var(--Spacing-Spacing-2);
+    align-self: center;
+    flex-wrap: wrap;
+    
+    @media (max-width: 1024px) {
+        justify-content: center;
+        gap: 4px;
+    }
+
+    button {
+        display: flex;
+        padding: var(--Spacing-Spacing-2) var(--Spacing-Spacing-2) var(--Spacing-Spacing-2) var(--Spacing-Spacing-3);
+        align-items: center;
+        gap: var(--Spacing-Spacing-2);
+        border-radius: var(--Border-Radius-sm);
+        background: var(--Bg-Button-disable, #FFF);
+        border: none;
+        cursor: pointer;
+        color: var(--Text-Default);
+        text-align: right;
+        font-family: var(--font-ping);
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 10px;
+        letter-spacing: 0.11px;
+        
+        @media (max-width: 1200px) {
+            font-size: 10px;
+            padding: 4px 6px;
+        }
+
+        &:hover {
+            background: var(--Bg-Button-hover-2);
+        }
+
+        &.active {
+            color: #0F275C;
+        }
+
+        &:nth-child(1) span {
+            width: 15px;
+            height: 12px;
+            border-radius: var(--Border-Radius-m);
+            background: var(--Donor-default);
+        }
+
+        &:nth-child(2) span {
+            width: 2px;
+            height: 12px;
+            border-radius: 24px;
+            background: var(--fund-raiser-hover, #037E9B);
+        }
+
+        &:nth-child(3) span {
+            width: 2px;
+            height: 12px;
+            border-radius: 24px;
+            background: #CFDEFF;
+        }
+    }
+}

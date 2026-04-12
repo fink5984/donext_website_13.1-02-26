@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="19" fill="none" viewBox="0 0 36 34">
+  <!-- Top person (operator) -->
+  <circle cx="18" cy="4.5" r="3.2" stroke="currentColor" stroke-width="2.2"/>
+  <path d="M12.5 13.5a5.5 5.5 0 0 1 11 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Connection lines -->
+  <path d="M18 14.5v3.5M9 18h18M9 18v2.5M27 18v2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Left person (fundraiser) -->
+  <circle cx="9" cy="23.5" r="2.8" stroke="currentColor" stroke-width="2.2"/>
+  <path d="M4 31a5 5 0 0 1 10 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Right person (fundraiser) -->
+  <circle cx="27" cy="23.5" r="2.8" stroke="currentColor" stroke-width="2.2"/>
+  <path d="M22 31a5 5 0 0 1 10 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

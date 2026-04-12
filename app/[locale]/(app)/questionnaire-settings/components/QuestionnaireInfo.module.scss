@@ -1,0 +1,150 @@
+.faqList {
+  display: flex;
+  // height: 688px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  // overflow-y: auto;
+  padding-top: 112px;
+  height: 100%;
+}
+
+.faqItem {
+  display: flex;
+  width: 353px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--Spacing-Spacing-4, 8px);
+  color: var(--Text-able-Text, #0C4AD5);
+
+  .questionText {
+    max-width: calc(100% - 35px);
+  }
+}
+
+.questionHeader {
+  display: flex;
+  padding-bottom: var(--Spacing-Spacing-4, 8px);
+  justify-content: space-between;
+  align-items: center;
+  gap: 17px;
+  align-self: stretch;
+  border-bottom: 1px solid var(--Border-disable-field, #C5D7F8);
+  cursor: pointer;
+}
+
+.expandIcon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  color: #667eea;
+}
+
+.expandIcon::before,
+.expandIcon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transform-origin: 50% 50%;
+  transform: translateY(-50%) rotate(0deg);
+}
+
+// מצב ברירת מחדל: פלוס (קו אופקי + קו אנכי)
+.expandIcon::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+// פתיחה: + -> X -> _
+.expandIcon.expanded::before {
+  animation: barOneOpen 0.3s ease-in forwards;
+}
+
+.expandIcon.expanded::after {
+  animation: barTwoOpen 0.3s ease-in forwards;
+}
+
+@keyframes barOneOpen {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+
+  40% {
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  70% {
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  100% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+}
+
+@keyframes barTwoOpen {
+  0% {
+    transform: translateY(-50%) rotate(90deg);
+    opacity: 1;
+  }
+
+  40% {
+    transform: translateY(-50%) rotate(-45deg);
+    opacity: 1;
+  }
+
+  70% {
+    transform: translateY(-50%) rotate(-45deg);
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) rotate(-45deg);
+  }
+}
+
+.answerContent {
+  display: flex;
+  padding: 0 var(--Spacing-Spacing-3, 4px);
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out, transform 0.3s ease-out;
+  will-change: max-height, opacity, transform;
+}
+
+.answerContent.expanded {
+  max-height: 500px; // ערך גבוה כדי להכיל תכנים שונים
+  opacity: 1;
+  transform: translateY(0);
+  transition: max-height 0.3s cubic-bezier(0.42, 0, 1, 1), opacity 0.2s ease-in, transform 0.3s ease-out; // פתיחה: מתחילה לאט ואז מאיצה
+}
+
+// רספונסיביות
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .questionHeader {
+    padding: 15px;
+  }
+
+  .answerContent {
+    padding: 0 15px 15px 15px;
+  }
+
+  .questionText {
+    font-size: 0.9rem;
+  }
+}

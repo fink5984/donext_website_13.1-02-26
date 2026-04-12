@@ -1,0 +1,10 @@
+.loader {
+    width: 120px;
+    height: auto;
+    display: block;
+    
+    &.small {
+        width: 20px;
+        height: auto;
+    }
+}

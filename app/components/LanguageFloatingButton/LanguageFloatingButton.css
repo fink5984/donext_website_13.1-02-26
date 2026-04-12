@@ -1,0 +1,209 @@
+/* =====================================================
+   LANGUAGE FLOATING BUTTON STYLES
+   Modern, elegant design - matches accessibility widget
+   ===================================================== */
+
+/* CSS Variables - Matching website colors */
+:root {
+  --lang-primary: #0C4AD5;
+  --lang-primary-hover: #283680;
+  --lang-primary-light: rgba(12, 74, 213, 0.1);
+  --lang-secondary: #00FBAE;
+  --lang-bg: #ffffff;
+  --lang-bg-hover: #F6F9FC;
+  --lang-text: #0C4AD5;
+  --lang-text-secondary: #6E99EC;
+  --lang-border: #C5D7F8;
+  --lang-active: #00FBAE;
+  --lang-active-text: #0C4AD5;
+  --lang-shadow: 0 8px 32px rgba(12, 74, 213, 0.2);
+  --lang-shadow-sm: 0 4px 12px rgba(12, 74, 213, 0.12);
+  --lang-radius: 16px;
+  --lang-radius-sm: 10px;
+  --lang-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =====================================================
+   TRIGGER BUTTON - Round button with Chinese character
+   ===================================================== */
+
+.lang-trigger {
+  position: fixed;
+  bottom: 76px; /* Position above the accessibility button (20px + 44px + 12px gap) */
+  z-index: 99999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--lang-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--lang-shadow);
+  transition: all var(--lang-transition);
+}
+
+.lang-trigger:hover {
+  background: var(--lang-primary-hover);
+  transform: scale(1.08);
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3);
+}
+
+.lang-trigger:focus {
+  outline: none;
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3), 0 0 0 3px rgba(12, 74, 213, 0.25);
+}
+
+.lang-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3), 0 0 0 3px rgba(12, 74, 213, 0.25);
+}
+
+/* RTL/LTR positioning */
+.lang-trigger-rtl {
+  left: 20px;
+  right: auto;
+}
+
+.lang-trigger-ltr {
+  right: 20px;
+  left: auto;
+}
+
+.lang-trigger-icon {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* =====================================================
+   MENU - Clean modern dropdown
+   ===================================================== */
+
+.lang-menu {
+  position: fixed;
+  bottom: 132px; /* Position above the trigger button */
+  z-index: 99998;
+  width: 200px;
+  max-width: calc(100vw - 40px);
+  background: var(--lang-bg);
+  border-radius: var(--lang-radius);
+  box-shadow: var(--lang-shadow);
+  border: 1px solid var(--lang-border);
+  overflow: hidden;
+  animation: lang-slideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lang-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* RTL/LTR positioning */
+.lang-menu-rtl {
+  left: 20px;
+  right: auto;
+}
+
+.lang-menu-ltr {
+  right: 20px;
+  left: auto;
+}
+
+/* Header */
+.lang-menu-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--lang-border);
+  background: var(--lang-bg-hover);
+}
+
+.lang-menu-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lang-text);
+}
+
+/* Options container */
+.lang-menu-options {
+  padding: 8px;
+}
+
+/* Language option button */
+.lang-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: var(--lang-radius-sm);
+  cursor: pointer;
+  transition: all var(--lang-transition);
+  text-align: start;
+}
+
+.lang-option:hover {
+  background: var(--lang-bg-hover);
+}
+
+.lang-option:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--lang-primary-light);
+}
+
+.lang-option-active {
+  background: var(--lang-active);
+  color: var(--lang-active-text);
+}
+
+.lang-option-active:hover {
+  background: var(--lang-active);
+}
+
+.lang-option-flag {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lang-option-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lang-text);
+}
+
+.lang-option-check {
+  font-size: 14px;
+  color: var(--lang-active-text);
+  font-weight: bold;
+}
+
+/* =====================================================
+   RESPONSIVE ADJUSTMENTS
+   ===================================================== */
+
+@media (max-width: 480px) {
+  .lang-trigger {
+    width: 40px;
+    height: 40px;
+    bottom: 70px;
+  }
+  
+  .lang-trigger-icon {
+    font-size: 18px;
+  }
+  
+  .lang-menu {
+    bottom: 120px;
+    width: 180px;
+  }
+}

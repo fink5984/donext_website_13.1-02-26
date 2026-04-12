@@ -1,0 +1,211 @@
+.sendPopup {
+  display: flex;
+  width: 684px;
+  height: 522px;
+  min-height: 234px;
+  padding: var(--Spacing-Spacing-11, 48px) var(--Spacing-Spacing-8, 24px);
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: var(--Border-Radius-m, 16px);
+  background: var(--table-default, #FFF);
+  box-shadow: 0 106px 30px 0 rgba(62, 101, 193, 0.00), 0 68px 27px 0 rgba(62, 101, 193, 0.01), 0 38px 23px 0 rgba(62, 101, 193, 0.03), 0 17px 17px 0 rgba(62, 101, 193, 0.04), 0 4px 9px 0 rgba(62, 101, 193, 0.05);
+
+  .header {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+
+  .options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    gap: 16px var(--Spacing-Spacing-6, 16px);
+    align-self: stretch;
+    flex-wrap: wrap;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--Spacing-Spacing-1, 0);
+  }
+
+  /* מסך בחירת מתרימים ספציפיים */
+
+  &.selectorWrapper {
+    justify-content: center;
+    align-items: center;
+    gap: var(--Spacing-Spacing-8, 24px);
+
+    .table {
+      display: flex;
+      padding: 0 var(--Spacing-Spacing-1, 0);
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7.56px;
+      background: var(--Bg-Button-disable, #FFF);
+      width: 478px;
+
+      .tableHead {
+        display: grid;
+        grid-template-columns: 16px 180fr 134fr 94fr;
+        /* RTL: סטטוס, סטטוס, שם, בחירה */
+        align-items: center;
+        gap: var(--Spacing-Spacing-3, 4px);
+        padding: var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-5, 12px);
+        color: var(--table-Header, #0C4AD5);
+        height: 28px;
+        background: var(--Gray-Blue-35, #F6F9FC);
+        width: 100%;
+        margin-right: 18px;
+      }
+
+      .tableBody {
+        max-height: 234px;
+        min-height: 234px;
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        padding: 0 var(--Spacing-Spacing-1, 0);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 7.56px;
+        background: var(--Bg-Button-disable, #FFF);
+        direction: inherit;
+        padding-right: 12px;
+
+        /* בזמן טעינה – להשאיר מקום קבוע של גוף הטבלה ולהציג הודעה ממורכזת */
+        .loadingMore {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 120px;
+        }
+
+        .empty {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 120px;
+        }
+      }
+
+      .tableRow {
+        display: grid;
+        grid-template-columns: 16px 180fr 134fr 94fr;
+        /* RTL: סטטוס, סטטוס, שם, בחירה */
+        align-items: center;
+        gap: var(--Spacing-Spacing-3, 4px);
+        padding: var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-5, 12px);
+        color: var(--table-Header, #0C4AD5);
+        height: 28px;
+        border-radius: var(--Border-Radius, 0);
+        border-bottom: 1px solid rgba(197, 215, 248, 0.25);
+        width: 100%;
+      }
+
+      .colStatus {
+        text-align: center;
+        padding-right: 18px;
+        display: flex;
+        justify-content: center;
+
+        .ok {
+          color: var(--other-Success, #00EB3F);
+          width: 20px;
+          height: 20px;
+        }
+
+        .no {
+          color: var(--Icon-difault-icon, #6E99EC);
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .colName {
+        color: var(--Text-Fundraiser-able, #009FC0);
+        padding: var(--Spacing-Spacing-1, 0) 18px var(--Spacing-Spacing-1, 0) 2px;
+      }
+
+      .headerCell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 4px;
+
+        .sortButtons {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5px;
+          width: 16px;
+          align-items: center;
+
+          .sortButton {
+            color: var(--Gray-Blue-325, #98B8FF);
+
+            &:hover {
+              color: var(--Icon-able-Icon, #0C4AD5);
+            }
+
+            &.active {
+              color: var(--Brand-Primary-blue);
+            }
+          }
+        }
+      }
+
+      .loadingMore,
+      .empty {
+        text-align: center;
+        color: #7f8c8d;
+        padding: 12px 0;
+        height: 100%;
+        flex: 1;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .sendPopup {
+    width: 95vw;
+
+    .options {
+      grid-template-columns: 1fr;
+    }
+
+    .optionButton {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .submitButton {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  .selectorWrapper {
+    width: 95vw;
+  }
+
+  .tableHead,
+  .tableRow {
+    grid-template-columns: 120px 140px 1fr 40px;
+  }
+
+  .tableBody {
+    max-height: 260px;
+  }
+}

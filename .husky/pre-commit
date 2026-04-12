@@ -1,0 +1,3 @@
+#!/bin/sh
+# Run fast static checks on commit; avoid heavy build step here
+npm run lint || exit 1

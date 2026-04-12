@@ -1,0 +1,181 @@
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--Text-button, #FFF);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--Spacing-Spacing-8);
+    padding: var(--Spacing-Spacing-11) var(--Spacing-Spacing-9) var(--Spacing-Spacing-8) var(--Spacing-Spacing-9);
+    border-radius: var(--Border-Radius-lg);
+    animation: fadeSlide 0.3s ease;
+    width: 100%;
+    height: 100%;
+}
+
+
+@keyframes slideFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    color: var(--Text-Select-Text);
+
+    .donors {
+        color: var(--Donor-default);
+    }
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--Spacing-Spacing-6);
+    align-self: stretch;
+    flex: 1;
+
+    .bigWrapper {
+        background: var(--Surface-01);
+        border-radius: var(--Border-Radius-m);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: var(--Spacing-Spacing-7) var(--Spacing-Spacing-4);
+        gap: var(--Spacing-Spacing-9);
+        flex: 1;
+
+        .assignedPeopleWrapper {
+            align-self: flex-start;
+            max-height: min(calc(90vh - 605px), 326px);
+            // max-height: 422px;
+            overflow-y: auto;
+            direction: inherit; // Inherit from parent for RTL/LTR support;
+
+            .peopleGrid {
+                display: flex;
+                flex-wrap: wrap;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--Spacing-Spacing-8);
+                flex: 1 0 0;
+                width: 100%;
+                align-self: stretch;
+
+                .letterGroup {
+                    display: flex;
+                    gap: var(--Spacing-Spacing-3);
+                    width: 100%;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    align-self: stretch;
+
+                    .letter {
+                        color: var(--Gray-Blue-300-2);
+                        width: 22px;
+                        height: 20px;
+                        padding: var(--Spacing-Spacing-3);
+                    }
+
+                    .peopleInLetter {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: var(--Spacing-Spacing-4) 4px;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        align-content: flex-start;
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+
+    .progressBar {
+        // width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-self: flex-start;
+        // padding-top: 16px;
+
+        .progressText {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            color: var(--Gray-Blue-700);
+
+            .recommendation {
+                color: var(--Gray-Blue-300);
+            }
+        }
+
+        .barContainer {
+            // width: 100%;
+            width: 332px;
+            height: 11px;
+            overflow: hidden;
+            position: relative;
+            background: var(--Gray-Blue-50, #F5F8FE);
+            border-radius: var(--Border-Radius-lg);
+
+
+            .bar {
+                height: 100%;
+                border-radius: var(--Border-Radius-lg);
+                transition: width 0.3s ease, background 0.3s ease;
+
+                // מצב ריק - 0 מתרימים
+                &.empty {
+                    background: var(--Gray-Blue-90);
+                }
+
+                // &.under {
+                //     background: linear-gradient(90deg, #00EB3F -149.84%, #0B6BFF 100%);
+
+                // }
+
+                // מצב מתחת למינימום
+                &.below {
+                    background: linear-gradient(90deg, var(--Brand-Secondary-Green) 0%, var(--Primary-blue) 100%);
+                }
+
+                // // מצב בטווח הרצוי
+                // &.normal {
+                //     background: #0F4;
+                // }
+
+                &.nice {
+                    background: var(--Brand-Secondary-Green);
+                }
+
+                // מצב מעל המקסימום
+                &.above {
+                    background: var(--Text-warning);
+                }
+
+                // מצב מקסימלי
+                &.max {
+                    background: var(--Brand-Green-950, #003727);
+                }
+            }
+        }
+    }
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+}

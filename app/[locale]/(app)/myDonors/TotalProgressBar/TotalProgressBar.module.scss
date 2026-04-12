@@ -1,0 +1,235 @@
+.totalProgressBar {
+  // background: #fafbfc;
+  border-radius: var(--Border-Radius-lg);
+  padding: var(--Spacing-Spacing-6) var(--Spacing-Spacing-8);
+  padding: var(--Spacing-Spacing-4) var(--Spacing-Spacing-8) var(--Spacing-Spacing-1) var(--Spacing-Spacing-8);
+
+  // margin: 24px 0;
+  // box-shadow: 0 2px 8px 0 rgba(168, 188, 230, 0.12);
+  width: 100%;
+  // max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--Spacing-Spacing-7);
+  margin-top: 27px;
+
+  @media (max-height: 900px) {
+    margin-top: 16px;
+    gap: var(--Spacing-Spacing-5);
+  }
+
+  @media (max-height: 750px) {
+    margin-top: 10px;
+    gap: var(--Spacing-Spacing-4);
+  }
+
+  @media (max-width: 1024px) {
+    padding: var(--Spacing-Spacing-4) var(--Spacing-Spacing-6) var(--Spacing-Spacing-1) var(--Spacing-Spacing-6);
+    margin-top: 20px;
+  }
+
+  @media (max-width: 768px) {
+    padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-4) var(--Spacing-Spacing-1) var(--Spacing-Spacing-4);
+    gap: var(--Spacing-Spacing-5);
+    margin-top: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-3) var(--Spacing-Spacing-1) var(--Spacing-Spacing-3);
+    gap: var(--Spacing-Spacing-4);
+    margin-top: 12px;
+  }
+
+  .topRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--Spacing-Spacing-4);
+    color: var(--Text-able-Text);
+
+    @media (max-width: 768px) {
+      flex-wrap: wrap;
+      gap: var(--Spacing-Spacing-3);
+    }
+
+    @media (max-width: 480px) {
+      font-size: 13px;
+    }
+
+    .percentText {}
+
+    .progressText {
+      .forecastLink {
+        color: var(--Text-able-Text);
+        text-decoration: underline;
+        cursor: pointer;
+        transition: color 0.2s;
+
+        &:hover {
+          color: var(--Gray-Blue-800);
+        }
+      }
+    }
+  }
+
+  .barAndText {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .progressBarWrapper {
+      width: 100%;
+      height: 8px;
+      background: var(--Gray-Blue-100);
+      border-radius: var(--Border-Radius-lg);
+      overflow: visible;
+      position: relative;
+      // margin-bottom: 8px;
+
+      .progressBar {
+        height: 100%;
+        border-radius: var(--Border-Radius-lg);
+        transition: width 0.7s cubic-bezier(0.23, 1, 0.32, 1), background 0.3s;
+        position: absolute;
+        top: 0;
+        z-index: 1;
+        background: var(--Text-able-Text);
+
+        &.rtl {
+          right: 0;
+          left: auto;
+        }
+
+        &.ltr {
+          left: 0;
+          right: auto;
+        }
+
+        &.above {
+          background: var(--other-Success)
+        }
+
+        &:hover {
+          background: var(--Gray-Blue-800);
+
+          &.above {
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%), var(--other-Success);
+          }
+        }
+      }
+
+      &:hover .progressHover {
+        opacity: 1;
+        visibility: visible;
+
+        .blueTip {
+          color: var(--Gray-Blue-800);
+        }
+      }
+    }
+
+    .bottomRow {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+
+      @media (max-width: 480px) {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      &.ltrRow {
+        flex-direction: row-reverse;
+      }
+
+      .amountBox {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+
+        @media (max-width: 480px) {
+          align-items: center;
+          flex: 1;
+          min-width: 45%;
+        }
+
+        .amountAmount {
+          color: var(--Text-Default);
+          display: flex;
+          align-items: flex-end;
+          gap: 2px;
+
+          @media (max-width: 768px) {
+            font-size: 18px;
+          }
+
+          @media (max-width: 480px) {
+            font-size: 16px;
+          }
+
+          &:hover {
+            color: var(--Text-able-Text);
+          }
+
+          .shekelSign {
+            font-size: 10px;
+            line-height: 1;
+            margin-bottom: 5px;
+          }
+        }
+
+        .amountLabel {
+          color: var(--Text-Default);
+          margin-top: -4px;
+        }
+      }
+    }
+  }
+}
+
+.progressHover {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s color 0.3s;
+
+  .progressTip {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    // color: var(--Gray-Blue-800);
+
+    &.blueTip {
+      color: (--Text-able-Text);
+    }
+
+    // &.greenTip {
+    //   color: var(--other-Success);
+    // }
+  }
+
+  .progressLabel {
+    position: absolute;
+    top: calc(100% + 10px);
+    min-width: 70px;
+    min-height: 20px;
+    background: var(--Bg-Button-disable);
+    color: var(--Text-able-Text);
+    border-radius: var(--Border-Radius-s);
+    box-shadow: 0px 39px 11px 0px rgba(168, 188, 230, 0.00), 0px 25px 10px 0px rgba(168, 188, 230, 0.01), 0px 14px 8px 0px rgba(168, 188, 230, 0.03), 0px 6px 6px 0px rgba(168, 188, 230, 0.04), 0px 2px 3px 0px rgba(168, 188, 230, 0.05);
+    padding: 0px var(--Spacing-Spacing-3);
+    text-align: center;
+    white-space: nowrap;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    gap: var(--Spacing-Spacing-3);
+    transform: translateX(-50%);
+
+    .nis {
+      font-size: 9px;
+      font-weight: normal;
+    }
+  }
+}

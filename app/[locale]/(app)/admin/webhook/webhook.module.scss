@@ -1,0 +1,321 @@
+.container {
+    width: 100%;
+    min-height: 100vh;
+    padding: 2rem;
+    background-color: #f5f5f5;
+}
+
+.header {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.titleSection {
+    h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0.5rem 0 0;
+        color: #666;
+        font-size: 1rem;
+    }
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    font-size: 1.2rem;
+    color: #d32f2f;
+    background-color: #ffebee;
+    padding: 2rem;
+    border-radius: 8px;
+}
+
+.successMessage {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #c3e6cb;
+    text-align: center;
+}
+
+.errorMessage {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+}
+
+.content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.webhooksList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.webhookCard {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+
+    &:hover {
+        border-color: #2196F3;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+    }
+}
+
+.webhookHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.webhookInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.webhookIcon {
+    font-size: 2.5rem;
+}
+
+.webhookDetails {
+    h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0.25rem 0 0;
+        color: #666;
+        font-size: 0.95rem;
+    }
+}
+
+/* Toggle Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+
+        &:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        &:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        &:focus + .slider {
+            box-shadow: 0 0 1px #4CAF50;
+        }
+    }
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+
+    &:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+    }
+}
+
+.webhookUrlSection {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #666;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+}
+
+.urlContainer {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.urlInput {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #333;
+    direction: ltr;
+    text-align: left;
+
+    &:focus {
+        outline: none;
+        border-color: #2196F3;
+    }
+}
+
+.copyButton {
+    padding: 0.75rem 1.5rem;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+
+    &:hover {
+        background-color: #1976D2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.infoSection {
+    padding: 1.5rem;
+    background-color: #e3f2fd;
+    border-radius: 8px;
+    border: 1px solid #90caf9;
+
+    h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.2rem;
+        color: #1565C0;
+        font-weight: 600;
+    }
+
+    ul {
+        margin: 0;
+        padding-right: 1.5rem;
+        
+        li {
+            margin-bottom: 0.5rem;
+            color: #1565C0;
+            line-height: 1.6;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .header {
+        padding: 1.5rem;
+    }
+
+    .titleSection {
+        h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .content {
+        padding: 1rem;
+    }
+
+    .webhookCard {
+        padding: 1.5rem;
+    }
+
+    .webhookHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .webhookDetails {
+        h3 {
+            font-size: 1.1rem;
+        }
+    }
+
+    .webhookIcon {
+        font-size: 2rem;
+    }
+
+    .urlContainer {
+        flex-direction: column;
+    }
+
+    .urlInput {
+        width: 100%;
+    }
+
+    .copyButton {
+        width: 100%;
+    }
+}

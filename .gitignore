@@ -1,0 +1,98 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# === Node.js & Next.js ===
+node_modules/
+.next/
+.next/cache/
+out/
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dependencies
+/node_modules
+/.pnp
+.idea/*
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# אל תעלו את node_modules
+node_modules/
+
+# אל תעלו קבצי build של Next.js
+.next/
+
+# next.js
+/.next/
+/out/
+.next
+# # production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+.idea/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files (can opt-in for commiting if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# === Testing ===
+coverage/
+
+# === Environment Variables ===
+.env*
+*.pem
+
+# === macOS & Windows ===
+.DS_Store
+Thumbs.db
+
+# === PhpStorm / IntelliJ ===
+.idea/
+*.iml
+.idea/workspace.xml
+
+# === Laravel-specific ===
+/vendor/
+/storage/*.key
+/storage/framework/*
+!/storage/framework/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+phpunit.result.cache
+
+# === VSCode (אם רלוונטי) ===
+.vscode/
+*.code-workspace
+
+# === Miscellaneous ===
+.codegpt
+
+/lib/generated/prisma
+/public/logos/*
+.idea/
+
+.vercel

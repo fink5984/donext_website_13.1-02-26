@@ -1,0 +1,232 @@
+.bevelPaymentContainer {
+    width: 100%;
+    margin-top: 16px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    direction: inherit;
+    display: block;
+    position: static;
+    pointer-events: auto;
+    
+    .errorMessage {
+        background-color: #FEE;
+        color: #C33;
+        padding: 10px 12px;
+        border-radius: var(--Border-Radius-m, 16px);
+        border: 1px solid #FAA;
+        text-align: center;
+        font-size: 13px;
+        margin-top: 16px;
+        margin-bottom: 8px;
+        direction: inherit;
+    }
+    
+    .paymentForm {
+        background: transparent;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        direction: inherit;
+        
+        .cardFormContainer {
+            position: relative;
+            min-height: auto;
+            margin-bottom: 0;
+            
+            .formGroup {
+                margin-bottom: 12px;
+                display: block;
+                pointer-events: auto;
+                
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+            
+            .label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: var(--Text-Default, #6E99EC);
+                font-size: 14px;
+                text-align: start;
+            }
+            
+            .input {
+                width: 100%;
+                height: 40px;
+                padding: 0 12px;
+                border: 1px solid var(--Border-Default, #6E99EC);
+                border-radius: var(--Border-Radius-m, 16px);
+                font-size: 14px;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                box-sizing: border-box;
+                background: var(--Bg-Button-disable, #FFF);
+                color: var(--Text-Default, #6E99EC);
+                direction: inherit;
+                text-align: start;
+                
+                &:focus {
+                    outline: none;
+                    border-color: #6E99EC;
+                    box-shadow: 0 0 0 3px rgba(110, 153, 236, 0.1);
+                }
+                
+                &::placeholder {
+                    color: rgba(110, 153, 236, 0.5);
+                    text-align: start;
+                }
+                
+                &:disabled {
+                    background-color: #f3f4f6;
+                    cursor: not-allowed;
+                }
+            }
+            
+            .cardContainer {
+                width: 100%;
+                height: 45px;
+                padding: 12px;
+                border: 1px solid var(--Border-Default, #6E99EC);
+                border-radius: var(--Border-Radius-m, 16px);
+                background: var(--Bg-Button-disable, #FFF);
+                transition: border-color 0.2s, box-shadow 0.2s;
+                box-sizing: border-box;
+                cursor: text;
+                direction: inherit;
+                overflow: hidden;
+                
+                &:focus-within {
+                    border-color: #6E99EC;
+                    box-shadow: 0 0 0 3px rgba(110, 153, 236, 0.1);
+                }
+            }
+            
+            .loadingOverlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(255, 255, 255, 0.9);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                
+                .loader {
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+                
+                p {
+                    margin-top: 16px;
+                    color: #666;
+                    font-size: 14px;
+                }
+            }
+        }
+        
+        .processingMessage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            background: rgba(110, 153, 236, 0.1);
+            border: 1px solid rgba(110, 153, 236, 0.3);
+            border-radius: var(--Border-Radius-m, 16px);
+            color: #6E99EC;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 16px;
+            
+            &::before {
+                content: '';
+                width: 16px;
+                height: 16px;
+                border: 2px solid #6E99EC;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+        }
+        
+        .securityNote {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            color: #2e7d32;
+            font-size: 14px;
+            
+            svg {
+                flex-shrink: 0;
+            }
+        }
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+// RTL support
+[dir="rtl"] {
+    .bevelPaymentContainer {
+        .paymentForm {
+            .cardFormContainer {
+                .cardHeader {
+                    flex-direction: row-reverse;
+                }
+                
+                .securityBadge {
+                    flex-direction: row-reverse;
+                }
+            }
+            
+            .securityNote {
+                flex-direction: row-reverse;
+            }
+            
+            .processingMessage {
+                flex-direction: row-reverse;
+            }
+        }
+    }
+}
+
+// Enhanced iframe styling (global scope needed for pay.js)
+#bevelPaymentCardContainer {
+    direction: inherit !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    
+    iframe {
+        width: 100% !important;
+        min-height: 50px !important;
+        height: auto !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        background: transparent !important;
+    }
+    
+    // Force inherit for all content inside
+    * {
+        direction: inherit !important;
+    }
+}

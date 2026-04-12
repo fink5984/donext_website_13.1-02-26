@@ -1,0 +1,87 @@
+---
+alwaysApply: true
+---
+# === GENERAL CONVENTIONS ===
+- Use modern JavaScript (ES6+). Avoid TypeScript.
+- Always use named exports. Avoid default exports.
+- Prefer small, focused files and components.
+- Follow the Single Responsibility Principle throughout the codebase.
+
+# === REACT ===
+- Use function components only. Never use class components.
+- If the file exceeds 400 lines, consider splitting into multiple files logically.
+- Avoid `useEffect` when possible. Use `useMemo`, `useCallback` appropriately.
+- Reorganize any given React component to follow this structure:
+1. Constants and variables not dependent on state, props, or hooks.
+2. State and refs (`useState`, `useReducer`, `useRef`).
+3. Other hooks (`useEffect`, `useMemo`, `useCallback`, `useContext`, etc.).
+4. Internal helper functions that are not event handlers.
+5. Event handler functions (`onClick`, `onChange`, etc.).
+6. JSX return at the end, with minimal inline logic. 
+Extract complex logic to helpers or subcomponents.
+Keep formatting clean, code readable, and maintain existing functionality.
+
+- No direct DOM manipulation – use declarative JSX only.
+- Use dynamic imports for non-critical or heavy components.
+
+# === NEXT.JS =====
+- Follow Next.js routing and file-based convention strictly.
+
+# === STYLING (TAILWIND CSS + SHADCN) ===
+<!-- - Use Tailwind CSS only. No inline styles unless necessary. -->
+<!-- - Use shadcn/ui components when available. -->
+<!-- - Always write mobile-first and responsive layouts. -->
+- Keep design consistent using spacing, font sizes, and color utilities.
+- Avoid hardcoded colors. Use predefined classes or variables.
+
+# === API ROUTES ===
+- API input must be validated using Zod.
+- Return a unified API response structure:
+  {
+    success: boolean,
+    data: any,
+    error: null | { message, code }
+  }
+- No raw SQL queries. Use Prisma for all DB operations.
+- No logic inside route handlers – move it to services or controllers.
+
+# === PRISMA + POSTGRESQL ===
+- Each Prisma model should represent a single entity (SRP).
+- Use relation fields with explicit naming.
+- Migrations should be tracked and described in `CHANGELOG.md`.
+- No cascade delete without business justification.
+- Use Prisma Client methods only – no `executeRaw` unless safe and validated.
+
+# === UTILS & SERVICES ===
+- Reusable logic belongs in `lib/`, `utils/`, or `services/`.
+- Utility functions must be pure and testable.
+- Use `function` keyword for shared utility functions, not arrow functions.
+
+# === FOLDER STRUCTURE ===
+- No more than one `index.js` per folder.
+- Separate concerns: UI, data, routing, logic.
+- Components live in `components/`; logic lives in `lib/` or `services/`.
+
+# === NAMING & CODE STYLE ===
+- camelCase for JS variables and functions.
+- PascalCase for components.
+- snake_case for database fields.
+- Use clear, descriptive names: e.g. isLoading, handleSubmit, formData.
+
+# === PERFORMANCE ===
+- Use lazy loading for images and non-critical assets.
+- Optimize image formats (.webp) and add width/height attributes.
+- Avoid unnecessary re-renders. Use memoization when needed.
+- Minimize use of useState/useEffect in favor of server components where possible.
+<!-- 
+# === TESTING ===
+- Use @testing-library/react for all UI tests.
+- Test business logic separately from UI.
+- No untested API routes. -->
+
+# === DOCUMENTATION ===
+- Each public function, utility, or API route must include a comment describing input/output.
+- Maintain README.md per module when logic is complex or shared.
+- Do not add explanatory comments when modifying existing code unless the comment is strictly necessary to clarify complex or non-obvious logic.
+
+

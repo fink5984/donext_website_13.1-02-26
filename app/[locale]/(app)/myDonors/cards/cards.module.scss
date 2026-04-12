@@ -1,0 +1,1061 @@
+.cards {
+    height: 204px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 32px;
+    gap: 30px;
+
+    @media (max-width: 1200px) {
+        gap: 20px;
+    }
+
+    @media (max-height: 900px) and (min-width: 769px) {
+        height: 180px;
+        margin-bottom: 20px;
+        gap: 20px;
+    }
+
+    @media (max-height: 750px) and (min-width: 769px) {
+        height: 160px;
+        margin-bottom: 12px;
+        gap: 16px;
+    }
+
+    @media (max-width: 1024px) {
+        flex-wrap: wrap;
+        height: auto;
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-bottom: 20px;
+        height: auto;
+    }
+
+    @media (max-width: 480px) {
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .card {
+        border-radius: var(--Border-Radius-m);
+        background: var(--other-White, #FFF);
+        height: 100%;
+        border: var(--Strock-Width-3) solid transparent;
+        overflow: hidden;
+
+        @media (max-width: 768px) {
+            height: auto;
+            overflow: visible;
+        }
+
+        &:hover {
+            border: var(--Strock-Width-3) solid var(--Border-hover-field, #228CFF);
+        }
+
+        &.card1,
+        &.card2 {
+            width: 240px;
+            padding: var(--Spacing-Spacing-6) var(--Spacing-Spacing-8);
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: var(--Spacing-Spacing-6);
+            max-width: 100%;
+
+            .information {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: flex-start;
+                flex: 1 0 0;
+                align-self: stretch;
+
+                .cardTop {
+                    color: var(--Text-able-Text, #0C4AD5);
+                }
+
+                .content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: flex-start;
+                    gap: 2px;
+                    align-self: stretch;
+
+                    .cardTitle {
+                        color: var(--Text-able-Text, #0C4AD5);
+                        word-break: break-word;
+
+                        .plusGreen {
+                            color: var(--other-Success);
+                        }
+                    }
+
+                    .cardText {
+                        color: var(--Text-able-Text, #0C4AD5);
+                        font-size: 15px;
+                        word-break: break-word;
+                        overflow-wrap: break-word;
+
+                        .underlinedName {
+                            text-decoration-line: underline;
+                            text-decoration-style: solid;
+                            text-decoration-skip-ink: none;
+                            text-decoration-thickness: auto;
+                            text-underline-offset: auto;
+                            text-underline-position: from-font;
+                        }
+                    }
+                }
+            }
+
+            @media (max-width: 1200px) {
+                width: 200px;
+                padding: 14px 12px;
+            }
+
+            @media (max-width: 1024px) {
+                width: calc(50% - 8px);
+                min-width: 180px;
+            }
+
+            @media (max-width: 768px) {
+                width: 100%;
+                min-width: unset;
+                height: auto;
+                min-height: 160px;
+            }
+
+            @media (max-width: 480px) {
+                padding: 12px 10px;
+                min-height: 140px;
+            }
+
+            .hidden {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+        }
+
+        &.card3 {
+            flex: 1;
+            min-width: 780px;
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            padding: var(--Spacing-Spacing-6);
+            display: flex;
+            flex-direction: column;
+            padding: 14px 16px;
+
+            @media (max-width: 1200px) {
+                min-width: 600px;
+            }
+
+            @media (max-width: 1024px) {
+                min-width: 100%;
+                width: 100%;
+            }
+
+            @media (max-width: 768px) {
+                min-width: unset;
+                width: 100%;
+                padding: 12px;
+                height: auto;
+                min-height: unset;
+                max-width: 100%;
+                flex: none;
+            }
+
+            @media (max-width: 480px) {
+                padding: 10px;
+            }
+
+            &.open {
+                height: calc(100vh - 218px);
+                max-height: 3167px;
+                // box-shadow: 0 8px 32px 0 #e6eefe;
+                z-index: 10;
+                padding: 40px;
+                border: none;
+                display: flex;
+                flex-direction: column;
+                gap: var(--Spacing-Spacing-8);
+
+                @media (max-width: 768px) {
+                    padding: 20px;
+                    height: auto;
+                    max-height: calc(100vh - 150px);
+                }
+
+                @media (max-width: 480px) {
+                    padding: 14px;
+                }
+
+                .list {
+                    margin-top: 24px;
+                    overflow-y: auto;
+                    max-height: 70vh;
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    direction: rtl;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
+            }
+
+            .card3Header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-end;
+                position: absolute;
+                left: 16.333px;
+                top: 12.435px;
+                color: var(--Text-Select-Text);
+            }
+
+            .card3LoadingState {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                width: 100%;
+                color: var(--Text-Select-Text);
+            }
+
+            .card3Title {
+                color: var(--Text-Select-Text);
+                word-break: break-word;
+                white-space: normal;
+
+                @media (max-width: 768px) {
+                    font-size: 12px;
+                    line-height: 1.3;
+                }
+            }
+
+            .card3Subtitle {
+                color: var(--Text-Select-Text);
+                opacity: 0.8;
+                margin-top: -4px;
+                word-break: break-word;
+                white-space: normal;
+
+                @media (max-width: 768px) {
+                    font-size: 10px;
+                    margin-top: -2px;
+                }
+            }
+
+            .card3ForecastAmount {
+                color: var(--other-Success);
+                font-size: 12px;
+                font-weight: 600;
+                margin-top: 2px;
+            }
+
+            .card3Content,
+            .currentCompetitionCard {
+                display: flex;
+                min-width: 340px;
+
+                @media (max-width: 768px) {
+                    min-width: unset;
+                    width: 100%;
+                    gap: 8px;
+                    padding: 0;
+                    flex: none;
+                    overflow: visible;
+                }
+                padding: 0px 0px 0px var(--Spacing-Spacing-1);
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--Spacing-Spacing-4);
+                flex: 1 0 0;
+                align-self: stretch;
+                position: relative;
+
+                &.fadeIn {
+                    animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                &.fadeOut {
+                    animation: slideOutDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                @keyframes slideInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                @keyframes slideOutDown {
+                    from {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                }
+
+                .currentCompetitionSubtitle {
+                    color: var(--Text-Select-Text);
+                    opacity: 0.8;
+                    margin-top: -4px;
+                }
+
+                .card3Top3 {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: flex-end;
+                    gap: var(--Spacing-Spacing-5);
+                    align-self: stretch;
+
+                    @media (max-width: 768px) {
+                        display: none;
+                    }
+
+                    .card3Participant {
+                        justify-content: flex-end;
+                        display: flex;
+                        height: 100px;
+                        padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-3) var(--Spacing-Spacing-4) var(--Spacing-Spacing-3);
+                        flex-direction: column;
+                        align-items: center;
+                        align-self: stretch;
+                        border-radius: var(--Border-Radius-m);
+                        background: var(--Surface-01);
+
+                        .card3NameWrapper {
+                            text-align: center;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            color: var(--Text-able-Text, #0C4AD5);
+                            text-align: center;
+                            white-space: nowrap;
+
+                            .card3FirstName {
+                                max-width: 100%;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                            }
+
+                            .card3LastName {
+                                margin-top: -4px;
+                                max-width: 100%;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                            }
+                        }
+
+                        &.card3First {
+                            min-width: 140px;
+                            padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-6) var(--Spacing-Spacing-6) var(--Spacing-Spacing-6);
+                            flex-direction: row;
+                            justify-content: flex-start;
+                            align-items: flex-end;
+                            gap: var(--Spacing-Spacing-5);
+                            flex: 1;
+
+                            .card3NameWrapper {
+                                align-items: flex-start;
+                                text-align: right;
+
+                                .card3LastName {
+                                    margin-top: 0px;
+                                }
+                            }
+                        }
+
+                        &.card3Second {
+                            width: 180.477px;
+                        }
+
+                        &.card3Third {
+                            width: 180.477px;
+                        }
+                    }
+                }
+
+                // Mobile carousel - shows one participant at a time with slide transition
+                .mobileCarousel {
+                    display: none;
+
+                    @media (max-width: 768px) {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 8px;
+                        width: 100%;
+                    }
+
+                    .mobileCarouselCard {
+                        display: flex;
+                        align-items: center;
+                        gap: 14px;
+                        padding: 12px 16px;
+                        background: var(--Surface-01);
+                        border-radius: var(--Border-Radius-m);
+                        width: 100%;
+                        min-height: 70px;
+                        transition: opacity 0.3s ease, transform 0.3s ease;
+
+                        &.mobileSlideIn {
+                            opacity: 1;
+                            transform: translateX(0);
+                        }
+
+                        &.mobileSlideOut {
+                            opacity: 0;
+                            transform: translateX(-30px);
+                        }
+
+                        .mobileCarouselMedal {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 4px;
+                            flex-shrink: 0;
+
+                            .mobileCarouselMedalImg {
+                                width: 44px;
+                                height: 44px;
+                                object-fit: contain;
+                            }
+
+                            .mobileCarouselRank {
+                                font-size: 11px;
+                                color: var(--Text-able-Text, #0C4AD5);
+                                font-weight: 600;
+                                white-space: nowrap;
+                            }
+                        }
+
+                        .mobileCarouselName {
+                            flex: 1;
+                            color: var(--Text-able-Text, #0C4AD5);
+                            font-weight: 700;
+                            font-size: 18px;
+                            line-height: 1.3;
+                            word-break: break-word;
+                            overflow-wrap: break-word;
+                            white-space: normal;
+                        }
+                    }
+
+                    .mobileCarouselDots {
+                        display: flex;
+                        gap: 6px;
+                        justify-content: center;
+                        padding: 4px 0;
+
+                        .mobileCarouselDot {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            border: none;
+                            background: var(--Border-disable-field, #D4E3F5);
+                            cursor: pointer;
+                            padding: 0;
+                            transition: background 0.3s, transform 0.2s;
+
+                            &.activeDot {
+                                background: var(--Bg-Button-Primary, #0C4AD5);
+                                transform: scale(1.2);
+                            }
+                        }
+                    }
+                }
+
+                .bbbbb {
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    bottom: 0px;
+                    z-index: 6;
+
+                    @media (max-width: 768px) {
+                        position: static;
+                        transform: none;
+                        margin-top: 4px;
+                        display: flex;
+                        justify-content: center;
+                        width: 100%;
+                    }
+                }
+            }
+
+            .card3ArrowBtn {
+                position: absolute;
+                left: 15.933px;
+                bottom: 16.002px;
+                cursor: pointer;
+                width: 18px;
+                height: 18px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: color 0.3s;
+
+                &.open {
+                    color: var(--Icon-able-Icon-2, #FFFFFF);
+
+                    &:hover {
+                        color: var(--Gray-Blue-900);
+                    }
+                }
+
+                &:not(.open) {
+                    color: var(--Icon-difault-icon, #6E99EC);
+
+                    svg {
+                        width: 15px;
+                        height: 15px;
+                        transition: width 1ms, height 1ms;
+                        display: block;
+                    }
+
+                    &:hover {
+                        color: var(--Icon-able-Icon, #0C4AD5);
+
+                        svg {
+                            width: 18px;
+                            height: 18px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.gifOverlay {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.gifImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.clapAnimation {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    right: 20px;
+    bottom: -60px;
+    animation: clapMove 3s forwards;
+    animation-delay: 0.8s;
+}
+
+@keyframes clapMove {
+    0% {
+        bottom: -60px;
+    }
+
+    100% {
+        bottom: calc(100% + 60px);
+    }
+}
+
+.partyAnimation {
+    width: 82px;
+    height: 82px;
+    position: absolute;
+    left: 34px;
+    bottom: 28px;
+    animation: partySequence 1.26s forwards;
+    animation-delay: 1s;
+    z-index: 20;
+}
+
+@keyframes partySequence {
+    0% {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    /* 600ms fade in */
+    46.7% {
+        opacity: 1;
+    }
+
+    /* 800ms visible */
+    100% {
+        opacity: 0;
+        display: none;
+    }
+
+    /* 1600ms fade out */
+}
+
+.starAnimation,
+.dizzyAnimation {
+    width: 132px;
+    height: 132px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: starGrowFade 1.62s forwards;
+    // animation-delay: 0.8s;
+}
+
+@keyframes starGrowFade {
+    0% {
+        opacity: 0;
+        display: block;
+    }
+
+    30.9% {
+        opacity: 1;
+        display: block;
+    }
+
+    100% {
+        // opacity: 0;
+        display: none;
+    }
+}
+
+.moneyAnimation {
+    width: 82px;
+    height: 82px;
+    position: absolute;
+    left: -82px;
+    bottom: -82px;
+    animation: moneyMove 3s forwards;
+    animation-delay: 0.8s;
+}
+
+@keyframes moneyMove {
+    0% {
+        left: -82px;
+        bottom: -82px;
+    }
+
+    100% {
+        left: 100%;
+        bottom: 100%;
+    }
+}
+
+.competitionListWrapOuter {
+    max-height: 70vh;
+    overflow-y: auto;
+    direction: inherit;
+    // margin-top: 24px;
+
+    .competitionListWrap {
+        // width: 700px;
+        // margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        // padding: 0 0 24px 0;
+        padding-right: 20px;
+
+        @media (max-width: 768px) {
+            gap: 16px;
+            padding-right: 12px;
+            justify-content: center;
+        }
+
+        .competitionCard {
+            border-radius: var(--Border-Radius-m);
+            box-shadow: 0px 0px 34px 2px rgba(183, 223, 255, 0.30);
+            width: 322px;
+            height: 389px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 8;
+
+            @media (max-width: 768px) {
+                width: 100%;
+                max-width: 322px;
+                height: auto;
+                min-height: 300px;
+            }
+
+            @media (max-width: 480px) {
+                max-width: 100%;
+            }
+
+            .competitionCardHeader {
+                color: var(--Text-button, #FFF);
+                display: flex;
+                width: 100%;
+                padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-4);
+                flex-direction: column;
+                align-items: center;
+                gap: var(--Spacing-Spacing-3);
+                border-radius: var(--Border-Radius);
+                background: var(--Bg-Button-Primary, #0C4AD5);
+
+                .competitionCardTitleRow {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--Spacing-Spacing-3);
+
+                    .competitionIcon {
+                        height: 20px;
+                    }
+                }
+
+                .competitionCardDateRow {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 4px;
+                }
+            }
+
+            .competitionParticipantsWrapper {
+                display: flex;
+                width: 100%;
+
+                padding: var(--Spacing-Spacing-7) var(--Spacing-Spacing-6) var(--Spacing-Spacing-7) var(--Spacing-Spacing-3);
+                justify-content: center;
+                align-items: flex-start;
+                border: var(--Strock-Width-3) solid var(--Bg-Button-disable, #FFF);
+                background: var(--Bg-Button-disable, #FFF);
+
+
+                .competitionParticipants {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 16px;
+                    padding-right: 12px;
+                    height: 303px;
+                    overflow-y: auto;
+                    direction: inherit;
+
+                    .competitionParticipantWrapper {
+                        width: 100%;
+                        max-width: 280px;
+                        min-height: 87px;
+                        padding-left: 20px;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+
+                        .competitionParticipant {
+                            height: 60.3px;
+                            display: flex;
+                            width: 100%;
+                            max-width: 260px;
+                            padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-3) var(--Spacing-Spacing-3) var(--Spacing-Spacing-3);
+                            justify-content: flex-start;
+                            align-items: center;
+                            gap: 8px;
+                            border-radius: var(--Border-Radius-s);
+                            background: var(--Surface-01);
+                            position: relative;
+
+                            .participantImg {
+                                width: 33.678px;
+                                height: 50px;
+                            }
+
+                            .participantName {
+                                color: var(--Text-Select-Text);
+                                padding: 0px var(--Spacing-Spacing-4);
+                                padding-top: var(--Spacing-Spacing-3);
+                                display: flex;
+                                flex-direction: column;
+                                align-items: flex-start;
+                                justify-content: center;
+
+                                .participantLastName {
+                                    margin-top: -4px;
+                                }
+                            }
+                        }
+
+                        &:hover {
+                            .competitionParticipant {
+                                background: var(--Gray-Blue-80, #E5EFFA);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.participantPlaceNumber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    color: var(--Text-Select-Text);
+    padding-top: 4px;
+}
+
+.competitionParticipantWrapper:nth-child(n+4) {
+    min-height: 55px !important;
+
+    .competitionParticipant {
+        height: 28px !important;
+    }
+}
+
+.participantFirstName,
+.participantLastName {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px; // או מה שמתאים לעיצוב שלך
+    transition: font-size 0.2s;
+}
+
+.participantNameBig {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 28px;
+    letter-spacing: -0.84px;
+
+    @media (max-width: 768px) {
+        font-size: 14px;
+        line-height: 16px;
+        letter-spacing: -0.3px;
+    }
+}
+
+.participantNameMedium {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 24px;
+    letter-spacing: -0.6px;
+
+    @media (max-width: 768px) {
+        font-size: 12px;
+        line-height: 14px;
+        letter-spacing: -0.2px;
+    }
+}
+
+.participantNameSmall {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 20px;
+    letter-spacing: -0.4px;
+
+    @media (max-width: 768px) {
+        font-size: 11px;
+        line-height: 13px;
+        letter-spacing: -0.15px;
+    }
+}
+
+.currentCompetitionCardWrapper {
+    border-radius: var(--Border-Radius-lg);
+    background: var(--Bg-Button-disable, #FFF);
+    height: 192px;
+    padding-bottom: 24px;
+    position: relative;
+
+    @media (max-width: 768px) {
+        height: auto;
+        min-height: 160px;
+    }
+
+    .currentCompetitionCard {
+        border-radius: var(--Border-Radius-lg);
+        background: var(--Bg-Button-disable, #FFF);
+        margin-bottom: 24px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--Spacing-Spacing-4);
+        min-width: 340px;
+
+        @media (max-width: 768px) {
+            min-width: unset;
+            width: 100%;
+        }
+
+        .card3Top3Current {
+            display: flex;
+            padding: 0px var(--Spacing-Spacing-4);
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: var(--Spacing-Spacing-5);
+            align-self: stretch;
+
+            @media (max-width: 768px) {
+                gap: 6px;
+                padding: 0;
+                flex-wrap: nowrap;
+                overflow: hidden;
+            }
+
+            .card3Participant {
+                justify-content: flex-end;
+                display: flex;
+                height: 100px;
+                padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-3) var(--Spacing-Spacing-4) var(--Spacing-Spacing-3);
+                flex-direction: column;
+                align-items: center;
+                align-self: stretch;
+                border-radius: var(--Border-Radius-m);
+                background: var(--Surface-01);
+
+                @media (max-width: 768px) {
+                    height: auto;
+                    min-height: 60px;
+                    padding: 4px 4px 6px 4px;
+                    overflow: hidden;
+                    min-width: 0;
+
+                    img {
+                        width: 26px;
+                        height: 26px;
+                        object-fit: contain;
+                        flex-shrink: 0;
+                    }
+                }
+
+                .card3NameWrapper {
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--Text-able-Text, #0C4AD5);
+                    text-align: center;
+                    white-space: nowrap;
+
+                    @media (max-width: 768px) {
+                        font-size: 11px;
+                        line-height: 1.2;
+                    }
+
+                    .card3FirstName {
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+
+                    .card3LastName {
+                        margin-top: -4px;
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                }
+
+                &.card3First {
+                    min-width: 140px;
+                    padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-6) var(--Spacing-Spacing-6) var(--Spacing-Spacing-6);
+                    flex-direction: row;
+                    justify-content: flex-start;
+                    align-items: flex-end;
+                    gap: var(--Spacing-Spacing-5);
+                    flex: 1;
+
+                    @media (max-width: 768px) {
+                        min-width: unset;
+                        flex: 1;
+                        flex-direction: column;
+                        justify-content: flex-end;
+                        align-items: center;
+                        padding: 4px 4px 6px 4px;
+                        gap: 2px;
+                    }
+
+                    .card3NameWrapper {
+                        align-items: flex-start;
+                        text-align: right;
+
+                        @media (max-width: 768px) {
+                            align-items: center;
+                            text-align: center;
+                        }
+
+                        .card3LastName {
+                            margin-top: 0px;
+                        }
+                    }
+                }
+
+                &.card3Second {
+                    width: 180.477px;
+
+                    @media (max-width: 768px) {
+                        width: auto;
+                        flex: 1;
+                    }
+                }
+
+                &.card3Third {
+                    width: 180.477px;
+
+                    @media (max-width: 768px) {
+                        width: auto;
+                        flex: 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.currentCompetitionTitleBar {
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    padding: var(--Spacing-Spacing-3) 0px;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--Spacing-Spacing-2);
+    border-radius: var(--Border-Radius);
+    background: var(--Icon-able-Icon, #0C4AD5);
+    color: var(--Text-button, #FFF);
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+}
+
+.showMoreBtnWrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateX(-26px);
+    bottom: 24px;
+    display: flex;
+    justify-content: center;
+    width: max-content;
+    z-index: 30;
+}

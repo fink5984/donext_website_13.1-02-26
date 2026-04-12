@@ -1,0 +1,123 @@
+/* Additional Modal Styles */
+.modalFooter {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.modalContinueBtn {
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.modalContinueBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+.modalBackBtn {
+    background: #f1f5f9;
+    border: none;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modalBackBtn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.modalSubtitle {
+    text-align: center;
+    font-size: 1.125rem;
+    color: #64748b;
+    margin: 0 0 2rem 0;
+}
+
+.modalSubtitle strong {
+    color: #b45309;
+}
+
+.donationForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formLabel {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.formInput {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #b45309;
+    box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.1);
+}
+
+.modalSubmitBtn {
+    padding: 1rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    margin-top: 1rem;
+}
+
+.modalSubmitBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+@media (max-width: 640px) {
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+    
+    .modalRanks {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}

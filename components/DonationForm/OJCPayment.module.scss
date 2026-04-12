@@ -1,0 +1,169 @@
+.ojcContainer {
+  width: 100%;
+  margin-top: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  direction: inherit;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #4A9B5D;
+}
+
+.cardForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--Text-Default, #4A9B5D);
+  font-size: 14px;
+  text-align: start;
+}
+
+.cardFieldsContainer {
+  display: flex;
+  flex-direction: row;
+  direction: ltr;
+  align-items: center;
+  width: 100%;
+  height: 45px;
+  padding: 0 12px;
+  border: 1px solid var(--Border-Default, #4A9B5D);
+  border-radius: var(--Border-Radius-m, 16px);
+  background: var(--Bg-Button-disable, #FFF);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  gap: 8px;
+
+  &:focus-within {
+    border-color: #4A9B5D;
+    box-shadow: 0 0 0 3px rgba(74, 155, 93, 0.1);
+  }
+}
+
+.cardNumberField,
+.expDateField {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--Text-Default, #4A9B5D);
+  font-size: 14px;
+  padding: 0;
+  height: 100%;
+
+  &::placeholder {
+    color: rgba(74, 155, 93, 0.5);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.cardNumberField {
+  flex: 2;
+  letter-spacing: 0.05em;
+  direction: ltr;
+  text-align: left;
+}
+
+.expDateField {
+  flex: 0 0 70px;
+  letter-spacing: 0.1em;
+  text-align: center;
+  direction: ltr;
+}
+
+.emailField {
+  width: 100%;
+  height: 45px;
+  padding: 0 12px;
+  border: 1px solid var(--Border-Default, #4A9B5D);
+  border-radius: var(--Border-Radius-m, 16px);
+  background: var(--Bg-Button-disable, #FFF);
+  color: var(--Text-Default, #4A9B5D);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(74, 155, 93, 0.5);
+  }
+
+  &:focus {
+    border-color: #4A9B5D;
+    box-shadow: 0 0 0 3px rgba(74, 155, 93, 0.1);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.cardFieldsDivider {
+  width: 1px;
+  height: 24px;
+  background-color: rgba(74, 155, 93, 0.2);
+}
+
+.error {
+  width: 100%;
+  background-color: #FEE;
+  color: #C33;
+  padding: 10px 12px;
+  border-radius: var(--Border-Radius-m, 16px);
+  border: 1px solid #FAA;
+  text-align: center;
+  font-size: 13px;
+  margin-top: 16px;
+  direction: rtl;
+}
+
+.processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  background: rgba(74, 155, 93, 0.1);
+  border: 1px solid rgba(74, 155, 93, 0.3);
+  border-radius: var(--Border-Radius-m, 16px);
+  color: #4A9B5D;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  
+  &::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid #4A9B5D;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

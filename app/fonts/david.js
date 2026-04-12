@@ -1,0 +1,1 @@
+export const davidFont = 'BASE64_STRING_HERE'; // תחליף את זה עם המחרוזת שקיבלת מהאתר 

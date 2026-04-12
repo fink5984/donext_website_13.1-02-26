@@ -1,0 +1,490 @@
+/* =====================================================
+   ACCESSIBILITY WIDGET STYLES
+   Modern, elegant design - RTL/LTR compatible
+   ===================================================== */
+
+/* CSS Variables for theming - Matching website colors */
+:root {
+  --a11y-primary: #0C4AD5;
+  --a11y-primary-hover: #283680;
+  --a11y-primary-light: rgba(12, 74, 213, 0.1);
+  --a11y-secondary: #00FBAE;
+  --a11y-bg: #ffffff;
+  --a11y-bg-hover: #F6F9FC;
+  --a11y-text: #0C4AD5;
+  --a11y-text-secondary: #6E99EC;
+  --a11y-border: #C5D7F8;
+  --a11y-active: #00FBAE;
+  --a11y-active-dark: #00d090;
+  --a11y-active-text: #0C4AD5;
+  --a11y-shadow: 0 8px 32px rgba(12, 74, 213, 0.2);
+  --a11y-shadow-sm: 0 4px 12px rgba(12, 74, 213, 0.12);
+  --a11y-radius: 16px;
+  --a11y-radius-sm: 10px;
+  --a11y-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =====================================================
+   TRIGGER BUTTON - Compact elegant button
+   ===================================================== */
+
+.a11y-trigger {
+  position: fixed;
+  bottom: 20px;
+  z-index: 99999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--a11y-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--a11y-shadow);
+  transition: all var(--a11y-transition);
+}
+
+.a11y-trigger:hover {
+  background: var(--a11y-primary-hover);
+  transform: scale(1.08);
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3);
+}
+
+.a11y-trigger:focus {
+  outline: none;
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3), 0 0 0 3px rgba(12, 74, 213, 0.25);
+}
+
+.a11y-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 10px 36px rgba(12, 74, 213, 0.3), 0 0 0 3px rgba(12, 74, 213, 0.25);
+}
+
+/* RTL/LTR positioning */
+.a11y-trigger-rtl {
+  left: 20px;
+  right: auto;
+}
+
+.a11y-trigger-ltr {
+  right: 20px;
+  left: auto;
+}
+
+.a11y-trigger-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* =====================================================
+   MENU DIALOG - Clean modern style
+   ===================================================== */
+
+.a11y-menu {
+  position: fixed;
+  bottom: 76px;
+  z-index: 99998;
+  width: 300px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 120px);
+  background: var(--a11y-bg);
+  border-radius: var(--a11y-radius);
+  box-shadow: var(--a11y-shadow);
+  border: 1px solid var(--a11y-border);
+  overflow: hidden;
+  animation: a11y-slideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes a11y-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* RTL/LTR positioning */
+.a11y-menu-rtl {
+  left: 20px;
+  right: auto;
+  direction: rtl;
+  text-align: right;
+}
+
+.a11y-menu-ltr {
+  right: 20px;
+  left: auto;
+  direction: ltr;
+  text-align: left;
+}
+
+.a11y-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: var(--a11y-primary);
+  color: white;
+}
+
+.a11y-menu-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.a11y-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--a11y-transition);
+}
+
+.a11y-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.a11y-close-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.a11y-menu-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* Custom scrollbar */
+.a11y-menu-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.a11y-menu-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.a11y-menu-content::-webkit-scrollbar-thumb {
+  background: var(--a11y-border);
+  border-radius: 3px;
+}
+
+.a11y-menu-content::-webkit-scrollbar-thumb:hover {
+  background: var(--a11y-text-secondary);
+}
+
+/* =====================================================
+   OPTION BUTTONS - Card style
+   ===================================================== */
+
+.a11y-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--a11y-bg-hover);
+  border-radius: var(--a11y-radius-sm);
+  margin-bottom: 2px;
+}
+
+.a11y-option-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--a11y-text);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.a11y-text-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.a11y-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--a11y-border);
+  border-radius: var(--a11y-radius-sm);
+  background: var(--a11y-bg);
+  color: var(--a11y-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--a11y-transition);
+}
+
+.a11y-btn:hover {
+  border-color: var(--a11y-primary);
+  background: var(--a11y-primary-light);
+}
+
+.a11y-btn:focus {
+  outline: none;
+  border-color: var(--a11y-primary);
+  box-shadow: 0 0 0 3px var(--a11y-primary-light);
+}
+
+.a11y-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.a11y-btn:disabled:hover {
+  background: var(--a11y-bg);
+  border-color: var(--a11y-border);
+}
+
+.a11y-btn-text {
+  flex: 1;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 10px;
+}
+
+.a11y-btn-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Active state for toggles */
+.a11y-toggle.a11y-active {
+  background: var(--a11y-active);
+  border-color: var(--a11y-active);
+  color: var(--a11y-active-text);
+  box-shadow: 0 3px 12px rgba(0, 251, 174, 0.35);
+}
+
+.a11y-toggle.a11y-active:hover {
+  background: var(--a11y-active-dark);
+  border-color: var(--a11y-active-dark);
+}
+
+/* Reset button */
+.a11y-reset {
+  background: var(--a11y-bg-hover);
+  border-color: var(--a11y-border);
+  color: var(--a11y-text-secondary);
+  margin-top: 6px;
+}
+
+.a11y-reset:hover {
+  background: #EDF5FD;
+  border-color: var(--a11y-text-secondary);
+  color: var(--a11y-text);
+}
+
+.a11y-reset .a11y-btn-icon {
+  transition: transform 0.4s ease;
+}
+
+.a11y-reset:hover .a11y-btn-icon {
+  transform: rotate(-360deg);
+}
+
+/* Statement link */
+.a11y-statement-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  color: var(--a11y-primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--a11y-radius-sm);
+  transition: all var(--a11y-transition);
+  margin-top: 2px;
+}
+
+.a11y-statement-link:hover {
+  background: var(--a11y-primary-light);
+}
+
+.a11y-statement-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--a11y-primary-light);
+}
+
+/* =====================================================
+   ACCESSIBILITY MODES - Applied to body
+   ===================================================== */
+
+/* High Contrast Mode */
+body.a11y-high-contrast {
+  filter: contrast(1.4) !important;
+}
+
+body.a11y-high-contrast * {
+  border-color: currentColor !important;
+}
+
+body.a11y-high-contrast a,
+body.a11y-high-contrast button {
+  text-decoration: underline !important;
+}
+
+/* Grayscale Mode */
+body.a11y-grayscale {
+  filter: grayscale(100%) !important;
+}
+
+/* Combined filters */
+body.a11y-high-contrast.a11y-grayscale {
+  filter: contrast(1.4) grayscale(100%) !important;
+}
+
+/* Highlight Links Mode */
+body.a11y-highlight-links a {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  padding: 2px 4px !important;
+  text-decoration: underline !important;
+  outline: 2px solid #000000 !important;
+}
+
+body.a11y-highlight-links a:focus {
+  outline: 3px solid #0066cc !important;
+  outline-offset: 2px !important;
+}
+
+/* Stop Animations Mode */
+body.a11y-stop-animations,
+body.a11y-stop-animations * {
+  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+body.a11y-stop-animations *::before,
+body.a11y-stop-animations *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ensure accessibility menu animations work even when animations are stopped */
+body.a11y-stop-animations .a11y-menu,
+body.a11y-stop-animations .a11y-trigger {
+  transition: none !important;
+}
+
+/* =====================================================
+   RESPONSIVE DESIGN
+   ===================================================== */
+
+@media (max-width: 480px) {
+  .a11y-menu {
+    width: calc(100vw - 32px);
+    bottom: 72px;
+  }
+
+  .a11y-trigger {
+    width: 40px;
+    height: 40px;
+    bottom: 16px;
+  }
+
+  .a11y-trigger-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .a11y-trigger-rtl {
+    left: 16px;
+  }
+
+  .a11y-trigger-ltr {
+    right: 16px;
+  }
+
+  .a11y-menu-rtl {
+    left: 16px;
+  }
+
+  .a11y-menu-ltr {
+    right: 16px;
+  }
+}
+
+/* =====================================================
+   PRINT STYLES - Hide widget when printing
+   ===================================================== */
+
+@media print {
+  .a11y-trigger,
+  .a11y-menu {
+    display: none !important;
+  }
+}
+
+/* =====================================================
+   PREFERS-REDUCED-MOTION
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .a11y-menu {
+    animation: none;
+  }
+
+  .a11y-trigger,
+  .a11y-btn,
+  .a11y-close-btn {
+    transition: none;
+  }
+}
+
+/* =====================================================
+   SKIP LINK (for keyboard navigation)
+   Add this to your main content
+   ===================================================== */
+
+.a11y-skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 100000;
+  padding: 16px 24px;
+  background: var(--a11y-primary);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  transition: top 0.2s;
+}
+
+.a11y-skip-link:focus {
+  top: 0;
+  outline: none;
+}
+
+/* RTL skip link */
+[dir="rtl"] .a11y-skip-link {
+  left: auto;
+  right: 0;
+  border-radius: 0 0 0 8px;
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "responet": true,
+      "responet-test": true,
+      "miri": true,
+      "production": true,
+      "hotfix/*": true,
+      "develop": true,
+      "internal-*": false
+    }
+  }
+}

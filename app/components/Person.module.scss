@@ -1,0 +1,232 @@
+.person {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: background 0.3s ease, color 0.3s ease;
+    background: var(--Icon-able-Icon-2);
+    color: var(--Text-donor-Default);
+    border-radius: var(--Border-Radius-lg);
+    border: 1px solid var(--Gray-Blue-150, #CFDEFF);
+    height: 32px;
+    padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-5);
+    justify-content: center;
+    align-items: center;
+    padding: 0 4px;
+    cursor: pointer;
+
+    &.fundRaiser {
+        color: var(--Brand-Turquoise-600, #009FC0);
+        border: 1px solid var(--Brand-Turquoise-600, #009FC0);
+    }
+
+    &.selected {
+        background: var(--Brand-Turquoise-500, #00C8E5);
+        color: var(--Text-button);
+        border: 1px solid var(--Brand-Turquoise-500, #00C8E5);
+    }
+
+    &.donorSelected {
+        &:hover {
+            border: 1px solid var(--Border-donor-Select);
+            background: var(--Donor-default);
+            color: var(--Text-button);
+
+            .rightIcon {
+                svg {
+                    color: var(--Donor-hover);
+                }
+            }
+        }
+    }
+
+    &.noEmail {
+        color: var(--Text-disable-Text);
+        border: none;
+
+        &:hover {
+            color: var(--Text-Default);
+            background: initial;
+        }
+    }
+
+    &.donorSelectedBold {
+        border: 1px solid var(--Border-donor-Select);
+        background: var(--Donor-default);
+        color: var(--Text-button);
+
+        .rightIcon {
+            background-color: var(--Donor-hover);
+            border-radius: 50%;
+
+            svg {
+                color: var(--Bg-Button-disable);
+            }
+        }
+    }
+
+    &:not(.selected):not(.noEmail):not(.fundRaiser):not(.disable):not(.donorSelected):hover {
+        color: var(--Donor-hover);
+        border: 1px solid var(--Donor-default);
+        background: var(--Gray-Blue-70);
+    }
+
+    &:not(.selected):not(.donorSelected):not(.fundRaiser):not(.disable).hovered {
+        background: var(--Gray-Blue-70);
+    }
+
+    &.fundRaiser.hovered {
+        color: var(--Text-button);
+        background: var(--Brand-Turquoise-500, #00C8E5);
+        border: 1px solid var(--Brand-Turquoise-500, #00C8E5);
+    }
+}
+
+.disable {
+    border: 1px solid var(--Border-disable-field);
+    background: transparent;
+    color: var(--Text-disable-Text);
+    background: var(--Bg-Button-disable);
+
+    &:hover {
+        cursor: not-allowed;
+    }
+}
+
+.content {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--Spacing-Spacing-3);
+}
+
+.icon {
+    fill: currentColor;
+    width: 24px;
+    height: 24px;
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0.3s, opacity 0.3s;
+    align-content: center;
+
+    &.hidden {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
+.buttonContainer {
+    position: relative;
+}
+
+.detailsBox {
+    position: absolute;
+    padding: 10px;
+    z-index: 1000;
+    border-radius: var(--Border-Radius-s);
+    background-color: #FFFFFF;
+    box-shadow: 0px 48px 14px 0px rgba(107, 124, 168, 0.00), 0px 31px 12px 0px rgba(107, 124, 168, 0.01), 0px 17px 10px 0px rgba(107, 124, 168, 0.05), 0px 8px 8px 0px rgba(107, 124, 168, 0.09), 0px 2px 4px 0px rgba(107, 124, 168, 0.10);
+    cursor: default;
+    transition: opacity 0.3s ease, visibility 0.3s;
+    max-width: 180px;
+    width: max-content;
+
+    p {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--Brand-Primary-blue);
+        text-align: right;
+        font-family: var(--font-ping);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 14px;
+        letter-spacing: 0.12px;
+        margin-bottom: 8px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        svg {
+            color: var(--Gray-Blue-350);
+        }
+
+        &.fundName {
+            display: flex;
+            justify-content: space-between;
+
+            .fundraiserWrapper {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                max-width: 100%;
+                overflow: hidden;
+
+                .fundraiserText {
+                    color: var(--fund-raiser-background-hover);
+                    display: block;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    max-width: 100%;
+                }
+
+                .fundIcon {
+                    color: var(--Gray-Blue-350);
+                }
+            }
+
+            button {
+                color: var(--Text-Default);
+                width: 58px;
+                white-space: nowrap;
+                padding: var(--Spacing-Spacing-1) var(--Spacing-Spacing-3);
+                justify-content: center;
+                align-items: center;
+                border-radius: var(--Border-Radius-lg);
+                background: var(--Gray-Blue-70);
+                text-align: right;
+                font-family: var(--font-ping);
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 14px;
+                letter-spacing: 0.12px;
+
+                &:hover {
+                    color: var(--Text-able-Text);
+                }
+            }
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+.noEmailMessage {
+    position: absolute;
+    padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-1);
+    color: var(--other-White, #FFF);
+    border-radius: var(--Border-Radius-xs);
+    background: var(--tooltip-Bg);
+    z-index: 1000;
+    text-align: center;
+    animation: fadeIn 0.3s ease forwards;
+    width: 180px;
+    top: -15px;
+}
+
+.loading {
+    cursor: not-allowed;
+    opacity: 0.7;
+}

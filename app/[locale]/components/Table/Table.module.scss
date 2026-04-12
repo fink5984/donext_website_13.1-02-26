@@ -1,0 +1,115 @@
+/* Basic styles for the generic table component */
+.table {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    direction: inherit; // Inherit from parent for RTL/LTR support
+}
+
+.tableHeader {
+    display: grid;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #f8f9fa; /* Example background */
+    border-bottom: 1px solid #dee2e6; /* Example border */
+    gap: 16px;
+}
+
+.headerCell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sortButtons {
+    display: flex;
+    flex-direction: column;
+}
+
+.sortButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.sortButton.active svg {
+    filter: invert(33%) sepia(98%) saturate(2208%) hue-rotate(211deg) brightness(91%) contrast(87%);
+}
+
+
+
+.tableRow {
+    display: grid;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e9ecef; /* Example border */
+    gap: 16px;
+    position: relative;
+}
+
+.tableRow:hover .hiddenActions {
+    display: flex;
+}
+
+.cell {
+    display: flex;
+    align-items: center;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+
+.hiddenActions {
+    display: none;
+    gap: 8px;
+    position: absolute;
+    right: 60px; /* Adjust as needed */
+    background-color: white;
+    padding: 4px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.actionButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.rotated {
+    transform: rotate(180deg);
+}
+
+.donorsList {
+    padding: 16px;
+    background-color: #f8f9fa;
+}
+
+.tableBody {
+    position: relative;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: var(--Spacing-Spacing-8, 24px);
+    min-height: 200px;
+    color: var(--Text-Default, #6E99EC);
+    text-align: center;
+}
+
+.errorState {
+    color: var(--error-color, #d32f2f);
+} 

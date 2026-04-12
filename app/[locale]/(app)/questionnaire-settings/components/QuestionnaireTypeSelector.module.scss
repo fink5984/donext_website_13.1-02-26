@@ -1,0 +1,88 @@
+.container {
+  display: flex;
+  width: 440px;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: var(--Text-able-Text, #0C4AD5);
+}
+
+.typeButtons {
+  display: flex;
+  width: 440px;
+  padding: var(--Spacing-Spacing-4, 8px);
+  align-items: center;
+  gap: var(--Spacing-Spacing-2, 2px);
+  border-radius: var(--Border-Radius-xl, 40px);
+  background: var(--Bg-Button-disable, #FFF);
+
+  /* table shadow */
+  box-shadow: 0 39px 11px 0 rgba(168, 188, 230, 0.00), 0 25px 10px 0 rgba(168, 188, 230, 0.01), 0 14px 8px 0 rgba(168, 188, 230, 0.03), 0 6px 6px 0 rgba(168, 188, 230, 0.04), 0 2px 3px 0 rgba(168, 188, 230, 0.05);
+}
+
+.typeButton {
+  display: flex;
+  width: 140px;
+  padding: var(--Spacing-Spacing-3, 4px) 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--Border-Radius-xl, 40px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled):not(.active) {
+    color: var(--Text-quetshion, #1D234E);
+  }
+
+  &.active {
+    border: 1px solid var(--Border-Default, #6E99EC);
+    background: var(--Bg-Button-hover-2, #EDF5FD);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.savingIndicator {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+// רספונסיביות
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+
+    h2 {
+      font-size: 1.3rem;
+    }
+  }
+
+  .typeButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .typeButton {
+    width: 200px;
+    font-size: 1rem;
+  }
+}

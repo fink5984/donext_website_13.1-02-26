@@ -1,0 +1,822 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Country {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  states     State[]
+  people     Person[]
+
+  @@map("countries")
+}
+
+model State {
+  id         Int       @id @default(autoincrement())
+  name       String
+  countryId  Int       @map("country_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  country    Country   @relation(fields: [countryId], references: [id])
+  cities     City[]
+
+  @@map("states")
+}
+
+model City {
+  id         Int       @id @default(autoincrement())
+  name       String
+  stateId    Int?      @map("state_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  state      State?    @relation(fields: [stateId], references: [id])
+  clients    Client[]
+  people     Person[]
+  streets    Street[]
+  zipCodes   ZipCode[]
+
+  @@map("cities")
+}
+
+model Street {
+  id         Int       @id @default(autoincrement())
+  name       String
+  dedication String?   @map("dedication")
+  cityId     Int       @map("city_id")
+  zipCodeId  Int?      @map("zip_code_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  city       City      @relation(fields: [cityId], references: [id])
+  zipCode    ZipCode?  @relation(fields: [zipCodeId], references: [id])
+  clients    Client[]
+  people     Person[]
+
+  @@map("streets")
+}
+
+model ZipCode {
+  id         Int       @id @default(autoincrement())
+  code       String
+  cityId     Int       @map("city_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  city       City      @relation(fields: [cityId], references: [id])
+  streets    Street[]
+
+  @@map("zip_codes")
+}
+
+model Currency {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@map("currencies")
+}
+
+model PaymentMethod {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@map("payment_methods")
+}
+
+model Client {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  organizationName   String?            @map("organization_name")
+  amutaNumber        String?            @map("amuta_number")
+  subscriptionPlan   String?            @map("subscription_plan")
+  firstName          String?            @map("first_name")
+  lastName           String?            @map("last_name")
+  phoneLandline      String?            @map("phone_landline")
+  email              String?
+  titleBefore        String?            @map("title_before")
+  titleAfter         String?            @map("title_after")
+  mainMobile         String?            @map("main_mobile")
+  secondaryMobile    String?            @map("secondary_mobile")
+  streetId           Int?               @map("street_id")
+  houseNumber        String?            @map("house_number")
+  cityId             Int?               @map("city_id")
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?          @default(now()) @updatedAt @db.Timestamp(6)
+  userId             Int?               @map("user_id")
+  campaignCategories      CampaignCategory[]
+  campaigns               Campaign[]
+  city                    City?                    @relation(fields: [cityId], references: [id])
+  street                  Street?                  @relation(fields: [streetId], references: [id])
+  user                    User?                    @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "fk_clients_user")
+  people                  Person[]
+  tags                    Tag[]
+  customFieldDefinitions  CustomFieldDefinition[]
+  contactsColumnSettings  ContactsColumnSettings?
+
+  @@index([userId], map: "idx_clients_user_id")
+  @@map("clients")
+}
+
+model Person {
+  id              Int                  @id @default(autoincrement())
+  clientId        Int?                 @map("client_id")
+  firstName       String?              @map("first_name")
+  lastName        String?              @map("last_name")
+  phoneLandline   String?              @map("phone_landline")
+  email           String?
+  titleBefore     String?              @map("title_before")
+  titleAfter      String?              @map("title_after")
+  mainMobile      String?              @map("main_mobile")
+  secondaryMobile String?              @map("secondary_mobile")
+  streetId        Int?                 @map("street_id")
+  houseNumber     String?              @map("house_number")
+  cityId          Int?                 @map("city_id")
+  countryId       Int?                 @map("country_id")
+  hasExistingHok  Boolean?             @map("has_existing_hok")
+  clientSystemId  String?              @map("client_system_id")
+  created_at      DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?            @default(now()) @updatedAt @db.Timestamp(6)
+  importId        Int?                 @map("import_id")
+  status          String?
+  synagogue       String?
+  fatherName      String?              @map("father_name")
+  motherName      String?              @map("mother_name")
+  grandfatherName String?              @map("grandfather_name")
+  birthDate       DateTime?            @map("birth_date") @db.Date
+  rating          Int?                 @map("rating")
+  active          Boolean?             @default(true) @map("active")
+  notes           String?              @map("notes")
+  donors          Donor[]
+  fundraisers     Fundraiser[]
+  englishName     PersonEnglishName?
+  city            City?                @relation(fields: [cityId], references: [id])
+  client          Client?              @relation(fields: [clientId], references: [id])
+  country         Country?             @relation(fields: [countryId], references: [id])
+  import          Import?              @relation(fields: [importId], references: [id])
+  street          Street?              @relation(fields: [streetId], references: [id])
+  personTags      PersonTag[]
+  customFieldValues CustomFieldValue[]
+
+  @@index([clientId, active], map: "idx_people_client_active")
+  @@map("people")
+}
+
+model PersonEnglishName {
+  id          Int       @id @default(autoincrement())
+  personId    Int       @unique @map("person_id")
+  titleBefore String?   @map("title_before")
+  firstName   String?   @map("first_name")
+  lastName    String?   @map("last_name")
+  titleAfter  String?   @map("title_after")
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@map("person_english_names")
+}
+
+model CampaignCategory {
+  id         Int        @id @default(autoincrement())
+  clientId   Int        @map("client_id")
+  name       String
+  created_at DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at DateTime?  @default(now()) @updatedAt @db.Timestamp(6)
+  client     Client     @relation(fields: [clientId], references: [id])
+  campaigns  Campaign[]
+
+  @@map("campaign_categories")
+}
+
+model Campaign {
+  id                   Int                    @id @default(autoincrement())
+  clientId             Int                    @map("client_id")
+  name                 String
+  nameEn               String?                @map("name_en")
+  logo                 String?
+  startDate            DateTime?              @map("start_date")
+  endDate              DateTime?              @map("end_date")
+  donationType         String?                @map("donation_type")
+  targetAmount         Decimal?               @map("target_amount")
+  categoryId           Int?                   @map("category_id")
+  requirePaymentMethod Boolean?               @map("require_payment_method")
+  isSingleDay          Boolean?               @map("is_single_day")
+  questionnaireType    String?                @default("קלאסי") @map("questionnaire_type")
+  created_at           DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?              @default(now()) @updatedAt @db.Timestamp(6)
+  currency             String?                @map("currency")
+  defaultHokMonths     Int?                   @default(12) @map("default_hok_months")
+  donation_ranks       String[]               @default([]) @db.VarChar
+  pixelArt             Boolean?               @map("pixel_art")
+  pixelArtId           Int?                   @map("pixel_art_id")
+  questionnaireStyleId Int?                   @map("questionnaire_style_id")
+  paymentMethods       Json?                  @map("payment_methods")
+  webhookSettings      Json?                  @map("webhook_settings")
+  creditCardProvider   String?                @map("credit_card_provider")
+  stripeKeys           Json?                  @map("stripe_keys")
+  bevelPublicKey       String?                @map("bevel_public_key")
+  bevelApiKey          String?                @map("bevel_api_key")
+  bevelApiPin          String?                @map("bevel_api_pin")
+  pledgerTaxId         String?                @map("pledger_tax_id")
+  pledgerCharityName   String?                @map("pledger_charity_name")
+  matbiaOrgUserHandle  String?                @map("matbia_org_user_handle")
+  matbiaOrgTaxId       String?                @map("matbia_org_tax_id")
+  matbiaOrgName        String?                @map("matbia_org_name")
+  matbiaOrgEmail       String?                @map("matbia_org_email")
+  ojcOrgId             String?                @map("ojc_org_id")
+  ojcApiKey            String?                @map("ojc_api_key")
+  ojcUsername          String?                @map("ojc_username")
+  ojcPassword          String?                @map("ojc_password")
+  donaryEnabled        Boolean?               @default(false) @map("donary_enabled")
+  donaryApiKey         String?                @map("donary_api_key")
+  donaryOrgGuid        String?                @map("donary_org_guid")
+  donaryLastSyncAt     DateTime?              @map("donary_last_sync_at")
+  nedarimPlusMosad     String?                @map("nedarim_plus_mosad")
+  nedarimPlusApiValid  String?                @map("nedarim_plus_api_valid")
+  nedarimPlusPaymentType String?              @default("Ragil") @map("nedarim_plus_payment_type") // Ragil or HK
+  nedarimPlusHkDay     Int?                   @default(1) @map("nedarim_plus_hk_day") // Day of month for HK (1-28)
+  showInvitationColumn Boolean?               @default(false) @map("show_invitation_column")
+  dailyTasksEmailEnabled Boolean?             @default(false) @map("daily_tasks_email_enabled")
+  activeFields         Json?                  @map("active_fields")
+  campaignType         String?                @default("community") @map("campaign_type")
+  hasOperators         Boolean?               @default(false) @map("has_operators")
+  isEvent              Boolean?               @default(false) @map("is_event")
+  screenSettings       CampaignScreenSetting?
+  category             CampaignCategory?      @relation(fields: [categoryId], references: [id])
+  client               Client                 @relation(fields: [clientId], references: [id])
+  questionnaireStyle   QuestionnaireStyle?    @relation(fields: [questionnaireStyleId], references: [id])
+  donors               Donor[]
+  fundraisers          Fundraiser[]
+  imports              Import[]
+  loginHistory         LoginHistory[]
+  publicScreenSettings PublicScreenSettings?
+  ranks                Rank[]
+  operatorRanks        OperatorRank[]
+
+  @@map("campaigns")
+}
+
+model Fundraiser {
+  id                  Int             @id @default(autoincrement())
+  personId            Int             @map("person_id")
+  campaignId          Int             @map("campaign_id")
+  statusForecast      status_enum     @default(NOT_SENT) @map("status_forecast")
+  statusQuestionnaire status_enum     @default(NOT_SENT) @map("status_questionnaire")
+  created_at          DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?       @default(now()) @updatedAt @db.Timestamp(6)
+  lastCompetitionType String?         @map("last_competition_type")
+  deleted_at          DateTime?       @map("deleted_at")
+  userId              Int?            @map("user_id")
+  isOperator              Boolean?        @default(false) @map("is_operator")
+  assignedOperatorId      Int?            @map("assigned_operator_id")
+  operatorExpected        Decimal?        @map("operator_expected")
+  lastForecastByOperatorId Int?           @map("last_forecast_by_operator_id")
+  donors              Donor[]
+  emojiReactionsFrom  EmojiReaction[] @relation("EmojiReactionFrom")
+  emojiReactionsTo    EmojiReaction[] @relation("EmojiReactionTo")
+  user                User?           @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "fk_fundraisers_user")
+  campaign            Campaign        @relation(fields: [campaignId], references: [id])
+  person              Person          @relation(fields: [personId], references: [id])
+
+  @@index([userId], map: "idx_fundraisers_user_id")
+  @@map("fundraisers")
+}
+
+model Donor {
+  id                              Int              @id @default(autoincrement())
+  campaignId                      Int              @map("campaign_id")
+  expected                        Decimal?         @map("expected")
+  fundraiserId                    Int?             @map("fundraiser_id")
+  lastForecastByFundraiserId      Int?             @map("last_forecast_by_fundraiser_id")
+  lastQuestionnaireByFundraiserId Int?             @map("last_questionnaire_by_fundraiser_id")
+  active                          Boolean?         @map("active")
+  personId                        Int?             @map("person_id")
+  trafficLightColor               String?          @map("traffic_light_color")
+  isAnonymous                     Boolean?         @default(false) @map("is_anonymous")
+  invitationSent                  Boolean?         @default(false) @map("invitation_sent")
+  arrivalConfirmed                Boolean?         @default(false) @map("arrival_confirmed")
+  actuallyArrived                 Boolean?         @default(false) @map("actually_arrived")
+  notes                           String?          @map("notes")
+  created_at                      DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at                      DateTime?        @default(now()) @updatedAt @db.Timestamp(6)
+  donations                       Donation[]
+  donorNotes                      DonorNote[]
+  campaign                        Campaign         @relation(fields: [campaignId], references: [id])
+  fundraiser                      Fundraiser?      @relation(fields: [fundraiserId], references: [id])
+  person                          Person?          @relation(fields: [personId], references: [id])
+  questionAnswers                 QuestionAnswer[]
+
+  @@map("donors")
+}
+
+model Donation {
+  id                 Int                   @id @default(autoincrement())
+  donorId            Int                   @map("donor_id")
+  created_at         DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?             @default(now()) @updatedAt @db.Timestamp(6)
+  deleted_at         DateTime?             @map("deleted_at")
+  hasPaymentMethod   Boolean               @default(false) @map("has_payment_method")
+  isUnlimited        Boolean               @default(false) @map("is_unlimited")
+  monthlyAmount      Decimal               @map("monthly_amount")
+  numberOfPayments   Int?                  @map("number_of_payments")
+  donateApproval     Boolean               @default(false) @map("donate_approval")
+  moneyDonorId       Int?                  @map("money_donor_id")
+  createdInSystem    donation_source_enum? @map("created_in_system")
+  note               String?               @map("note")
+  noteRead           Boolean?              @default(false) @map("note_read")
+  noteCompleted      Boolean?              @default(false) @map("note_completed")
+  noteCompletedAt    DateTime?             @map("note_completed_at") @db.Timestamp(6)
+  followUpDate       DateTime?             @map("follow_up_date") @db.Timestamp(6)
+  dedication         String?               @map("dedication")
+  paymentMethod      payment_method_enum?  @map("payment_method")
+  externalDonationId Int?                  @map("external_donation_id")
+  // Bevel payment tracking
+  bevelCustKey       String?               @map("bevel_cust_key")
+  bevelScheduleId    String?               @map("bevel_schedule_id")
+  bevelPaymethodKey  String?               @map("bevel_paymethod_key")
+  bevelPaymentsLeft  Int?                  @map("bevel_payments_left")
+  createdByUserId    Int?                  @map("created_by_user_id")
+  updatedByUserId    Int?                  @map("updated_by_user_id")
+  donor              Donor                 @relation(fields: [donorId], references: [id])
+  createdByUser      User?                 @relation("DonationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser      User?                 @relation("DonationUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  donationNotes      DonationNote[]
+
+  @@index([createdByUserId], map: "idx_donations_created_by_user_id")
+  @@index([updatedByUserId], map: "idx_donations_updated_by_user_id")
+  @@map("donations")
+}
+
+model DonorNote {
+  id               Int       @id @default(autoincrement())
+  donorId          Int       @map("donor_id")
+  note             String    @map("note")
+  followUpDate     DateTime? @map("follow_up_date") @db.Timestamp(6)
+  noteCompleted    Boolean   @default(false) @map("note_completed")
+  noteCompletedAt  DateTime? @map("note_completed_at") @db.Timestamp(6)
+  assignedToUserId Int?      @map("assigned_to_user_id")
+  assignedToName   String?   @map("assigned_to_name")
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  donor            Donor     @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  assignedToUser   User?     @relation("DonorNoteAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([donorId], map: "idx_donor_notes_donor_id")
+  @@index([assignedToUserId], map: "idx_donor_notes_assigned_to")
+  @@map("donor_notes")
+}
+
+model DonationNote {
+  id               Int       @id @default(autoincrement())
+  donationId       Int       @map("donation_id")
+  note             String    @map("note")
+  followUpDate     DateTime? @map("follow_up_date") @db.Timestamp(6)
+  noteCompleted    Boolean   @default(false) @map("note_completed")
+  noteCompletedAt  DateTime? @map("note_completed_at") @db.Timestamp(6)
+  assignedToUserId Int?      @map("assigned_to_user_id")
+  assignedToName   String?   @map("assigned_to_name")
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  donation         Donation  @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  assignedToUser   User?     @relation("NoteAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([donationId], map: "idx_donation_notes_donation_id")
+  @@index([assignedToUserId], map: "idx_donation_notes_assigned_to")
+  @@map("donation_notes")
+}
+
+model User {
+  id                    Int              @id @default(autoincrement())
+  email                 String           @unique
+  password              String
+  createdAt             DateTime         @default(now()) @map("created_at")
+  loggedAt              DateTime?        @map("logged_at")
+  updated_at            DateTime?        @default(now()) @updatedAt @db.Timestamp(6)
+  phone                 String?          @db.VarChar(20)
+  role                  user_role_enum[] @default([fundraiser])
+  name                  String?
+  googleId              String?          @unique @map("google_id")
+  clients               Client[]
+  fundraisers           Fundraiser[]
+  loginHistory          LoginHistory[]
+  donationsCreated      Donation[]       @relation("DonationCreatedBy")
+  donationsUpdated      Donation[]       @relation("DonationUpdatedBy")
+  assignedNotes         DonationNote[]   @relation("NoteAssignedTo")
+  assignedDonorNotes    DonorNote[]      @relation("DonorNoteAssignedTo")
+
+  @@index([phone], map: "idx_users_phone")
+  @@map("users")
+}
+
+model EmojiReaction {
+  id        Int        @id @default(autoincrement())
+  fromId    Int        @map("from_id")
+  toId      Int        @map("to_id")
+  emoji     String
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
+  from      Fundraiser @relation("EmojiReactionFrom", fields: [fromId], references: [id])
+  to        Fundraiser @relation("EmojiReactionTo", fields: [toId], references: [id])
+
+  @@map("emoji_reactions")
+}
+
+model Import {
+  id         Int       @id @default(autoincrement())
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  campaignId Int?      @map("campaign_id")
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  people     Person[]
+
+  @@map("imports")
+}
+
+model Rank {
+  id         Int       @id @default(autoincrement())
+  name       String
+  campaignId Int       @map("campaign_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  amount     Decimal?  @map("amount")
+  isPremium  Boolean?  @default(false) @map("is_premium")
+  colorLeft  String?   @map("color_left")
+  colorRight String?   @map("color_right")
+  image      String?
+  campaign   Campaign  @relation(fields: [campaignId], references: [id])
+
+  @@map("ranks")
+}
+
+model OperatorRank {
+  id         Int       @id @default(autoincrement())
+  name       String
+  campaignId Int       @map("campaign_id")
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  amount     Decimal?  @map("amount")
+  campaign   Campaign  @relation(fields: [campaignId], references: [id])
+
+  @@map("operator_ranks")
+}
+
+model CampaignScreenSetting {
+  id                            Int                        @id @default(autoincrement())
+  campaignId                    Int                        @unique @map("campaign_id")
+  amountBigScreen               Int?                       @map("amount_big_screen")
+  displayTopPart                Boolean?                   @default(true) @map("display_top_part")
+  displayBottomPart             Boolean?                   @default(true) @map("display_bottom_part")
+  preloadingNames               Boolean?                   @default(true) @map("preloading_names")
+  byPresence                    Boolean?                   @default(false) @map("by_presence")
+  textOverTotal                 String?                    @map("text_over_total")
+  textUnderTotal                String?                    @map("text_under_total")
+  bgScreen                      String?                    @map("bg_screen")
+  bgBigDonations                String?                    @map("bg_big_donations")
+  hasGoal                       Boolean?                   @map("has_goal")
+  nameVsPhone                   Int?                       @map("name_vs_phone")
+  topPartBottomTitlesColor      String?                    @map("top_part_bottom_titles_color")
+  videoText                     String?                    @map("text_video")
+  videoTextFontSize             Int?                       @map("font_size_text_video")
+  videoDate                     DateTime?                  @map("video_date")
+  videoRepeat                   Int?                       @map("video_repeat")
+  videoUrl                      String?                    @map("video_url")
+  topTimerText                  String?                    @map("top_timer_text")
+  bottomTimerText               String?                    @map("bottom_timer_text")
+  cubeWidth                     Int?                       @map("cube_width")
+  cubeHeight                    Int?                       @map("cube_hight")
+  cubePadding                   Int?                       @map("cube_padding")
+  borderRadius                  Int?                       @map("border_radius")
+  fontSizeNameFront             Int?                       @map("font_size_name_front")
+  fontSizeNameBack              Int?                       @map("font_size_name_back")
+  fontSizeAmountBack            Int?                       @map("font_size_amount_back")
+  displayRank                   Boolean?                   @map("display_rank")
+  fontSizeRank                  Int?                       @map("font_size_rank")
+  displayFreeField1             Boolean?                   @map("display_free_field1")
+  fontSizeFreeField1            Int?                       @map("font_size_free_field1")
+  frontBoxTextColor             String?                    @map("front_box_text_color")
+  backBoxTextColor              String?                    @map("back_box_text_color")
+  showAmount                    Boolean?                   @map("show_amount")
+  bsShowLogo                    Boolean?                   @map("bs_show_logo")
+  bsLogoHeight                  Int?                       @map("bs_logo_height")
+  bsLogoTopMargin               Int?                       @map("bs_logo_top_margin")
+  bsNameFontSize                Int?                       @map("bs_name_font_size")
+  bsNameColor                   String?                    @map("bs_name_color")
+  bsNameTopMargin               Int?                       @map("bs_name_top_margin")
+  bsShowAmount                  Boolean?                   @map("bs_show_amount")
+  bsAmountFontSize              Int?                       @map("bs_amount_font_size")
+  bsAmountColor                 String?                    @map("bs_amount_color")
+  bsAmountTopMargin             Int?                       @map("bs_amount_top_margin")
+  bsShowRank                    Boolean?                   @map("bs_show_rank")
+  bsRankFontSize                Int?                       @map("bs_rank_font_size")
+  bsRankColor                   String?                    @map("bs_rank_color")
+  bsRankTopMargin               Int?                       @map("bs_rank_top_margin")
+  showNamesInDonationScreen     Boolean?                   @map("show_names_in_donation_screen")
+  displayDonationButton         Boolean?                   @map("display_donation_button")
+  donationButtonPosition        String?                    @map("donation_button_position")
+  donationButtonBackgroundImage String?                    @map("donation_button_background_image")
+  donationButtonUrl             String?                    @map("donation_button_url")
+  titleBefore                   String?                    @map("title_before")
+  hasShop                       Boolean?                   @map("has_shop")
+  minimumCart                   Int?                       @map("minimum_cart")
+  chargeMethodId                Int?                       @map("charge_method_id")
+  nedarimMosad                  String?                    @map("nedarim_mosad")
+  nedarimApiValid               Boolean?                   @map("nedarim_api_valid")
+  shopPhone                     String?                    @map("shop_phone")
+  ifHok                         Boolean?                   @map("if_hok")
+  ifFundRaiser                  Boolean?                   @map("if_fund_raiser")
+  showSum                       Boolean?                   @map("show_sum")
+  showDonorFundRaiser           Boolean?                   @map("show_donor_fund_raiser")
+  mosadWebhook1                 Int?                       @map("mosad_webhook1")
+  mosadWebhook2                 Int?                       @map("mosad_webhook2")
+  mosadWebhook3                 Int?                       @map("mosad_webhook3")
+  skipDonationApproved          Boolean?                   @map("skip_donation_approved")
+  supervisorApproval            Boolean?                   @map("supervisor_approval")
+  created_at                    DateTime?                  @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime?                  @default(now()) @updatedAt @db.Timestamp(6)
+  goal                          Decimal?                   @map("goal")
+  lowDonationDisplay            low_donation_display_enum? @map("low_donation_display")
+  campaign                      Campaign                   @relation(fields: [campaignId], references: [id])
+
+  @@map("campaign_screen_settings")
+}
+
+model DonationsApiCampaign {
+  id               Int     @id @default(autoincrement())
+  donextCampaignId Int     @map("donext_campaign_id")
+  moneyCampaignId  Int     @map("money_campaign_id")
+  active           Boolean
+
+  @@map("donations_api")
+}
+
+/// סגנונות שאלון (למשל: "קלאסי" / "שמרני" / "קליל")
+model QuestionnaireStyle {
+  id         Int                     @id @default(autoincrement())
+  name       String                  @unique
+  created_at DateTime?               @default(now()) @db.Timestamp(6)
+  updated_at DateTime?               @default(now()) @updatedAt @db.Timestamp(6)
+  campaigns  Campaign[]
+  questions  QuestionnaireQuestion[]
+
+  @@map("questionnaire_styles")
+}
+
+/// קטגוריות שאלון (למשל "א" / "ב" / "ג") עם משקל
+model QuestionCategory {
+  id         Int                  @id @default(autoincrement())
+  name       String               @unique
+  weight     Decimal?             @db.Decimal
+  created_at DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at DateTime?            @default(now()) @updatedAt @db.Timestamp(6)
+  questions  QuestionOnCategory[]
+
+  @@map("question_categories")
+}
+
+/// שאלות בשאלון — שייכות לסגנון ומקושרות לקטגוריות
+model QuestionnaireQuestion {
+  id          Int                  @id @default(autoincrement())
+  styleId     Int                  @map("style_id")
+  number      Int
+  description String
+  isActive    Boolean              @default(true) @map("is_active")
+  created_at  DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?            @default(now()) @updatedAt @db.Timestamp(6)
+  categories  QuestionOnCategory[]
+  wordings    QuestionWording[]
+  style       QuestionnaireStyle   @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  @@unique([styleId, number])
+  @@map("questionnaire_questions")
+}
+
+/// טבלת קישור בין שאלה לקטגוריה (many-to-many)
+model QuestionOnCategory {
+  questionId Int                   @map("question_id")
+  categoryId Int                   @map("category_id")
+  category   QuestionCategory      @relation(fields: [categoryId], references: [id])
+  question   QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, categoryId])
+  @@index([categoryId])
+  @@map("question_on_category")
+}
+
+/// נוסחים של שאלה — כולל הטקסטים של התשובות ("כן", "תלוי", "לא")
+model QuestionWording {
+  id         Int                   @id @default(autoincrement())
+  questionId Int                   @map("question_id")
+  language   String                @default("he") @map("language") @db.VarChar(5)
+  wording    String
+  yesText    String                @map("yes_text")
+  maybeText  String                @map("maybe_text")
+  noText     String                @map("no_text")
+  created_at DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at DateTime?             @default(now()) @updatedAt @db.Timestamp(6)
+  answers    QuestionAnswer[]
+  question   QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, language])
+  @@map("question_wordings")
+}
+
+/// תשובות בפועל של תורמים לשאלות
+model QuestionAnswer {
+  id         Int                @id @default(autoincrement())
+  donorId    Int                @map("donor_id")
+  choice     answer_choice_enum @map("choice")
+  created_at DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at DateTime?          @default(now()) @updatedAt @db.Timestamp(6)
+  wordingId  Int                @map("wording_id")
+  donor      Donor              @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  wording    QuestionWording    @relation(fields: [wordingId], references: [id], onDelete: Cascade)
+
+  @@unique([donorId, wordingId])
+  @@index([wordingId])
+  @@map("question_answers")
+}
+
+model LoginHistory {
+  id         Int            @id @default(autoincrement())
+  userId     Int            @map("user_id")
+  campaignId Int?           @map("campaign_id")
+  role       user_role_enum @map("role")
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  campaign   Campaign?      @relation(fields: [campaignId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([campaignId])
+  @@index([createdAt])
+  @@map("login_history")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model temp {
+  first  String? @db.VarChar
+  father String? @db.VarChar
+  mobile String? @db.VarChar
+  last   String? @db.VarChar
+
+  @@ignore
+}
+
+model PublicScreenSettings {
+  id                   Int       @id @default(autoincrement())
+  campaignId           Int       @unique @map("campaign_id")
+  ranks                Json?     @map("ranks")
+  aboutText            String?   @map("about_text")
+  phone                String?   @map("phone")
+  email                String?   @map("email")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  banners              Json?     @map("banners")
+  endDate              DateTime? @map("end_date") @db.Timestamp(6)
+  startDate            DateTime? @map("start_date") @db.Timestamp(6)
+  ranksBackgroundColor String?   @default("#b45309") @map("ranks_background_color")
+  isEnabled            Boolean   @default(false) @map("is_enabled")
+  showDonationDetails  Boolean   @default(true) @map("show_donation_details")
+  campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("public_screen_settings")
+}
+
+enum status_enum {
+  NOT_SENT @map("לא_נשלח")
+  RECEIVED @map("התקבל")
+  OPENED   @map("נפתח")
+  SUCCESS  @map("הסתיים_בהצלחה")
+}
+
+enum low_donation_display_enum {
+  HIDE
+  SHOW_WITHOUT_APPROVAL
+  SHOW_WITH_APPROVAL
+}
+
+enum payment_method_enum {
+  CREDIT        @map("אשראי")
+  CASH          @map("מזומן")
+  CHECKS        @map("צקים")
+  BANK_TRANSFER @map("העברה בנקאית")
+  HOK_BANK      @map("הו\"ק בנקאית")
+  HOK_NEW       @map("הו\"ק חדשה")
+  OTHER         @map("אחר")
+  PAYBOX        @map("PayBox")
+  BIT           @map("bit")
+  PAYPAL        @map("PayPal")
+  APPLE_PAY     @map("ApplePay")
+  GOOGLE_PAY    @map("Google Pay")
+  STRIPE        @map("Stripe")
+  BEVEL         @map("Bevel")
+  PLEDGER       @map("Pledger")
+  MATBIA        @map("Matbia")
+  OJC           @map("OJC")
+  NEDARIM_PLUS  @map("Nedarim Plus")
+  COMMITMENT    @map("התחייבות")
+}
+
+enum donation_source_enum {
+  LANDING_PAGE   @map("דף נחיתה")
+  BACKOFFICE     @map("PRIVET_SCREEN")
+  PHONE_DONATION @map("תרומה טלפונית")
+  NEDARIM        @map("נדרים")
+  CLEARING_POS   @map("מסוף סליקה")
+  PUBLIC_SCREEN  @map("PUBLIC_SCREEN")
+  DONARY         @map("DONARY")
+}
+
+enum user_role_enum {
+  fundraiser
+  manager
+  admin
+  operator
+}
+
+/// Enum של סוגי תשובה
+enum answer_choice_enum {
+  YES
+  MAYBE
+  NO
+}
+
+enum custom_field_type_enum {
+  text
+  number
+  date
+  select
+  boolean
+}
+
+// ─── Contacts Hub Models ───────────────────────────────────────
+
+model Tag {
+  id         Int         @id @default(autoincrement())
+  clientId   Int         @map("client_id")
+  name       String
+  color      String?
+  created_at DateTime?   @default(now()) @db.Timestamp(6)
+  updated_at DateTime?   @default(now()) @updatedAt @db.Timestamp(6)
+  client     Client      @relation(fields: [clientId], references: [id])
+  personTags PersonTag[]
+
+  @@unique([clientId, name])
+  @@map("tags")
+}
+
+model PersonTag {
+  personId Int    @map("person_id")
+  tagId    Int    @map("tag_id")
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([personId, tagId])
+  @@map("person_tags")
+}
+
+model CustomFieldDefinition {
+  id         Int                    @id @default(autoincrement())
+  clientId   Int                    @map("client_id")
+  fieldName  String                 @map("field_name")
+  fieldType  custom_field_type_enum @default(text) @map("field_type")
+  options    Json?                  @map("options")
+  required   Boolean                @default(false)
+  order      Int                    @default(0)
+  active     Boolean                @default(true)
+  created_at DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at DateTime?              @default(now()) @updatedAt @db.Timestamp(6)
+  client     Client                 @relation(fields: [clientId], references: [id])
+  values     CustomFieldValue[]
+
+  @@unique([clientId, fieldName])
+  @@map("custom_field_definitions")
+}
+
+model CustomFieldValue {
+  id                Int                   @id @default(autoincrement())
+  personId          Int                   @map("person_id")
+  fieldDefinitionId Int                   @map("field_definition_id")
+  value             String?               @map("value")
+  created_at        DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?             @default(now()) @updatedAt @db.Timestamp(6)
+  person            Person                @relation(fields: [personId], references: [id], onDelete: Cascade)
+  fieldDefinition   CustomFieldDefinition @relation(fields: [fieldDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, fieldDefinitionId])
+  @@map("custom_field_values")
+}
+
+model ContactsColumnSettings {
+  id                Int      @id @default(autoincrement())
+  clientId          Int      @unique @map("client_id")
+  columnDefinitions Json     @map("column_definitions")
+  updated_at        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  client            Client   @relation(fields: [clientId], references: [id])
+
+  @@map("contacts_column_settings")
+}

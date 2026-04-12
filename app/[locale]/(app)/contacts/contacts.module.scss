@@ -1,0 +1,3130 @@
+// Contacts Page Styles — matched to Figma design
+// ================================================
+
+// ---- Layout ----
+.contactsLayout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+}
+
+// ---- Right Action Sidebar (250 px, blue-tinted bg) ----
+.actionSidebar {
+  width: 250px;
+  min-width: 250px;
+  flex-shrink: 0;
+  background: var(--Surface-02, #edf5fd);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  order: 2;
+
+  :global([dir="rtl"]) & {
+    order: 2;
+  }
+
+  :global([dir="ltr"]) & {
+    order: 0;
+  }
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-blue-350, #76a0ff);
+  border-radius: var(--Border-Radius-lg, 24px);
+  transition: all 0.2s ease;
+  text-align: right;
+  font-family: var(--font-ping);
+  font-size: 16px;
+  line-height: 20px;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--button-hover-2, #daeafe);
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+
+  :global([dir="rtl"]) & {
+    text-align: right;
+    justify-content: flex-start;
+  }
+
+  :global([dir="ltr"]) & {
+    text-align: left;
+    justify-content: flex-start;
+  }
+}
+
+.logoutButton {
+  background: #FF5252 !important;
+  color: white !important;
+  margin-bottom: 16px;
+
+  &:hover {
+    background: #ff3838 !important;
+    color: white !important;
+  }
+}
+
+.actionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: inherit;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ---- Main Content Area ----
+.contactsMainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: var(--Surface-01, #f6f9fc);
+  overflow: hidden;
+  gap: 0;
+  order: 1;
+
+  :global([dir="rtl"]) & {
+    order: 1;
+  }
+
+  :global([dir="ltr"]) & {
+    order: 1;
+  }
+}
+
+// ---- Header ----
+.contactsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  padding: 24px 32px 16px;
+  position: relative;
+}
+
+.contactsHeaderTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 1;
+
+  h1 {
+    color: var(--Text-able-Text, #0C4AD5);
+    margin: 0;
+    font-family: var(--font-ping);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 34px;
+  }
+}
+
+.contactsSubtitle {
+  color: var(--Text-Default, #6e99ec);
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+// ---- Header Actions ----
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-inline-end: 24px;
+}
+
+.importExcelButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--Text-able-Text, #0C4AD5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: var(--Text-able-Text-hover, #0a3eb3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(12, 74, 213, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ---- AI Assistant ----
+.aiAssistant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.aiIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #4FC3F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0 16px rgba(79, 195, 247, 0.3);
+  }
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.aiLabel {
+  color: var(--Text-Default, #6e99ec);
+  font-family: var(--font-ping);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: rgba(237, 245, 253, 0.7);
+  border-radius: 4px;
+}
+
+// ---- Tabs — pill-shaped, NOT underline ----
+.contactsTabs {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding: 0 32px;
+  gap: 0;
+  margin: 8px 0 0 auto;
+  justify-content: flex-end;
+  direction: rtl;
+}
+
+.contactsTab {
+  padding: 8px 0;
+  background: var(--gray-blue-70, #edf5fd);
+  border: none;
+  border-radius: 24px 24px 0 0;
+  color: var(--Text-able-Text, #0C4AD5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-ping);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 24px;
+  white-space: nowrap;
+  width: 200px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: -24px;
+  position: relative;
+  z-index: 1;
+
+  &:first-child {
+    margin-inline-start: 0;
+  }
+
+  &:hover {
+    background: var(--Surface-02, #daeafe);
+  }
+
+  &.activeTab {
+    background: var(--button-disable, #ffffff);
+    color: var(--Text-able-Text, #0C4AD5);
+    font-weight: 700;
+    z-index: 2;
+  }
+}
+
+// Tab count badge
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #E74C3C;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  margin-inline-start: 8px;
+  line-height: 1;
+}
+
+// Status badge (needsAttention tab)
+.statusActionCell {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-inline-end: 16px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #FDE4E3;
+  color: #B35056;
+
+  &[data-status="duplicated_phone"] {
+    background: #FDE4E3;
+    color: #B35056;
+  }
+  &[data-status="duplicated_name"] {
+    background: #ECE9FC;
+    color: #744ABF;
+  }
+  &[data-status="missing_phone"] {
+    background: #FFF3CD;
+    color: #856404;
+  }
+  &[data-status="missing_email"] {
+    background: #FFF3CD;
+    color: #856404;
+  }
+  &[data-status="invalid_email"] {
+    background: #F8D7DA;
+    color: #721C24;
+  }
+}
+
+.resolveButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #28A745;
+  background: transparent;
+  color: #28A745;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #28A745;
+    color: #fff;
+  }
+}
+
+// ---- Needs Attention (Page4-style correction UI) ----
+.needsAttentionWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px 0;
+  direction: rtl;
+  text-align: right;
+}
+
+.needsAttentionLoading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.needsAttentionEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 300px;
+  color: var(--Text-able-Text, #0C4AD5);
+
+  h2 {
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--Gray-Blue-300, #6E99EC);
+  }
+}
+
+// ---- White Content Container (holds filter bar + table) ----
+.contactsContentWrapper {
+  background: var(--button-disable, #ffffff);
+  border-radius: 40px 0 0 0;
+  padding: 24px;
+  margin: 0 32px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ---- Filter Bar ---- Figma: "header" row
+.contactsFilterBar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  direction: rtl;
+}
+
+// Figma: "all filters" — chips + filter icon + clear
+.allFilters {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  direction: rtl;
+}
+
+// .filterActions — removed, elements are now direct children of .contactsFilterBar
+
+// Figma: "resalts" — vertical two-line results count
+.resultsCount {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding-inline-start: 8px;
+  gap: 2px;
+  flex-shrink: 0;
+  height: 22px;
+  white-space: nowrap;
+}
+
+.resultsLabel {
+  font-family: var(--font-ping);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 10px;
+  text-align: right;
+  letter-spacing: 0.01em;
+  color: var(--Text-Default, #6e99ec);
+}
+
+.resultsValue {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-ping);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 10px;
+  text-align: right;
+  letter-spacing: 0.01em;
+  color: var(--Text-Default, #6e99ec);
+}
+
+.menuButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.menuIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--Text-Default, #6e99ec);
+}
+
+// ---- Export Menu (3 dots dropdown) ----
+.exportMenuWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.exportMenuDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px;
+  width: 148px;
+  background: #FFFFFF;
+  box-shadow:
+    0px 25px 10px rgba(168, 188, 230, 0.01),
+    0px 14px 8px rgba(168, 188, 230, 0.03),
+    0px 6px 6px rgba(168, 188, 230, 0.04),
+    0px 2px 3px rgba(168, 188, 230, 0.05);
+  border-radius: 16px;
+  z-index: 100;
+  direction: rtl;
+}
+
+.exportMenuItem {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 8px 4px;
+  width: 100%;
+  background: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  span {
+    font-family: var(--font-ping);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 14px;
+    letter-spacing: -0.01em;
+    text-align: right;
+    color: #6E99EC;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    background: #F6F9FC;
+  }
+}
+
+.filterIconButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--Text-Default, #6e99ec);
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    border-color: var(--Text-able-Text, #0C4AD5);
+    color: var(--Text-able-Text, #0C4AD5);
+    background: var(--Surface-02, #edf5fd);
+  }
+}
+
+.filterIconButtonActive {
+  color: var(--Text-able-Text, #0C4AD5);
+  background: var(--Surface-02, #edf5fd);
+}
+
+.filterIconDot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: var(--Text-able-Text, #0C4AD5);
+  border-radius: 50%;
+  border: 1.5px solid #FFFFFF;
+  pointer-events: none;
+}
+
+.columnMenuWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.columnToggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--Text-Default, #6e99ec);
+  transition: all 0.2s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--Text-able-Text, #0C4AD5);
+    background: var(--Surface-02, #edf5fd);
+  }
+}
+
+.columnToggleButtonActive {
+  color: var(--Text-able-Text, #0C4AD5);
+  background: var(--Surface-02, #edf5fd);
+}
+
+.addContactButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--Bg-Button-Primary, #0C4AD5);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--Icon-able-Icon-2, #FFFFFF);
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    border-radius: var(--Border-Radius-lg);
+  }
+}
+
+.dottedSeparator {
+  width: 0;
+  height: 24px;
+  border-left: 1px dashed var(--Text-Default, #6e99ec);
+  opacity: 0.5;
+  margin: 0 4px;
+}
+
+.clearFilters {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 0 12px;
+  gap: 2px;
+  min-width: 88px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: 24px;
+  color: var(--Text-Default, #6e99ec);
+  cursor: pointer;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+  text-align: right;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+}
+
+.filterOptionIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.addContactBtn {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--Text-Default, #6e99ec);
+  flex-shrink: 0;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+}
+
+.filterIconWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--Text-Default, #6e99ec);
+  padding: 4px;
+
+  &:hover {
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+}
+
+.filterIconSvg {
+  width: 20px;
+  height: 20px;
+}
+
+.allFilters > .chipDropdownContainer,
+.allFilters > .filterIconWrapper,
+.allFilters > .clearFilters {
+  flex-shrink: 0;
+}
+
+// removed separate filterChips container — chips are now direct children of allFilters
+
+.filterChip {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  border-radius: 24px;
+  border: 1px solid #6E99EC;
+  background: #FFFFFF;
+  padding: 0;
+  padding-inline-start: 16px;
+  padding-inline-end: 8px;
+  min-width: auto;
+  transition: border-color 0.2s ease;
+  position: relative;
+  cursor: pointer;
+  gap: 8px;
+  flex-shrink: 0;
+
+  &:focus-within {
+    border-color: var(--Border-able-field, #0C4AD5);
+  }
+}
+
+.filterChipTrailing {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  width: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.filterChipActive {
+  border-color: var(--Border-able-field, #0C4AD5);
+  background: var(--Surface-02, #edf5fd);
+}
+
+.filterChipName {
+  padding: 0 12px;
+  gap: 8px;
+  width: 180px;
+  min-width: 180px;
+}
+
+.filterChipClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 11px;
+  height: 11px;
+  background: transparent;
+  border: none;
+  border-inline-start: 1px solid #C5D7F8;
+  cursor: pointer;
+  padding: 0;
+  padding-inline-start: 8px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+  box-sizing: content-box;
+
+  svg {
+    width: 11px;
+    height: 11px;
+    color: var(--Text-Default, #6e99ec);
+  }
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.filterBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 1000px;
+  background: #0C4AD5;
+  color: #FFFFFF;
+  font-family: var(--font-ping);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 10px;
+  text-align: center;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.filterDropdownIcon {
+  width: 8px;
+  height: 5px;
+  flex-shrink: 0;
+  color: var(--Text-Default, #6e99ec);
+  transition: transform 0.2s ease;
+}
+
+.filterInput {
+  flex: 1;
+  min-width: 30px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--Text-Default, #6e99ec);
+  font-family: var(--font-ping);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 15px;
+  text-align: right;
+  direction: rtl;
+
+  &::placeholder {
+    color: var(--Text-Default, #6e99ec);
+  }
+
+  :global([dir="ltr"]) & {
+    text-align: left;
+    direction: ltr;
+  }
+}
+
+.contactsSearchWrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+  width: 240px;
+  min-width: 240px;
+  height: 32px;
+}
+
+// ---- Filter Chip Dropdown (Figma "MENU") ----
+.chipDropdownContainer {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.filterChipLabel {
+  font-family: var(--font-ping);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 15px;
+  text-align: right;
+  color: #6E99EC;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filterChipHasSelection {
+  border-color: #0C4AD5;
+
+  .filterChipLabel {
+    color: #6E99EC;
+  }
+}
+
+.filterDropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.chipDropdownPanel {
+  box-sizing: border-box;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 188px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  gap: 2px;
+  background: #FFFFFF;
+  border: 1px solid #0C4AD5;
+  border-radius: 16px;
+  z-index: 100;
+  box-shadow:
+    0px 4px 12px rgba(168, 188, 230, 0.15),
+    0px 2px 6px rgba(168, 188, 230, 0.1);
+
+  :global([dir="ltr"]) & {
+    right: auto;
+    left: 0;
+  }
+}
+
+.chipDropdownPanelSimple {
+  // Simple variant — auto-height, no search, no action bar
+  width: 188px;
+}
+
+.chipDropdownSearch {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 10px;
+  gap: 8px;
+  width: 100%;
+  min-width: 180px;
+  height: 36px;
+  border-bottom: 1px solid #6E99EC;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+
+.chipDropdownSearchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: right;
+  direction: rtl;
+  color: #0C4AD5;
+  padding: 0;
+
+  &::placeholder {
+    color: #6E99EC;
+  }
+
+  :global([dir="ltr"]) & {
+    text-align: left;
+    direction: ltr;
+  }
+}
+
+.chipDropdownSearchIcon {
+  width: 16px;
+  height: 16px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+.chipDropdownListWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  height: 224px;
+  overflow: hidden;
+}
+
+.chipDropdownListSimple {
+  // Simple (no-search) variant — auto height, no scroll wrapper
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0;
+  width: 100%;
+}
+
+.chipDropdownList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  overflow-y: auto;
+  height: 100%;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #EDF5FD;
+    border-radius: 22px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #B4CBFF;
+    border-radius: 22px;
+  }
+}
+
+.chipDropdownItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-inline-start: 12px;
+  padding-inline-end: 0;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  box-sizing: border-box;
+
+  // State 2 — hover (no selection): bg #EDF5FD, all content #0C4AD5
+  // State 3 — hover + selected: same colors, checkbox stays filled
+  &:hover {
+    background: #EDF5FD;
+
+    .chipDropdownItemLabel {
+      color: #0C4AD5;
+    }
+    .chipDropdownItemIcon {
+      color: #0C4AD5;
+
+      svg {
+        fill: #0C4AD5;
+      }
+    }
+    .chipDropdownCheckmark {
+      border-color: #0C4AD5;
+    }
+  }
+}
+
+.chipDropdownItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #6E99EC;
+  transition: color 0.15s ease;
+
+  svg {
+    max-width: 16px;
+    max-height: 16px;
+    display: block;
+    transition: fill 0.15s ease;
+  }
+}
+
+.chipDropdownItemLabel {
+  flex: 1;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 36px;
+  text-align: right;
+  color: #6E99EC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+
+  :global([dir="ltr"]) & {
+    text-align: left;
+  }
+}
+
+.chipDropdownCheckbox {
+  display: none; // hidden, replaced by custom checkmark
+}
+
+.chipDropdownCheckmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #6E99EC;
+  border-radius: 3px;
+  background: transparent;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+// State 4 — selected (no hover): text/icon stay #6E99EC, checkbox filled #0C4AD5
+.chipDropdownCheckmarkChecked {
+  background: #0C4AD5;
+  border-color: #0C4AD5;
+}
+
+.chipDropdownEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 32px;
+  color: #6E99EC;
+  font-family: var(--font-ping);
+  font-size: 14px;
+}
+
+.chipDropdownScrollTrack {
+  display: none; // using native scrollbar styling instead
+}
+
+.chipDropdownActions {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 10px;
+  width: 100%;
+  border-top: 1px solid #C5D7F8;
+  border-radius: 0 0 12px 12px;
+  flex-shrink: 0;
+}
+
+.chipDropdownApply {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 2px;
+  background: #0C4AD5;
+  border: none;
+  border-radius: 24px;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  text-align: right;
+  letter-spacing: -0.01em;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #0a3eb3;
+  }
+}
+
+.chipDropdownClear {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 2px;
+  background: #FFFFFF;
+  border: 1px solid #6E99EC;
+  border-radius: 24px;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  text-align: right;
+  letter-spacing: -0.01em;
+  color: #6E99EC;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: #0C4AD5;
+    color: #0C4AD5;
+  }
+}
+
+// ---- Top Custom Scrollbar ----
+.topScrollbarTrack {
+  width: 100%;
+  height: 6px;
+  background: #EDF5FD;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.topScrollbarThumb {
+  position: absolute;
+  top: 0;
+  height: 6px;
+  background: #B4CBFF;
+  border-radius: 22px 0px 0px 22px;
+  transition: right 0.05s linear, width 0.05s linear;
+}
+
+// ---- Table Container ----
+.contactsTableWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  direction: rtl;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.contactsTableContainer {
+  width: 100%;
+  overflow: auto;
+  flex: 1;
+  direction: rtl;
+  position: relative;
+  min-height: 0;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #EDF5FD;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #B4CBFF;
+    border-radius: 22px;
+  }
+}
+
+// ---- Table Header ----
+.contactsTableHeader {
+  display: grid;
+  align-items: stretch;
+  padding: 0;
+  padding-left: 12px;
+  height: 48px;
+  min-height: 48px;
+  background: var(--gray-blue-35, #f6f9fc);
+  border-radius: 24px 24px 0 0;
+  direction: rtl;
+  gap: 0;
+  z-index: 2;
+  position: relative;
+  box-shadow:
+    0px 2px 4px rgba(168, 188, 230, 0.12);
+}
+
+.contactsHeaderCell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--table-header, #0C4AD5);
+  white-space: nowrap;
+  justify-content: flex-start;
+  padding: 10px 2px;
+  padding-inline-start: 22px;
+  min-height: 100%;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 14px;
+  position: relative;
+  background: var(--gray-blue-35, #f6f9fc);
+
+  &.nameHeader {
+    justify-content: flex-start;
+    border-inline-start: 1px solid #E2EBFF;
+    padding-inline-start: 22px;
+    position: sticky;
+    right: 60px;
+    z-index: 30;
+    background: var(--gray-blue-35, #f6f9fc);
+  }
+}
+
+.headerCheckboxCell {
+  justify-content: center;
+  padding-inline-start: 0;
+  position: sticky;
+  right: 0;
+  z-index: 30;
+  background: var(--gray-blue-35, #f6f9fc);
+  border-radius: 0 24px 0 0;
+}
+
+.headerIconCell {
+  justify-content: center;
+  gap: 1px;
+  padding-inline-start: 0;
+  position: sticky;
+  right: 30px;
+  z-index: 30;
+  background: var(--gray-blue-35, #f6f9fc);
+}
+
+.headerAddCell {
+  padding-inline-start: 2px;
+  border-radius: 24px 0 0 0;
+}
+
+.headerTypeIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--table-header, #0C4AD5);
+  flex-shrink: 0;
+}
+
+.headerColorIcon {
+  width: 16px;
+  height: 16px;
+  color: #F5C542;
+  flex-shrink: 0;
+}
+
+.headerCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--button-primary, #0C4AD5);
+}
+
+// Sort buttons — vertical Up/Down arrows, absolutely positioned to the right (inline-start in RTL)
+.contactsSortButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+  width: 16px;
+  align-items: center;
+  flex-shrink: 0;
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  .sortButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #98B8FF;
+
+    &:hover {
+      color: var(--Icon-able-Icon, #0C4AD5);
+    }
+
+    &.active {
+      color: var(--Primary-blue, #0C4AD5);
+    }
+  }
+}
+
+// Drag handle — visible on header cell hover
+.headerDragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #98B8FF;
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.15s ease, color 0.15s ease;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.contactsHeaderCell:hover .headerDragHandle {
+  opacity: 1;
+}
+
+.contactsHeaderCell:hover .headerDragHandle:hover {
+  color: #0C4AD5;
+}
+
+// Dragging column visual feedback
+.draggingColumn {
+  opacity: 0.5;
+  background: rgba(12, 74, 213, 0.04);
+}
+
+// ---- Campaign Mount Cell (grouped campaign columns) ----
+.campaignMountCell {
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0;
+  position: relative;
+  border-inline-end: 1px solid #E2EBFF;
+}
+
+.headerCampaignPill {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 4px;
+  width: 100%;
+  background: #DAEAFE;
+  border-radius: 24px;
+  margin-top: -8px;
+  align-self: stretch;
+}
+
+.headerCampaignPillText {
+  font-family: var(--font-ping);
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 10px;
+  text-align: right;
+  letter-spacing: 0.01em;
+  color: #0C4AD5;
+  opacity: 0.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerCampaignContent {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  padding: 0 2px;
+  gap: 2px;
+  flex: 1;
+}
+
+// ---- Add Column Button (moved to toolbar) ----
+.headerAddCell {
+  justify-content: center;
+  border-inline-end: none;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--gray-blue-35, #f6f9fc);
+  border-radius: 24px 0 0 0;
+}
+
+.addColumnButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 1000px;
+  border: none;
+  background: transparent;
+  color: #6E99EC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 4px;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    color: #0C4AD5;
+    background: rgba(12, 74, 213, 0.05);
+  }
+
+  &.addColumnButtonActive {
+    background: #E5EFFA;
+    color: #0C4AD5;
+  }
+}
+
+// ---- Column Management Dropdown ----
+.columnMenuDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 188px;
+  max-height: 338px;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border: 1px solid #0C4AD5;
+  border-radius: 16px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 100;
+  box-shadow: 0px 6px 12px rgba(168, 188, 230, 0.15);
+  direction: rtl;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #C5D7F8;
+    border-radius: 2px;
+  }
+}
+
+.columnMenuSearch {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 2px;
+  width: 100%;
+  height: 28px;
+  min-height: 28px;
+  background: #F6F9FC;
+  border-radius: 24px;
+  box-sizing: border-box;
+}
+
+.columnMenuSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-ping);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 12px;
+  text-align: right;
+  color: #1D234E;
+  direction: rtl;
+  min-width: 0;
+
+  &::placeholder {
+    color: #6E99EC;
+  }
+}
+
+.columnMenuSearchIcon {
+  width: 14px;
+  height: 14px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+.columnMenuSectionLabel {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 12px 12px 4px;
+  width: 100%;
+  font-family: var(--font-ping);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 12px;
+  text-align: right;
+  letter-spacing: -0.01em;
+  color: var(--Text-able-Text, #0C4AD5);
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.columnMenuRow {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  border-radius: 0;
+  box-sizing: border-box;
+
+  &.columnMenuRowVisible {
+    background: #EDF5FD;
+  }
+
+  &.columnMenuRowHidden {
+    background: #FFFFFF;
+  }
+}
+
+.columnMenuDrag {
+  width: 16px;
+  height: 16px;
+  color: #6E99EC;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.columnMenuRowLabel {
+  flex: 1;
+  font-family: var(--font-ping);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: right;
+  color: var(--Text-able-Text, #0C4AD5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.columnMenuCheckbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #0C4AD5;
+  border-radius: 3px;
+}
+
+// ---- Total Donations Header (highlighted) ----
+.totalDonationsHeader {
+  background: #EDF5FD;
+  border-inline-end: 1px solid #EDF5FD;
+
+  &:hover {
+    border-inline-end: 1px solid #6E99EC;
+  }
+}
+
+// ---- Table Body ----
+.contactsTableBody {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  min-width: max-content;
+}
+
+.contactsTableRow {
+  display: grid;
+  align-items: stretch;
+  padding: 0;
+  padding-left: 12px;
+  min-height: 52px;
+  background: transparent;
+  direction: rtl;
+  gap: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--button-hover-2, #edf5fd);
+  }
+  border-radius: var(--Border-Radius-lg, 24px);
+  box-shadow:
+    0px 2px 3px 0px rgba(168, 188, 230, 0.05),
+    0px 6px 6px 0px rgba(168, 188, 230, 0.04),
+    0px 14px 8px 0px rgba(168, 188, 230, 0.03),
+    0px 25px 10px 0px rgba(168, 188, 230, 0.01),
+    0px 39px 11px 0px rgba(168, 188, 230, 0);
+}
+
+// ---- Cells ----
+.contactsCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--table-cell, #6e99ec);
+  min-width: 0;
+  padding: 0 2px;
+  padding-inline-start: 22px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  background: var(--table-default, #ffffff);
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-radius: 24px 0 0 24px;
+  }
+}
+
+.contactsTableRow:hover .contactsCell {
+  background: var(--button-hover-2, #edf5fd);
+}
+
+.selectedRow .contactsCell {
+  background: var(--Surface-02, #edf5fd) !important;
+}
+
+.nameCell {
+  justify-content: flex-start;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--Text-Default, #6e99ec);
+  cursor: pointer;
+  gap: 6px;
+  border-inline-start: 1px solid #E2EBFF;
+  padding-inline-start: 22px;
+  overflow: visible;
+  position: sticky;
+  right: 60px;
+  z-index: 10;
+  background: var(--table-default, #ffffff);
+}
+
+.contactsTableRow:hover .nameCell {
+  background: var(--button-hover-2, #edf5fd);
+}
+
+.selectedRow .nameCell {
+  background: var(--Surface-02, #edf5fd) !important;
+}
+
+.checkboxCell {
+  padding-inline-start: 0;
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  background: var(--table-default, #ffffff);
+  border-radius: 0 24px 24px 0;
+}
+
+.typeIconCell {
+  padding-inline-start: 0;
+  position: sticky;
+  right: 30px;
+  z-index: 10;
+  background: var(--table-default, #ffffff);
+}
+
+.contactsTableRow:hover .checkboxCell,
+.contactsTableRow:hover .typeIconCell {
+  background: var(--button-hover-2, #edf5fd);
+}
+
+.selectedRow .checkboxCell,
+.selectedRow .typeIconCell {
+  background: var(--Surface-02, #edf5fd) !important;
+}
+
+// Checkbox cell
+.checkboxCell {
+  justify-content: center;
+  overflow: visible;
+}
+
+// Type icon cell
+.typeIconCell {
+  justify-content: center;
+  overflow: visible;
+}
+
+.contactTypeIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--Text-Default, #6e99ec);
+  flex-shrink: 0;
+}
+
+.contactName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clickableName {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--Bg-Button-hover-3, #DCEBFB);
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+}
+
+.rowIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
+.addressCell {
+  direction: rtl;
+  text-align: right;
+  justify-content: flex-start;
+}
+
+.expectedAmount {
+  color: var(--table-cell, #6e99ec);
+  font-weight: 400;
+  justify-content: flex-start;
+}
+
+// ---- Amount Cell ----
+.amountCell {
+  color: var(--table-cell, #6e99ec);
+  font-weight: 400;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+// ---- Total Donations (highlighted) ----
+// Note: .totalDonationsHeader is defined above in the header section
+
+.totalDonationsCell {
+  color: var(--table-cell, #6e99ec);
+  font-weight: 400;
+  justify-content: flex-start;
+  background: #EDF5FD;
+  border-inline-end: 1px solid #E2EBFF;
+  padding: 8px 2px 8px 18px;
+  padding-inline-start: 22px;
+  gap: 2px;
+  align-self: stretch;
+}
+
+.totalDonationsEmpty {
+  background: transparent;
+}
+
+.contactsTableRow:hover .totalDonationsCell {
+  background: #E2EBFF;
+  color: #0C4AD5;
+}
+
+.contactsTableRow:hover .totalDonationsEmpty {
+  background: transparent;
+}
+
+.donationCurrency {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+}
+
+.donationAmount {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+}
+
+// ---- Fundraiser Name ----
+.fundraiserName {
+  color: var(--table-cell, #6e99ec);
+  font-size: 14px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ---- Rating Stars ----
+.ratingCell {
+  justify-content: center;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 1px;
+  direction: ltr;
+}
+
+.star {
+  font-size: 14px;
+  color: var(--border-disable-field, #c5d7f8);
+  line-height: 1;
+}
+
+.starFilled {
+  color: #ffc107;
+}
+
+// ---- Summary Row (outside white container) ----
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0 0;
+  width: 100%;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--Text-Default, #6e99ec);
+  font-family: var(--font-ping);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 12px;
+  letter-spacing: -0.12px;
+  white-space: nowrap;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  line-height: 12px;
+  letter-spacing: -0.12px;
+}
+
+.summaryNumber {
+  font-size: 12px;
+  line-height: 12px;
+  letter-spacing: -0.12px;
+}
+
+.summaryCurrency {
+  font-size: 10px;
+  line-height: 10px;
+  letter-spacing: 0.1px;
+}
+
+.viewButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--Text-Default, #6e99ec);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--table-header, #0C4AD5);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.personIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--Text-Default, #6e99ec);
+  flex-shrink: 0;
+}
+
+.trafficDot {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #F5C542;
+}
+
+.rowCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--button-primary, #0C4AD5);
+}
+
+.viewIcon {
+  width: 18px;
+  height: 18px;
+  color: var(--Text-Default, #6e99ec);
+  flex-shrink: 0;
+}
+
+.rowSmallCheckbox {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--button-primary, #0C4AD5);
+  border-radius: 2px;
+}
+
+// ---- Tags ----
+.sourceTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: var(--Border-Radius-lg, 24px);
+  background: var(--Surface-02, #edf5fd);
+  color: var(--Text-Default, #6e99ec);
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: var(--Border-Radius-lg, 24px);
+  background: #c4f3d1;
+  color: var(--Text-able-Text, #0C4AD5);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  width: 28px;
+}
+
+.mailIcon {
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 4px;
+  color: var(--Text-Default, #6e99ec);
+}
+
+// ---- Loading / Empty ----
+.contactsLoadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+  min-height: 200px;
+}
+
+.contactsEmptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  color: var(--Text-Default, #6e99ec);
+  min-height: 200px;
+}
+
+// ---- Pagination (outside white container) ----
+.contactsPaginationWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 32px 8px;
+  padding-left: 80px;
+}
+
+.rowsPerPage {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  direction: rtl;
+}
+
+.rowsPerPageLabel {
+  font-family: var(--font-ping);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: right;
+  color: #6E99EC;
+  white-space: nowrap;
+}
+
+.rowsSelectContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 56px;
+}
+
+.rowsSelectTrigger {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 12px 2px 4px;
+  width: 56px;
+  height: 24px;
+  border-radius: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  gap: 2px;
+
+  .rowsSelectIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: #6E99EC;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .rowsSelectValue {
+    font-family: var(--font-ping);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 14px;
+    text-align: right;
+    letter-spacing: -0.01em;
+    color: #6E99EC;
+  }
+
+  &.rowsSelectTriggerOpen {
+    .rowsSelectIcon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.rowsSelectDropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0;
+  width: 56px;
+  background: #FFFFFF;
+  border: 1px solid #0C4AD5;
+  border-radius: 20px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.rowsSelectOption {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 12px;
+  gap: 2px;
+  width: 100%;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-ping);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: right;
+  letter-spacing: -0.01em;
+  color: #6E99EC;
+  border-radius: 0;
+
+  &:hover {
+    background: #f6f9fc;
+  }
+
+  &.rowsSelectOptionActive {
+    background: #EDF5FD;
+    color: #0C4AD5;
+  }
+
+  &:first-child {
+    border-radius: 20px 20px 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 20px 20px;
+  }
+}
+
+// ---- Responsive ----
+@media (max-width: 1200px) {
+  .contactsHeader {
+    padding: 15px 16px 8px;
+  }
+
+  .contactsContentWrapper {
+    padding: 16px;
+  }
+
+  .actionSidebar {
+    width: 200px;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contactsLayout {
+    flex-direction: column;
+  }
+
+  .actionSidebar {
+    width: 100%;
+    min-width: 100%;
+    flex-direction: row;
+    height: auto;
+    min-height: auto;
+    padding: 12px 16px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-disable-field, #c5d7f8);
+  }
+
+  .actionItem {
+    padding: 8px 12px;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .contactsContentWrapper {
+    padding: 12px;
+    border-radius: 0;
+  }
+
+  .contactsTabs {
+    overflow-x: auto;
+    justify-content: flex-start;
+    max-width: 100%;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .contactsTab {
+    padding: 8px 16px;
+    font-size: 14px;
+    width: auto;
+    min-width: 120px;
+    margin-inline-start: -12px;
+  }
+
+  .contactsFilterBar {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+  }
+
+  .allFilters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .filterChip {
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+
+  .contactsSearchWrapper {
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .contactsTableContainer {
+    overflow-x: auto;
+  }
+
+  .contactsPaginationWrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .aiAssistant {
+    display: none;
+  }
+}
+
+// ---- Selection Action Bar ----
+.selectionActionBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 8px;
+  gap: 8px;
+  background: #2B3BA2;
+  box-shadow: 0px 4px 4px rgba(43, 59, 162, 0.25);
+  border-radius: 8px;
+  direction: rtl;
+  width: fit-content;
+  min-width: 480px;
+  height: 40px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.selectionCloseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: #FFFFFF;
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.selectionCount {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.selectionCountValue {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 12px;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.selectionCountLabel {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 12px;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.selectionDivider {
+  width: 0;
+  height: 12px;
+  border-right: 1px solid #6E99EC;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.selectionActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0 2px 8px;
+  border-radius: 24px;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+
+  span {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+    color: #C5D7F8;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.selectionMailIcon {
+  width: 12px;
+  height: 12px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+.selectionDeleteBtn {
+  span {
+    color: #FF6B6B;
+  }
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.selectionDeleteIcon {
+  width: 14px;
+  height: 14px;
+  color: #FF6B6B;
+  flex-shrink: 0;
+}
+
+// ---- More Menu (upward dropdown) ----
+.moreMenuWrapper {
+  position: relative;
+}
+
+.moreMenuDropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 12px 8px;
+  gap: 4px;
+  width: 150px;
+  background: #FFFFFF;
+  box-shadow:
+    0px 197px 79px rgba(137, 145, 164, 0.01),
+    0px 111px 67px rgba(137, 145, 164, 0.05),
+    0px 49px 49px rgba(137, 145, 164, 0.09),
+    0px 12px 27px rgba(137, 145, 164, 0.1);
+  border-radius: 8px;
+  z-index: 10;
+  direction: rtl;
+}
+
+.moreMenuItem {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 0 2px 8px;
+  gap: 4px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+
+  span {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+    letter-spacing: -0.01em;
+    color: #6E99EC;
+    text-align: right;
+  }
+
+  &:hover {
+    background: #F6F9FC;
+  }
+}
+
+.moreMenuIcon {
+  width: 12px;
+  height: 12px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+// ---- Add to Campaign Button ----
+.addToCampaignButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--Text-able-Text, #0C4AD5);
+  color: white;
+  border: none;
+  border-radius: var(--Border-Radius-lg, 24px);
+  cursor: pointer;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--Text-able-Text-hover, #0a3eb3);
+  }
+}
+
+// ---- Selected Row Highlight ----
+.selectedRow {
+  // row itself stays transparent; cells handle backgrounds
+}
+
+// ---- Campaign Tags ----
+// ---- Campaign Tags (redesigned) ----
+.campaignsCell {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 4px 6px;
+  padding-inline-start: 22px;
+  gap: 6px;
+  overflow: visible;
+  white-space: normal;
+}
+
+.campaignTags {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  row-gap: 3px;
+}
+
+.campaignTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  border-radius: 24px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 10px;
+  letter-spacing: 0.01em;
+  width: 80px;
+  text-align: center;
+  cursor: default;
+  position: relative;
+
+  .campaignTagText {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.5;
+  }
+
+  .campaignTagTooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tooltip-Bg, #2B3BA2);
+    color: var(--tooltip-Text, #FFF) !important;
+    padding: 4px 8px;
+    border-radius: var(--Border-Radius-xs, 2px);
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    white-space: nowrap;
+    z-index: 8000;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 4px;
+      border-style: solid;
+      border-color: var(--tooltip-Bg, #2B3BA2) transparent transparent transparent;
+    }
+  }
+
+  &:hover .campaignTagTooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.campaignCount {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+.campaignMore {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: var(--gray-blue-100, #c4d9fb);
+  color: var(--Text-able-Text, #0C4AD5);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.noCampaigns {
+  color: var(--gray-blue-250, #a3bef8);
+  font-size: 14px;
+}
+
+// ---- Modal Styles ----
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* ─── Add-to-Campaign Popup (system design) ─── */
+
+.atcPopup {
+  display: flex;
+  width: 780px;
+  min-height: 280px;
+  padding: var(--Spacing-Spacing-11, 48px) var(--Spacing-Spacing-9, 32px);
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--Spacing-Spacing-8, 24px);
+  border-radius: 40px;
+  background: var(--table-default, #FFF);
+  box-shadow: 0 106px 30px 0 rgba(62, 101, 193, 0.00),
+              0 68px 27px 0 rgba(62, 101, 193, 0.01),
+              0 38px 23px 0 rgba(62, 101, 193, 0.03),
+              0 17px 17px 0 rgba(62, 101, 193, 0.04),
+              0 4px 9px 0 rgba(62, 101, 193, 0.05);
+}
+
+.atcTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--Text-able-Text, #0C4AD5);
+}
+
+.atcSubtitle {
+  font-size: 14px;
+  color: var(--Text-Default, #4a4a68);
+  line-height: 1.5;
+}
+
+.atcContent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 540px;
+}
+
+/* Dropdown wrapper */
+.atcDropdownWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.atcDropdownTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-5, 12px);
+  font-family: var(--font-ping);
+  font-size: 14px;
+  border: 1px solid var(--Border-Default, #d0e2fb);
+  border-radius: var(--Border-Radius-lg, 24px);
+  background: var(--Bg-Button-disable, #FFF);
+  cursor: pointer;
+  height: var(--Heigt-Heigt-8, 48px);
+  transition: border-color 0.2s ease;
+  direction: rtl;
+  font-size: 15px;
+
+  &:hover {
+    border-color: var(--Border-able-field, #0C4AD5);
+  }
+}
+
+.atcDropdownTriggerOpen {
+  border-color: var(--Border-able-field, #0C4AD5);
+}
+
+.atcDropdownValue {
+  color: var(--Text-heading, #1a1a2e);
+  font-weight: 500;
+}
+
+.atcDropdownPlaceholder {
+  color: var(--Gray-Blue-300, #a0b8e0);
+}
+
+.atcDropdownArrow {
+  font-size: 12px;
+  color: var(--Gray-Blue-300, #a0b8e0);
+  transition: transform 0.2s ease;
+}
+
+.atcDropdownArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* Dropdown panel */
+.atcDropdownPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 100;
+  background: #FFF;
+  border: 1px solid var(--Border-able-field, #0C4AD5);
+  border-radius: var(--Border-Radius-m, 16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.atcDropdownSearch {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--Spacing-Spacing-3, 4px) var(--Spacing-Spacing-5, 12px);
+  font-family: var(--font-ping);
+  font-size: 14px;
+  border: 1px solid var(--Border-Default, #d0e2fb);
+  border-radius: var(--Border-Radius-lg, 24px);
+  outline: none;
+  transition: border-color 0.2s ease;
+  color: var(--Text-heading, #1a1a2e);
+  direction: rtl;
+  height: 36px;
+
+  &::placeholder {
+    color: var(--Gray-Blue-300, #a0b8e0);
+  }
+
+  &:focus {
+    border-color: var(--Border-able-field, #0C4AD5);
+  }
+}
+
+.atcCampaignList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  width: 100%;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--Gray-Blue-200, #d0e2fb);
+    border-radius: 2px;
+  }
+}
+
+.atcCampaignItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-5, 12px);
+  border: var(--Strock-Width-1, 1px) solid transparent;
+  border-radius: var(--Border-Radius-lg, 24px);
+  background: var(--Bg-Button-disable, #FFF);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-ping);
+  height: var(--Heigt-Heigt-6, 40px);
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: var(--Border-Default, #d0e2fb);
+    background: var(--Bg-Button-hover-2, #edf5fd);
+  }
+}
+
+.atcCampaignSelected {
+  border-color: var(--Border-able-field, #0C4AD5) !important;
+  background: var(--Bg-Button-hover-3, #DCEBFB);
+  color: var(--Text-able-Text, #0C4AD5);
+}
+
+.atcCampaignName {
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+}
+
+.atcCampaignType {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: var(--Border-Radius-lg, 24px);
+  background: var(--Gray-Blue-50, #F6F9FC);
+  color: var(--Text-Default, #4a4a68);
+}
+
+.atcEmpty {
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--Gray-Blue-300, #a0b8e0);
+}
+
+.atcSelectedInfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-5, 12px);
+  background: var(--Gray-Blue-35, #F6F9FC);
+  border-radius: var(--Border-Radius-lg, 24px);
+  font-size: 14px;
+  color: var(--Text-Default, #4a4a68);
+
+  strong {
+    color: var(--Text-able-Text, #0C4AD5);
+  }
+}
+
+.atcError {
+  padding: var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-5, 12px);
+  background: #fff0f0;
+  border: 1px solid #ffcaca;
+  border-radius: var(--Border-Radius-lg, 24px);
+  color: var(--Text-error, #FF1F00);
+  font-size: 14px;
+  text-align: center;
+}
+
+.atcActions {
+  display: flex;
+  gap: var(--Spacing-Spacing-10, 40px);
+  justify-content: center;
+  align-items: center;
+}
+
+/* ─── Campaign Filter Dropdown ─── */
+
+.campaignDropdownContainer {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.campaignDropdownPanel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px;
+  gap: 13px;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 192px;
+  background: #FFFFFF;
+  border: 1px solid #0C4AD5;
+  border-radius: 16px;
+  z-index: 100;
+
+  :global([dir="ltr"]) & {
+    right: auto;
+    left: 0;
+  }
+}
+
+.campaignPill {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  width: 100%;
+  height: 24px;
+  border: 2px solid transparent;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  gap: 4px;
+  font-family: var(--font-ping);
+  font-size: 0;
+  outline: none;
+}
+
+.campaignPillSelected {
+  border-color: #0C4AD5;
+}
+
+.campaignPillLabel {
+  flex: 1;
+  font-family: var(--font-ping);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 14px;
+  display: flex;
+  align-items: center;
+  text-align: right;
+  letter-spacing: -0.01em;
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-content: center;
+
+  :global([dir="ltr"]) & {
+    text-align: left;
+  }
+}
+
+.campaignPillCheck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* ─── Campaign Tags in Table ─── */
+
+.campaignMore {
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: var(--gray-blue-100, #c4d9fb);
+  color: var(--Text-body, #4a4a68);
+}
+
+.noCampaigns {
+  color: var(--gray-blue-300, #a0b8e0);
+}
+
+/* ─── Rating Stars ─── */
+.ratingStars {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.starFilled {
+  color: #ffc107;
+}
+
+/* ─── AddToCampaign Button ─── */
+.addToCampaignButton {
+  padding: 8px 16px;
+  background: var(--Text-able-Text, #0C4AD5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-ping);
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--Text-able-Text-hover, #0a3eb3);
+  }
+}
+
+// ─── Responsible Fundraiser Cell ───
+.fundraiserPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #ffffff;
+  border: 1px solid #6e99ec;
+  border-radius: 24px;
+  color: #6e99ec;
+  font-size: 14px;
+  line-height: 14px;
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fundraiserTrigger {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 16px 2px 18px;
+  gap: 4px;
+  height: 24px;
+  border-radius: 24px;
+  cursor: pointer;
+  color: #6e99ec;
+  font-size: 14px;
+  line-height: 14px;
+  max-width: 164px;
+
+  .fundraiserTriggerText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    text-align: right;
+    max-width: 90px;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.fundraiserDropdownPanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1px solid #6e99ec;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  width: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px 0;
+
+  .fundraiserDropdownEntry {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 8px;
+    gap: 2px;
+    width: 146px;
+    height: 24px;
+    margin: 4px 25px 4px auto;
+    background: #ffffff;
+    border: 1px solid #6e99ec;
+    border-radius: 24px;
+
+    span {
+      color: #6e99ec;
+      font-size: 14px;
+      line-height: 14px;
+      text-align: right;
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 90px;
+    }
+  }
+
+  .fundraiserDropdownCount {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 18px 4px 2px;
+    width: 100%;
+    color: #6e99ec;
+    font-size: 14px;
+    line-height: 14px;
+  }
+
+  .fundraiserDropdownBtn {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 8px;
+    gap: 2px;
+    width: 105px;
+    height: 20px;
+    margin: 4px 14px 4px auto;
+    background: #ffffff;
+    border: 1px solid #6e99ec;
+    border-radius: 24px;
+    color: #6e99ec;
+    font-size: 14px;
+    line-height: 14px;
+    cursor: pointer;
+
+    &:hover {
+      background: #edf5fd;
+    }
+  }
+}

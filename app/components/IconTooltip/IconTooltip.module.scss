@@ -1,0 +1,95 @@
+.tooltipContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // width: 100px;
+    // height: 100px;
+    // color: var(--Icon-able-Icon, #0C4AD5);
+    cursor: pointer;
+
+    &.up .tooltip span {
+        padding: var(--Spacing-Spacing-4);
+        white-space: wrap;
+    }
+
+    .tooltip {
+        visibility: hidden;
+
+        position: absolute;
+        // transform: translateY(-50%);
+        transition: opacity 0.3s ease-in-out;
+        color: var(--tooltip-Bg, #2B3BA2);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 250px;
+        height: fit-content;
+        width: max-content;
+        z-index: 8000;
+
+        // width: 182px;
+        span {
+            background: var(--tooltip-Bg, #2B3BA2);
+            // padding: var(--Spacing-Spacing-2);
+            border-radius: var(--Border-Radius-xs, 2px);
+            color: var(--tooltip-Text, #FFF);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            white-space: pre-line;
+            padding: 2px 4px 3px 4px;
+        }
+
+        // svg {
+        //     position: absolute;
+        //     // right: 40%;
+        //     // top: calc(100% + 5px);
+        //     // transform: translateY(-50%);
+        //     color: var(--tooltip-Bg, #2B3BA2);
+        //     fill: var(--tooltip-Bg, #2B3BA2);
+        //     width: 12.96px;
+        //     height: 12.96px;
+
+        //     left: 50%;
+        //     /* transform: translate(10px, 10px); */
+        //     top: calc(100% + 5px);
+        //     transform: translate(-50%, -50%);
+        // }
+        .arrowUp {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12.96px;
+            height: 12.96px;
+            fill: var(--tooltip-Bg, #2B3BA2);
+        }
+
+        /* 🔻 חץ כלפי מטה */
+        .arrowDown {
+            position: absolute;
+            bottom: calc(100% - 1px);
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+            width: 12.96px;
+            height: 12.96px;
+            fill: var(--tooltip-Bg, #2B3BA2);
+        }
+    }
+
+    &.up .tooltip {
+        bottom: 140%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    &.down .tooltip {
+        top: 140%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    &:hover .tooltip {
+        visibility: visible;
+    }
+}

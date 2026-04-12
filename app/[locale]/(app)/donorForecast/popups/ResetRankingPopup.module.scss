@@ -1,0 +1,133 @@
+.resetRankingPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+
+    .popupContent {
+        position: relative;
+
+        display: inline-flex;
+        min-height: 234px;
+        padding: var(--Spacing-Spacing-9);
+        flex-direction: column;
+        align-items: center;
+        gap: var(--Spacing-Spacing-6);
+        border-radius: var(--Border-Radius-m);
+        background: var(--Gray-Blue-100, #DEE7FB);
+        box-shadow: 0px 106px 30px 0px rgba(62, 101, 193, 0.00), 0px 68px 27px 0px rgba(62, 101, 193, 0.01), 0px 38px 23px 0px rgba(62, 101, 193, 0.03), 0px 17px 17px 0px rgba(62, 101, 193, 0.04), 0px 4px 9px 0px rgba(62, 101, 193, 0.05);
+        width: 576px;
+
+        .emojiContainer {
+            position: absolute;
+            bottom: calc(100% - 16px);
+
+            img {
+                width: 255.938px;
+                height: 210px;
+            }
+        }
+
+        .title {
+            color: var(--Text-able-Text, #0C4AD5);
+            text-align: center;
+        }
+
+        .cardsContainer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: var(--Spacing-Spacing-9);
+            align-self: stretch;
+            // box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+            color: var(--Text-able-Text, #0C4AD5);
+
+            .card {
+                width: 240px;
+                height: 320px;
+                perspective: 1000px;
+                position: relative;
+
+                &.flipped {
+                    .cardFace {
+                        transform: rotateY(180deg);
+
+                        &.back {
+                            transform: rotateY(0deg);
+                        }
+                    }
+                }
+            }
+
+            .cardFace {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                backface-visibility: hidden;
+                transition: transform 300ms;
+                transform-style: preserve-3d;
+                padding: var(--Spacing-Spacing-8) var(--Spacing-Spacing-6);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                gap: var(--Spacing-Spacing-6);
+
+                border-radius: var(--Border-Radius-sm);
+                background: var(--Bg-Button-disable, #FFF);
+                box-shadow: 0px 39px 11px 0px rgba(168, 188, 230, 0.00), 0px 25px 10px 0px rgba(168, 188, 230, 0.01), 0px 14px 8px 0px rgba(168, 188, 230, 0.03), 0px 6px 6px 0px rgba(168, 188, 230, 0.04), 0px 2px 3px 0px rgba(168, 188, 230, 0.05);
+                white-space: pre-line;
+
+                &.front {
+                    transform: rotateY(0deg);
+                    border: 1px solid #E6E6E6;
+
+                    &.green, &.red {
+                        text-align: center;
+                    }
+
+                    &.green {
+                        border: var(--Strock-Width-3) solid var(--other-Success);
+                    }
+
+                    &.red {
+                        border: var(--Strock-Width-3) solid var(--other-Error, #FF3B3B);
+                    }
+                }
+
+                &.back {
+                    transform: rotateY(-180deg);
+                    padding: 10px 10px 10.372px 9.867px;
+                    border-radius: var(--Border-Radius-sm);
+                    border: var(--Strock-Width-3) solid #9DBDF3;
+
+                    &.green, &.red {
+                        text-align: center;
+                    }
+
+                    &.green {
+                        border: 2px solid var(--other-Success);
+                    }
+
+                    &.red {
+                        border: 2px solid var(--other-Error, #FF3B3B);
+                    }
+                }
+            }
+
+            .cardButtons {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: var(--Spacing-Spacing-2);
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="confetti" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+      <!-- Multi-colored ribbons -->
+      <path d="M10 10C15 5 20 15 25 10" stroke="#0C4AD5" stroke-width="2"/>
+      <path d="M30 20C35 15 40 25 45 20" stroke="#4CAF50" stroke-width="2"/>
+      <path d="M15 35C20 30 25 40 30 35" stroke="#FF4081" stroke-width="2"/>
+      
+      <!-- Multi-colored squares -->
+      <rect x="5" y="25" width="4" height="4" fill="#0C4AD5" transform="rotate(15)"/>
+      <rect x="35" y="15" width="4" height="4" fill="#4CAF50" transform="rotate(45)"/>
+      <rect x="25" y="45" width="4" height="4" fill="#FF4081" transform="rotate(-15)"/>
+      
+      <!-- Multi-colored circles -->
+      <circle cx="15" cy="15" r="2" fill="#0C4AD5"/>
+      <circle cx="40" cy="40" r="2" fill="#4CAF50"/>
+      <circle cx="25" cy="30" r="2" fill="#FF4081"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="400" fill="url(#confetti)"/>
+</svg> 

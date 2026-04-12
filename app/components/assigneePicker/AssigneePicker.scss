@@ -1,0 +1,149 @@
+.assignee-picker-wrapper {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    overflow: visible;
+    position: relative;
+}
+
+.assignee-icon-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    outline: none;
+    overflow: visible;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--Text-Default, #6E99EC);
+    transition: color 0.2s, background 0.2s;
+
+    &:hover {
+        color: var(--Text-able-Text, #0C4AD5);
+        background: var(--Surface-01, #F6F9FC);
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+    svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+        overflow: visible;
+        flex-shrink: 0;
+    }
+}
+
+.assignee-selected-label {
+    font-size: 10px;
+    color: var(--Impel-Brand-Primary-blue, #0C4AD5);
+    font-family: var(--font-ping);
+    white-space: nowrap;
+    line-height: 1;
+    font-weight: 400;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.assignee-popup {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    z-index: 100;
+    width: 240px;
+    max-height: 300px;
+    background: var(--Bg-Button-disable, #fff);
+    border-radius: 16px;
+    border: 1px solid var(--Border-Default, #6E99EC);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    direction: rtl;
+}
+
+.assignee-search {
+    padding: 8px;
+    border-bottom: 1px solid var(--Border-able-field, #e0e0e0);
+    flex-shrink: 0;
+
+    input {
+        width: 100%;
+        border: 1px solid var(--Border-able-field, #e0e0e0);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 13px;
+        font-family: var(--font-ping);
+        outline: none;
+        color: var(--Text-Default, #333);
+        direction: rtl;
+
+        &::placeholder {
+            color: #aaa;
+        }
+
+        &:focus {
+            border-color: var(--Impel-Brand-Primary-blue, #0C4AD5);
+        }
+    }
+}
+
+.assignee-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+    min-height: 0;
+    max-height: 220px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.assignee-loading,
+.assignee-empty {
+    padding: 12px;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    font-family: var(--font-ping);
+}
+
+.assignee-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    direction: rtl;
+
+    &:hover {
+        background: var(--Bg-Button-hover-2, #f0f4ff);
+    }
+}
+
+.assignee-name {
+    font-size: 13px;
+    font-family: var(--font-ping);
+    color: var(--Text-Default, #333);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.assignee-role {
+    font-size: 11px;
+    font-family: var(--font-ping);
+    color: var(--Impel-Brand-Primary-blue, #0C4AD5);
+    margin-inline-start: 8px;
+    white-space: nowrap;
+}

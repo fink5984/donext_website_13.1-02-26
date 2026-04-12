@@ -1,0 +1,47 @@
+.redTooltipWrapper {
+    position: absolute;
+    bottom: 77%;
+    left: -1px;
+    cursor: pointer;
+    color: var(--Icon-able-Icon, #0C4AD5);
+
+    .redTooltip {
+        position: fixed;
+        visibility: hidden;
+        color: var(--tooltip-Text, #FFF) !important;
+        padding: 0 !important;
+        border-radius: var(--Border-Radius-xs, 2px);
+        background: var(--tooltip-Bg, #2B3BA2);
+        box-shadow: 0px 2px 4px 0px #CDCEE1;
+        white-space: nowrap;
+        // z-index: 1000;
+        width: max-content;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        span {
+            color: var(--tooltip-Text, #FFF) !important;
+            padding: var(--Spacing-Spacing-4) !important;
+            border-radius: var(--Border-Radius-xs, 2px);
+            background: var(--tooltip-Bg, #2B3BA2);
+            text-align: center;
+        }
+
+        svg {
+            position: absolute;
+            right: 50%; // מיקום החץ
+            top: calc(100% + 4px);
+            transform: translateY(-50%);
+            color: var(--tooltip-Bg, #2B3BA2);
+            fill: var(--tooltip-Bg, #2B3BA2);
+        }
+    }
+
+    &:hover .redTooltip {
+        visibility: visible;
+        right: 39%;
+        top: 48%;
+        transform: translateY(-50%);
+    }
+}
