@@ -68,7 +68,8 @@ export async function middleware(request) {
       '/api/people',           // contacts page — uses clientId, not campaignId
       '/api/contacts-settings', // contacts column settings — uses clientId
       '/api/custom-fields',    // contacts page custom fields — uses clientId
-      '/api/tags'              // contacts page tags — uses clientId
+      '/api/tags',             // contacts page tags — uses clientId
+      '/api/admin'             // admin routes do their own JWT auth internally
     ];
 
     // בדיקה אם זה endpoint ציבורי
