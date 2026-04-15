@@ -433,11 +433,18 @@ class ContactsStore {
         }
     }
 
-    async deleteContact(contactId) {
+    async deleteContact(contactId, force = false) {
         try {
-            const res = await fetchWithAuth(`/api/people/${contactId}`, {
+            const url = force ? `/api/people/${contactId}?force=true` : `/api/people/${contactId}`;
+            const res = await fetchWithAuth(url, {
                 method: 'DELETE',
             });
+
+            if (res?.status === 409) {
+                const data = await res.json();
+                if (data.hasDonations) return { hasDonations: true };
+            }
+
             if (!res?.ok) throw new Error('Failed to delete contact');
 
             runInAction(() => {
@@ -447,6 +454,8 @@ class ContactsStore {
                     this.closeSidePanel();
                 }
             });
+
+            return { success: true };
         } catch (error) {
             console.error('Error deleting contact:', error);
             throw error;

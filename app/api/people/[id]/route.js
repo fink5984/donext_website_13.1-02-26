@@ -122,23 +122,61 @@ export async function PUT(request, { params }) {
 
 /**
  * DELETE /api/people/[id]
- * מחיקה רכה של איש קשר (active: false)
+ * אם אין תרומות: מחיקה מלאה עם cascade
+ * אם יש תרומות וללא ?force=true: מחזיר { hasDonations: true } עם 409
+ * אם יש תרומות עם ?force=true: מחיקה רכה (active: false)
  */
 export async function DELETE(request, { params }) {
     try {
         const { id } = await params;
+        const personId = parseInt(id);
+        const { searchParams } = new URL(request.url);
+        const force = searchParams.get('force') === 'true';
 
-        await prisma.person.update({
-            where: { id: parseInt(id) },
-            data: { active: false },
+        // Check for actual donation records
+        const donorWithDonations = await prisma.donor.findFirst({
+            where: {
+                personId,
+                donations: { some: {} }
+            },
+            select: { id: true }
         });
 
-        return NextResponse.json({ message: 'איש קשר הוסתר בהצלחה' });
+        if (donorWithDonations && !force) {
+            return NextResponse.json({ hasDonations: true }, { status: 409 });
+        }
+
+        if (donorWithDonations) {
+            // Has donations + force=true → soft delete only
+            await prisma.person.update({
+                where: { id: personId },
+                data: { active: false },
+            });
+        } else {
+            // No donations → hard delete with full cascade
+            await prisma.$transaction(async (tx) => {
+                const donors = await tx.donor.findMany({
+                    where: { personId },
+                    select: { id: true }
+                });
+                const donorIds = donors.map(d => d.id);
+
+                if (donorIds.length > 0) {
+                    await tx.donorNote.deleteMany({ where: { donorId: { in: donorIds } } });
+                    await tx.questionAnswer.deleteMany({ where: { donorId: { in: donorIds } } });
+                    await tx.donor.deleteMany({ where: { id: { in: donorIds } } });
+                }
+                await tx.fundraiser.deleteMany({ where: { personId } });
+                await tx.person.delete({ where: { id: personId } });
+            });
+        }
+
+        return NextResponse.json({ message: 'איש קשר נמחק בהצלחה' });
     } catch (error) {
         if (error.code === 'P2025') {
             return NextResponse.json({ error: 'איש קשר לא נמצא' }, { status: 404 });
         }
-        console.error('Error deactivating person:', error);
-        return NextResponse.json({ error: 'Failed to deactivate person' }, { status: 500 });
+        console.error('Error deleting person:', error);
+        return NextResponse.json({ error: 'Failed to delete person' }, { status: 500 });
     }
 }

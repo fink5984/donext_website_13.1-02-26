@@ -9,7 +9,8 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(request) {
     try {
-        const { ids } = await request.json();
+        const body = await request.json();
+        const { ids } = body;
 
         if (!Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
@@ -20,55 +21,70 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid IDs' }, { status: 400 });
         }
 
-        // Get all donor IDs linked to these people
-        const donors = await prisma.donor.findMany({
-            where: { personId: { in: personIds } },
-            select: { id: true },
-        });
-        const donorIds = donors.map(d => d.id);
+        const { force = false } = body;
 
-        // Get all donation IDs linked to these donors
-        let donationIds = [];
-        if (donorIds.length > 0) {
-            const donations = await prisma.donation.findMany({
-                where: { donorId: { in: donorIds } },
-                select: { id: true },
+        // Check which people have actual donation records
+        const donorsWithDonations = await prisma.donor.findMany({
+            where: {
+                personId: { in: personIds },
+                donations: { some: {} }
+            },
+            select: { personId: true },
+        });
+        const personIdsWithDonations = [...new Set(donorsWithDonations.map(d => d.personId))];
+
+        // If any have donations and not forced: return warning
+        if (personIdsWithDonations.length > 0 && !force) {
+            return NextResponse.json({
+                hasDonations: true,
+                affectedCount: personIdsWithDonations.length
             });
-            donationIds = donations.map(d => d.id);
         }
 
-        // Delete in correct order to respect FK constraints
+        // Split: hard delete those without donations, soft delete those with (force mode)
+        const personIdsToHardDelete = personIds.filter(id => !personIdsWithDonations.includes(id));
+        const personIdsToSoftDelete = personIdsWithDonations;
+
         await prisma.$transaction(async (tx) => {
-            // 1. Delete donation notes (FK to donations)
-            if (donationIds.length > 0) {
-                await tx.donationNote.deleteMany({ where: { donationId: { in: donationIds } } });
+            // Soft delete people with donations
+            if (personIdsToSoftDelete.length > 0) {
+                await tx.person.updateMany({
+                    where: { id: { in: personIdsToSoftDelete } },
+                    data: { active: false }
+                });
             }
 
-            // 2. Delete donations (FK to donors)
-            if (donorIds.length > 0) {
-                await tx.donation.deleteMany({ where: { donorId: { in: donorIds } } });
+            if (personIdsToHardDelete.length > 0) {
+                // Get all donors for hard-delete people
+                const donors = await tx.donor.findMany({
+                    where: { personId: { in: personIdsToHardDelete } },
+                    select: { id: true },
+                });
+                const donorIds = donors.map(d => d.id);
+
+                // Get donation IDs (should be none for these, but clean up defensively)
+                let donationIds = [];
+                if (donorIds.length > 0) {
+                    const donations = await tx.donation.findMany({
+                        where: { donorId: { in: donorIds } },
+                        select: { id: true },
+                    });
+                    donationIds = donations.map(d => d.id);
+                }
+
+                if (donationIds.length > 0) {
+                    await tx.donationNote.deleteMany({ where: { donationId: { in: donationIds } } });
+                    await tx.donation.deleteMany({ where: { donorId: { in: donorIds } } });
+                }
+                if (donorIds.length > 0) {
+                    await tx.donorNote.deleteMany({ where: { donorId: { in: donorIds } } });
+                    await tx.questionAnswer.deleteMany({ where: { donorId: { in: donorIds } } });
+                    await tx.donor.deleteMany({ where: { id: { in: donorIds } } });
+                }
+
+                await tx.fundraiser.deleteMany({ where: { personId: { in: personIdsToHardDelete } } });
+                await tx.person.deleteMany({ where: { id: { in: personIdsToHardDelete } } });
             }
-
-            // 3. Delete donor notes (FK to donors — cascade, but explicit for safety)
-            if (donorIds.length > 0) {
-                await tx.donorNote.deleteMany({ where: { donorId: { in: donorIds } } });
-            }
-
-            // 4. Delete question answers (FK to donors)
-            if (donorIds.length > 0) {
-                await tx.questionAnswer.deleteMany({ where: { donorId: { in: donorIds } } });
-            }
-
-            // 5. Delete donors
-            if (donorIds.length > 0) {
-                await tx.donor.deleteMany({ where: { id: { in: donorIds } } });
-            }
-
-            // 6. Delete fundraisers (FK to person)
-            await tx.fundraiser.deleteMany({ where: { personId: { in: personIds } } });
-
-            // 7. Delete person (cascades to personTags, customFieldValues, englishName)
-            await tx.person.deleteMany({ where: { id: { in: personIds } } });
         });
 
         return NextResponse.json({

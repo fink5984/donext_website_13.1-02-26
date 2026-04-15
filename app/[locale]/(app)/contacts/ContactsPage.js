@@ -242,6 +242,9 @@ const ContactsPage = observer(function ContactsPage() {
   // Bulk delete
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hasDonationsDialogOpen, setHasDonationsDialogOpen] = useState(false);
+  const [hasDonationsAffectedCount, setHasDonationsAffectedCount] = useState(0);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState([]);
 
   const handleBulkDelete = () => {
     if (contactsStore.selectedContactIds.size === 0) return;
@@ -258,6 +261,13 @@ const ContactsPage = observer(function ContactsPage() {
         body: JSON.stringify({ ids }),
       });
       if (!res?.ok) throw new Error('Failed to delete contacts');
+      const data = await res.json();
+      if (data.hasDonations) {
+        setPendingDeleteIds(ids);
+        setHasDonationsAffectedCount(data.affectedCount);
+        setHasDonationsDialogOpen(true);
+        return;
+      }
       contactsStore.clearSelection();
       contactsStore.fetchContacts();
       contactsStore.fetchNeedsAttentionCount();
@@ -266,6 +276,27 @@ const ContactsPage = observer(function ContactsPage() {
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const confirmForceDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetchWithAuth('/api/people/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: pendingDeleteIds, force: true }),
+      });
+      if (!res?.ok) throw new Error('Failed to delete contacts');
+      contactsStore.clearSelection();
+      contactsStore.fetchContacts();
+      contactsStore.fetchNeedsAttentionCount();
+    } catch (err) {
+      console.error('Force delete error:', err);
+    } finally {
+      setIsDeleting(false);
+      setHasDonationsDialogOpen(false);
+      setPendingDeleteIds([]);
     }
   };
 
@@ -972,6 +1003,28 @@ const ContactsPage = observer(function ContactsPage() {
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'center' }}>
                 <Button onClick={() => setIsDeleteDialogOpen(false)} text={t('cancelDelete')} disabled={isDeleting} />
                 <Button onClick={confirmBulkDelete} text={t('confirmDelete')} primary loading={isDeleting} />
+              </div>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      )}
+
+      {/* Has Donations Warning Dialog */}
+      {hasDonationsDialogOpen && (
+        <AlertDialog open={hasDonationsDialogOpen}>
+          <AlertDialogPortal>
+            <AlertDialogContent hasOverlay={false} className="deletePopup w-[auto] max-w-[none] rounded-[16px]">
+              <AlertDialogTitle className="sr-only">{t('hasDonationsTitle')}</AlertDialogTitle>
+              <AlertDialogDescription className="sr-only">{t('hasDonationsTitle')}</AlertDialogDescription>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <p className="headline-4">{t('hasDonationsTitle')}</p>
+                <p className="body-1" style={{ textAlign: 'center', color: '#6E99EC' }}>
+                  {t('hasDonationsDescription', { count: hasDonationsAffectedCount })}
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'center' }}>
+                <Button onClick={() => { setHasDonationsDialogOpen(false); setPendingDeleteIds([]); }} text={t('hasDonationsCancel')} disabled={isDeleting} />
+                <Button onClick={confirmForceDelete} text={t('hasDonationsConfirm')} primary loading={isDeleting} />
               </div>
             </AlertDialogContent>
           </AlertDialogPortal>
