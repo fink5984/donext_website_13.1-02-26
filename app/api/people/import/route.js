@@ -105,7 +105,8 @@ export async function POST(request) {
             const existingPeople = await tx.person.findMany({
                 where: {
                     email: { in: emails },
-                    clientId: parseInt(clientId)
+                    clientId: parseInt(clientId),
+                    active: { not: false }
                 },
                 include: { city: true, street: true, country: true }
             });
@@ -563,7 +564,8 @@ async function processSingleBatch(clientId, people, importId) {
         const existingPeople = emails.length > 0 ? await tx.person.findMany({
             where: {
                 email: { in: emails },
-                clientId: parseInt(clientId)
+                clientId: parseInt(clientId),
+                active: { not: false }
             },
             select: { id: true, email: true } // Only select needed fields
         }) : [];
