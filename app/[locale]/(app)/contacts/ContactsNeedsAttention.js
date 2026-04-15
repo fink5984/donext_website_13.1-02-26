@@ -43,6 +43,9 @@ export default function ContactsNeedsAttention({ clientId, onCountChange }) {
     const [tempEmailAddresses, setTempEmailAddresses] = useState({});
     const [tempPhoneErrors, setTempPhoneErrors] = useState({});
     const [currentProblem, setCurrentProblem] = useState(null);
+    // בעלי מספר טלפון — קיימים ב-DB עם status:null, לאותם מספרים כפולים
+    const [existingPhoneOwners, setExistingPhoneOwners] = useState({});
+    const [ownersLoaded, setOwnersLoaded] = useState(false);
 
     // === טעינת אנשי קשר עם בעיות ===
     const fetchPendingContacts = useCallback(async () => {
@@ -149,6 +152,42 @@ export default function ContactsNeedsAttention({ clientId, onCountChange }) {
             setCurrentProblem(filteredProblemOrder[0]);
         }
     }, [loading, filteredProblemOrder.length]);
+
+    // שליפת בעלי טלפון קיימים (status:null) לזיהוי אם המספר כבר שייך לאיש קשר
+    useEffect(() => {
+        const dupPhoneRows = rows.filter(r => r.status === 'duplicated_phone');
+        if (dupPhoneRows.length === 0) {
+            setExistingPhoneOwners({});
+            setOwnersLoaded(true);
+            return;
+        }
+        const phones = [...new Set(
+            dupPhoneRows
+                .map(r => String(r.phone || '').replace(/\D/g, ''))
+                .filter(p => p && !p.startsWith('no_phone_'))
+        )];
+        if (phones.length === 0) {
+            setOwnersLoaded(true);
+            return;
+        }
+        setOwnersLoaded(false);
+        (async () => {
+            try {
+                const res = await fetchWithAuth(`/api/people?clientId=${clientId}&paginated=true&pageSize=500&phoneIn=${phones.join(',')}`);
+                if (!res?.ok) return;
+                const data = await res.json();
+                const owners = {};
+                (data.data || []).forEach(p => {
+                    // רק אנשי קשר רגילים (ללא status) — לא pending
+                    if (p.status) return;
+                    const phone = (p.main_mobile || '').replace(/\D/g, '');
+                    if (phone) owners[phone] = { firstName: p.first_name || '', lastName: p.last_name || '', id: p.id };
+                });
+                setExistingPhoneOwners(owners);
+            } catch {}
+            setOwnersLoaded(true);
+        })();
+    }, [rows, clientId]);
 
     // מעבר אוטומטי כשהבעיה הנוכחית נפתרה
     useEffect(() => {
@@ -266,6 +305,12 @@ export default function ContactsNeedsAttention({ clientId, onCountChange }) {
     // ignore duplicate (approve)
     const handleIgnoreDuplicatePhones = async (index) => {
         if (index !== null && index !== undefined) {
+            // בדיקת ביטחון: אם המספר כבר שייך לאיש קשר קיים — אל תאשר
+            const row = rows.find(r => r.originalIndex === index);
+            if (row) {
+                const cleanPhone = String(row.phone || '').replace(/\D/g, '');
+                if (cleanPhone && existingPhoneOwners[cleanPhone]) return;
+            }
             await handleDefer(index);
         } else {
             // bulk — selected or all
@@ -438,6 +483,8 @@ export default function ContactsNeedsAttention({ clientId, onCountChange }) {
                                     openBulkDialog={openBulkDialog}
                                     handleIgnoreDuplicatePhones={handleIgnoreDuplicatePhones}
                                     handleUpdatePhone={handleUpdatePhone}
+                                    existingPhoneOwners={existingPhoneOwners}
+                                    ownersLoaded={ownersLoaded}
                                 />
                             )}
                             {currentProblem === 'duplicateNames' && (

@@ -845,48 +845,17 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
             status = 'invalid_email';
         }
 
-        // DEBUG
-        console.log('=== HANDLE DEFER DEBUG ===');
-        console.log('originalIndex:', originalIndex, '| currentProblem:', currentProblem, '| status:', status);
+        // דחיית רק השורה הספציפית (ללא הרחבה לכל הקבוצה)
+        const rowToDefer = status ? { ...deferredRow, status } : { ...deferredRow };
 
-        // עבור כפילויות - דחיית כל חברי הקבוצה יחד
-        let allIndexesToDefer = [originalIndex];
-        if (currentProblem === 'duplicatePhones') {
-            const cleanPhone = String(deferredRow.phone || '').replace(/\D/g, '');
-            if (cleanPhone && groupedDuplicatePhones[cleanPhone]) {
-                allIndexesToDefer = groupedDuplicatePhones[cleanPhone].map(e => e.originalIndex);
-            }
-        } else if (currentProblem === 'duplicateNames') {
-            const fullName = `${deferredRow.firstName} ${deferredRow.lastName}`;
-            console.log('Looking up group for name:', fullName, '| found:', !!groupedDuplicateNames[fullName]);
-            if (fullName && groupedDuplicateNames[fullName]) {
-                allIndexesToDefer = groupedDuplicateNames[fullName].map(e => e.originalIndex);
-            }
-        }
-
-        console.log('allIndexesToDefer:', allIndexesToDefer);
-        console.log('===========================');
-
-        // מציאת כל השורות לדחייה - יצירת אובייקטים חדשים עם הסטטוס (לא למוטט state ישירות)
-        const rowsToDefer = allIndexesToDefer
-            .map(idx => processedRows.find(row => row.originalIndex === idx))
-            .filter(Boolean)
-            .map(row => (status ? { ...row, status } : { ...row }));
-
-        const indexSet = new Set(allIndexesToDefer);
-
-        setProcessedRows(prevRows => {
-            return prevRows.filter(row => !indexSet.has(row.originalIndex));
-        });
+        setProcessedRows(prevRows => prevRows.filter(row => row.originalIndex !== originalIndex));
 
         setDeferredRows(prev => {
-            const newDeferred = rowsToDefer.filter(
-                row => !prev.some(existing => existing.originalIndex === row.originalIndex)
-            );
-            return [...prev, ...newDeferred];
+            if (prev.some(existing => existing.originalIndex === originalIndex)) return prev;
+            return [...prev, rowToDefer];
         });
 
-        setNamesWithDeletedPhone(prev => prev.filter(row => !indexSet.has(row.originalIndex)));
+        setNamesWithDeletedPhone(prev => prev.filter(row => row.originalIndex !== originalIndex));
     };
 
     const handleEmailChange = (originalIndex, value) => {

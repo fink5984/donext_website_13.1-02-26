@@ -146,6 +146,25 @@
     }
 }
 
+.importContactsBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-ping);
+    width: 100%;
+    text-align: right;
+    color: var(--Gray-Blue-350, #76A0FF);
+    font-size: 14px;
+
+    &:hover {
+        color: var(--Border-able-field, #0C4AD5);
+    }
+
+    :global([dir="ltr"]) & {
+        text-align: left;
+    }
+}
+
 .contactsLogoutButton {
     background: #f44336;
     color: white;

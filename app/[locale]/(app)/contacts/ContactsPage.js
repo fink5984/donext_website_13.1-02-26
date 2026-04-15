@@ -111,7 +111,7 @@ const ContactsPage = observer(function ContactsPage() {
 
   // Modals
   const [showAddToCampaignModal, setShowAddToCampaignModal] = useState(false);
-  const [showExcelImport, setShowExcelImport] = useState(false);
+  const showExcelImport = contactsStore.showExcelImport;
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -272,15 +272,16 @@ const ContactsPage = observer(function ContactsPage() {
   // Selection
   const handleSelectAll = (checked) => {
     if (checked) {
-      contactsStore.contacts.forEach(c => {
-        if (!contactsStore.selectedContactIds.has(c.id)) contactsStore.toggleContactSelection(c.id);
-      });
+      contactsStore.toggleSelectAll();
     } else {
       contactsStore.clearSelection();
     }
   };
-  const isAllSelected = contactsStore.contacts.length > 0 &&
-    contactsStore.contacts.every(c => contactsStore.selectedContactIds.has(c.id));
+  const isAllSelected = contactsStore.allFilteredIds.length > 0
+    ? contactsStore.allFilteredIds.length === contactsStore.selectedContactIds.size &&
+      contactsStore.allFilteredIds.every(id => contactsStore.selectedContactIds.has(id))
+    : contactsStore.contacts.length > 0 &&
+      contactsStore.contacts.every(c => contactsStore.selectedContactIds.has(c.id));
 
   // Column drag
   const handleColumnDragStart = (e, columnId) => {
@@ -564,9 +565,7 @@ const ContactsPage = observer(function ContactsPage() {
         {/* Header */}
         <div className={styles.contactsHeader}>
           <div className={styles.headerActions}>
-            <button className={styles.importExcelButton} onClick={() => setShowExcelImport(true)} title={t('importFromExcel')}>
-              <Plus />
-            </button>
+
           </div>
           <div className={styles.contactsHeaderTitle}>
             <h1>{t('title')}</h1>
@@ -763,7 +762,9 @@ const ContactsPage = observer(function ContactsPage() {
 
           {/* Table */}
           <div className={styles.contactsTableWrapper}>
-            {/* Table Header — fixed, outside scroll */}
+            {/* Scrollable Table Body */}
+            <div className={styles.contactsTableContainer} ref={tableContainerRef} onScroll={updateScrollThumb}>
+            {/* Table Header — sticky inside scroll container */}
             <div className={styles.contactsTableHeader} style={{ gridTemplateColumns }}>
 
               {/* Checkbox */}
@@ -807,9 +808,6 @@ const ContactsPage = observer(function ContactsPage() {
               <div className={`${styles.contactsHeaderCell} ${styles.headerAddCell}`}>
               </div>
             </div>
-
-            {/* Scrollable Table Body */}
-            <div className={styles.contactsTableContainer} ref={tableContainerRef} onScroll={updateScrollThumb}>
               <div className={styles.contactsTableBody}>
                 {contactsStore.loadingContacts ? (
                   <div className={styles.contactsLoadingState}><DoNextLoader /></div>
@@ -867,7 +865,11 @@ const ContactsPage = observer(function ContactsPage() {
                 <MailSmall className={styles.selectionMailIcon} />
                 <span>{t('addToExistingCampaign')}</span>
               </button>
-              <button className={styles.selectionActionBtn} onClick={() => router.push(`/${locale}/new`)}>
+              <button className={styles.selectionActionBtn} onClick={() => {
+                const ids = Array.from(contactsStore.selectedContactIds);
+                if (ids.length > 0) sessionStorage.setItem('pendingContactsForCampaign', JSON.stringify(ids));
+                router.push(`/${locale}/new`);
+              }}>
                 <MailSmall className={styles.selectionMailIcon} />
                 <span>{t('openNewCampaign')}</span>
               </button>
@@ -944,8 +946,8 @@ const ContactsPage = observer(function ContactsPage() {
       />
 
       {showExcelImport && (
-        <ContactsExcelImport open={showExcelImport} onClose={() => setShowExcelImport(false)}
-          onSuccess={() => { setShowExcelImport(false); contactsStore.fetchContacts(); contactsStore.fetchNeedsAttentionCount(); }} clientId={clientId} />
+        <ContactsExcelImport open={showExcelImport} onClose={() => contactsStore.setShowExcelImport(false)}
+          onSuccess={() => { contactsStore.setShowExcelImport(false); contactsStore.fetchContacts(); contactsStore.fetchNeedsAttentionCount(); }} clientId={clientId} />
       )}
 
       {formStore.isOpen && <AddEdit

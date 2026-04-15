@@ -5,7 +5,7 @@ import styles from './new.module.scss';
 import { useState } from 'react';
 import { getCurrencyBySymbol } from '@/lib/currencies';
 import { useAppContext } from "@/app/components/AppContext";
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import { sessionStore } from '@/stores/SessionStore';
 import { parseJwt } from '@/lib/auth';
@@ -15,6 +15,8 @@ export default function Page4({ campaignData, onClose }) {
     const [status, setStatus] = useState(null);
     const [createdCampaign, setCreatedCampaign] = useState(null);
     const router = useRouter();
+    const params = useParams();
+    const locale = params?.locale || 'he';
 
     const handleFinalClick = async () => {
        
@@ -99,6 +101,31 @@ export default function Page4({ campaignData, onClose }) {
                 setCreatedCampaign(data);
                 setStatus('success');
 
+                // שיוך אנשי קשר שנבחרו מדף אנשי קשר (אם קיימים)
+                try {
+                    const pendingRaw = sessionStorage.getItem('pendingContactsForCampaign');
+                    if (pendingRaw) {
+                        const personIds = JSON.parse(pendingRaw);
+                        if (personIds?.length > 0) {
+                            await fetchWithAuth('/api/people/add-to-campaign', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-campaign-id': String(data.id),
+                                },
+                                body: JSON.stringify({
+                                    personIds,
+                                    campaignId: data.id,
+                                    role: 'donor',
+                                }),
+                            });
+                        }
+                        sessionStorage.removeItem('pendingContactsForCampaign');
+                    }
+                } catch (e) {
+                    console.error('Error adding contacts to new campaign:', e);
+                }
+
                 // רענון הטוקן כך שיכלול את ה-campaignId החדש לפני ניווט
                 try {
                     const currentToken = sessionStore.token;
@@ -122,11 +149,10 @@ export default function Page4({ campaignData, onClose }) {
                     console.error('Token update error after campaign creation:', e);
                 }
 
-                // סגירת הדיאלוג והפניה לדף הבחירת קמפיין
-                const isCrowdfunding = campaignData.campaignType === 'crowdfunding';
+                // סגירת הדיאלוג וכניסה ישירה לקמפיין
                 setTimeout(() => {
                     if (onClose) onClose();
-                    router.push('/login?showCampaigns=true');
+                    router.push(`/${locale}/donors`);
                 }, 1500);
             } else {
                 console.error('❌ שגיאה בתגובה מהשרת:', response.status, response.statusText);

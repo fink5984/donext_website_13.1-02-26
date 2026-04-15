@@ -1,0 +1,239 @@
+.description {
+  color: var(--Text-able-Text, #0C4AD5);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  margin: 4px 0 16px;
+  text-align: right;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: min(calc(90vh - 380px), 340px);
+  direction: rtl;
+}
+
+/* ===== Card ===== */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0px 6px 6px 0px rgba(168, 188, 230, 0.04), 0px 2px 3px 0px rgba(168, 188, 230, 0.05);
+  border: 1px solid #E8EFFE;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: right;
+}
+
+.cardLoading {
+  composes: card;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.cardPhone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #0C4AD5;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+}
+
+/* Name chips */
+.nameChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.nameChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #0C4AD5;
+  background: #fff;
+  color: #0C4AD5;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #EBF1FF;
+  }
+}
+
+/* Card-level action buttons */
+.cardActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid #D1D9E6;
+  background: none;
+  color: #6E99EC;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  overflow: visible;
+  transition: border-color 0.15s, color 0.15s;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  &:hover {
+    border-color: #0C4AD5;
+    color: #0C4AD5;
+  }
+}
+
+/* ===== Sub-panel (after choosing a person) ===== */
+.subPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.subPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #8891A4;
+  line-height: 1;
+  padding: 0 4px;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #0C4AD5;
+  }
+}
+
+.subPanelTitle {
+  color: #0C4AD5;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  text-align: right;
+}
+
+.subPanelSubtitle {
+  color: #0C4AD5;
+  font-size: 13px;
+  font-weight: 400;
+  margin: 0;
+  text-align: right;
+}
+
+/* Row for each remaining person */
+.remainingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  direction: rtl;
+  background: #F6F9FC;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.remainingName {
+  color: #0C4AD5;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.remainingInput {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  border-bottom: 1.5px solid #CFDEFF;
+  padding-bottom: 2px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: #6E99EC;
+    flex-shrink: 0;
+  }
+}
+
+.phoneInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1A1A2E;
+  text-align: right;
+  direction: ltr;
+
+  &::placeholder {
+    color: #B0BDCF;
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+.editIcon {
+  color: #6E99EC;
+}
+
+.remainingActions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6E99EC;
+    padding: 4px;
+    overflow: visible;
+    transition: color 0.15s;
+
+    svg {
+      overflow: visible;
+    }
+
+    &:hover {
+      color: #0C4AD5;
+    }
+  }
+}

@@ -6,9 +6,10 @@ const BATCH_SIZE = 100; // Process in smaller batches
 
 // זיהוי כפילויות טלפון/שם בתוך הבאטש והגדרת סטטוס אוטומטית
 function detectAndSetDuplicateStatus(peopleData) {
-    // ספירת טלפונים
+    // ספירת טלפונים — לא סופרים אנשים שסומנו כ-"ראשי" (ignoreDuplicatePhone)
     const phoneCount = {};
     peopleData.forEach(p => {
+        if (p.ignoreDuplicatePhone) return; // זה האיש הראשי שנבחר — לא לספור
         const phone = p.mainMobile?.replace(/\D/g, '');
         if (phone) {
             phoneCount[phone] = (phoneCount[phone] || 0) + 1;
@@ -26,7 +27,7 @@ function detectAndSetDuplicateStatus(peopleData) {
 
     // הגדרת סטטוס לאנשים שאין להם סטטוס אבל יש להם כפילות
     return peopleData.map(p => {
-        if (p.status) return p; // כבר יש סטטוס - לא לדרוס
+        if (p.status || p.ignoreDuplicatePhone) return p; // כבר יש סטטוס או סומן כראשי — לא לדרוס
 
         const phone = p.mainMobile?.replace(/\D/g, '');
         const name = `${(p.firstName || '').trim()} ${(p.lastName || '').trim()}`.trim();
@@ -365,7 +366,8 @@ export async function POST(request) {
                         hasExistingHok: person.hasExistingHok,
                         clientSystemId: person.clientSystemId != null ? String(person.clientSystemId).trim() : null,
                         synagogue: person.synagogue != null ? String(person.synagogue).trim() : null,
-                        status: person.status || null
+                        status: person.status || null,
+                        ignoreDuplicatePhone: person.ignoreDuplicatePhone || false // דגל זמני — ניקוי לפני שמירה ב-DB
                     };
 
                     newPeopleData.push(personDataEntry);
@@ -403,8 +405,8 @@ export async function POST(request) {
             // Batch create all new people
             if (newPeopleData.length > 0) {
                 try {
-                    // Add importId to all new people
-                    const peopleWithImportId = newPeopleData.map(person => ({
+                    // Add importId to all new people (strip non-DB fields)
+                    const peopleWithImportId = newPeopleData.map(({ ignoreDuplicatePhone, ...person }) => ({
                         ...person,
                         importId: importRecord.id
                     }));
@@ -678,8 +680,8 @@ async function processSingleBatch(clientId, people, importId) {
                 });
                 const lastIdBefore = maxIdBefore._max.id || 0;
 
-                // Add importId to all new people
-                const peopleWithImportId = newPeopleData.map(person => ({
+                // Add importId to all new people (strip non-DB fields)
+                const peopleWithImportId = newPeopleData.map(({ ignoreDuplicatePhone, ...person }) => ({
                     ...person,
                     importId: importId
                 }));

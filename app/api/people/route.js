@@ -219,12 +219,29 @@ export async function GET(request) {
         }
 
         // סינון לפי status — טאב "אנשי קשר לטיפול" מול טאב רגיל
-        if (statusFilter === 'pending') {
-            // רק אנשי קשר עם status (לטיפול)
-            where.status = { not: null };
-        } else if (statusFilter !== 'all') {
-            // ברירת מחדל: רק אנשי קשר ללא status (רגילים)
-            where.status = null;
+        // כאשר phoneIn מסופק, לא מסננים לפי status — מחזירים הכל ומסננים בלקוח
+        const phoneIn = searchParams.get('phoneIn');
+        if (!phoneIn) {
+            if (statusFilter === 'pending') {
+                where.status = { not: null };
+            } else if (statusFilter !== 'all') {
+                where.status = null;
+            }
+        }
+
+        // חיפוש לפי רשימת מספרי טלפון — לזיהוי בעלי מספר קיים (לפתרון כפילויות)
+        if (phoneIn) {
+            // חיפוש גמיש: contains לכל מספר, כדי לתמוך בפורמטים שונים (עם/בלי מקפים)
+            const phones = phoneIn.split(',').map(p => p.trim().replace(/\D/g, '')).filter(Boolean);
+            if (phones.length > 0) {
+                const phoneConditions = phones.map(p => ({ mainMobile: { contains: p } }));
+                if (where.OR) {
+                    where.AND = [{ OR: where.OR }, { OR: phoneConditions }];
+                    delete where.OR;
+                } else {
+                    where.OR = phoneConditions;
+                }
+            }
         }
 
         // חיפוש טקסט
@@ -605,6 +622,7 @@ export async function GET(request) {
                 pageSize,
                 totalPages: Math.ceil(total / pageSize),
                 totalDonationsSum,
+                allIds: allPersonIds.map(p => p.id),
             });
         }
 

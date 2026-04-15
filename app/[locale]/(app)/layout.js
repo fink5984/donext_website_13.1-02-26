@@ -33,7 +33,7 @@ import { loadSession, isTokenValid, clearSession } from "@/lib/auth";
 import ContactsIcon from "@/app/icons/contacts.svg";
 
 // Sidebar for contacts page — icon sidebar + sub-sidebar with title & logout (like campaign selection page)
-function ContactsSidebar({ locale, isRTL, onLogout }) {
+const ContactsSidebar = observer(function ContactsSidebar({ locale, isRTL, onLogout }) {
     return (
         <div className={`${styles.contactsSidebarWrapper} ${isRTL ? styles.rtl : ''}`}>
             <nav className={styles.contactsSidebarNav}>
@@ -56,11 +56,16 @@ function ContactsSidebar({ locale, isRTL, onLogout }) {
                     <span className={`${styles.contactsSubSidebarItem} ${styles.active} table-2`}>
                         כל אנשי הקהילה
                     </span>
+                    <button
+                        className={`${styles.contactsSubSidebarItem} ${styles.importContactsBtn} table-2`}
+                        onClick={() => rootStore.contactsStore.setShowExcelImport(true)}>
+                        ייבוא אנשי קשר
+                    </button>
                 </div>
             </div>
         </div>
     );
-}
+});
 
 
 // Simple wrapper for login page

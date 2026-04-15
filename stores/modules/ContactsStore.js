@@ -36,6 +36,10 @@ class ContactsStore {
     // בחירה
     selectedContactIds = new Set();
     selectAll = false;
+    allFilteredIds = [];
+
+    // ייבוא Excel
+    showExcelImport = false;
 
     // טאב פעיל
     activeTab = 'myContacts';
@@ -225,6 +229,7 @@ class ContactsStore {
                 this.totalContacts = data.total || 0;
                 this.totalDonationsSum = data.totalDonationsSum || 0;
                 this.totalPages = data.totalPages || 0;
+                this.allFilteredIds = data.allIds || [];
                 this.loadingContacts = false;
             });
         } catch (error) {
@@ -348,6 +353,10 @@ class ContactsStore {
     // בחירה
     // =====================
 
+    setShowExcelImport(value) {
+        this.showExcelImport = value;
+    }
+
     toggleContactSelection(contactId) {
         const newSet = new Set(this.selectedContactIds);
         if (newSet.has(contactId)) {
@@ -364,7 +373,7 @@ class ContactsStore {
             this.selectedContactIds = new Set();
             this.selectAll = false;
         } else {
-            this.selectedContactIds = new Set(this.contacts.map(c => c.id));
+            this.selectedContactIds = new Set(this.allFilteredIds.length > 0 ? this.allFilteredIds : this.contacts.map(c => c.id));
             this.selectAll = true;
         }
     }
@@ -736,6 +745,8 @@ class ContactsStore {
         this.tags = [];
         this.selectedContactIds = new Set();
         this.selectAll = false;
+        this.allFilteredIds = [];
+        this.showExcelImport = false;
         this.activeTab = 'myContacts';
         this.needsAttentionCount = 0;
         this.activeContact = null;

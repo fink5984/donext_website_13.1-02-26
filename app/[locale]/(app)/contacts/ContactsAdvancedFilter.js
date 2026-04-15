@@ -139,7 +139,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   const t = useTranslations('contactsPage');
 
   // Active section tab
-  const [activeSection, setActiveSection] = useState('personal');
+  const [activeSection, setActiveSection] = useState('campaigns');
 
   // Personal details — multi-select arrays
   const [selectedFirstNames, setSelectedFirstNames] = useState([]);
@@ -438,10 +438,42 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   };
 
   const sectionTabs = [
-    { id: 'personal', label: t('af_personalDetails') },
     { id: 'campaigns', label: t('af_campaignsDonations') },
+    { id: 'personal', label: t('af_personalDetails') },
     { id: 'additional', label: t('af_additionalDetails') },
   ];
+
+  // Count active filters per tab
+  const tabCounts = useMemo(() => ({
+    personal:
+      selectedFirstNames.length +
+      selectedLastNames.length +
+      selectedCities.length +
+      selectedStreets.length +
+      selectedHouseNumbers.length +
+      selectedTitlesBefore.length +
+      selectedTitlesAfter.length +
+      selectedFundraisers.length,
+    campaigns:
+      selectedCampaignIds.length +
+      selectedSources.length +
+      (standingOrder !== null ? 1 : 0) +
+      (expectedRange.min > 0 || expectedRange.max < 1000000 ? 1 : 0) +
+      (actualRange.min > 0 || actualRange.max < 1000000 ? 1 : 0) +
+      (isFundraiser ? 1 : 0) +
+      (rating > 0 ? 1 : 0) +
+      selectedContactMethods.length,
+    additional:
+      selectedFatherNames.length +
+      selectedMotherNames.length +
+      selectedGroomAt.length +
+      selectedWifeNames.length +
+      selectedSynagogues.length +
+      (ageFrom ? 1 : 0) +
+      (ageTo ? 1 : 0),
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
+
+  const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
   return (
     <>
@@ -460,6 +492,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
         {/* Header */}
         <div className={styles.filterHeader}>
           <h2 className="headline-2">{t('advancedFilter')}</h2>
+          {totalFilterCount > 0 && (
+            <p className={styles.filterCountSubtitle}>ערכי סינון פעילים: {totalFilterCount}</p>
+          )}
         </div>
 
         {/* Section Tabs */}
@@ -471,6 +506,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
               onClick={() => setActiveSection(tab.id)}
             >
               {tab.label}
+              {tabCounts[tab.id] > 0 && (
+                <span className={styles.tabBadge}>{tabCounts[tab.id]}</span>
+              )}
             </button>
           ))}
         </div>
@@ -577,6 +615,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
               <div className={styles.sectionContent}>
                 {/* Campaign selection */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_selectCampaigns')}</h4>
                   <div className={styles.campaignPills}>
                     {loadingCampaigns ? (
                       <span className={styles.loadingText}>{t('loading')}</span>
@@ -608,6 +647,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
                 {/* Donation Source */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_donationSource')}</h4>
                   <div className={styles.sourceGrid}>
                     {DONATION_SOURCES.map(source => {
                       const isSelected = selectedSources.includes(source);
@@ -627,6 +667,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
                 {/* Standing Order Toggle */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_standingOrder')}</h4>
                   <div className={styles.toggleWrapper}>
                     <button
                       className={`${styles.toggle} ${standingOrder === true ? styles.toggleOn : ''}`}
@@ -642,6 +683,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
                 {/* Expected Donation Range */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_donationAmounts')}</h4>
                   <MultiRangeSlider
                     min={0}
                     max={1000000}
@@ -666,6 +708,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
                 {/* Is Fundraiser + Star Rating */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_fundraiserRating')}</h4>
                   <div className={styles.fundraiserRatingRow}>
                     <label className={styles.checkboxLabel}>
                       <input
@@ -692,6 +735,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
                 {/* Contact Method */}
                 <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_contactMethod')}</h4>
                   <div className={styles.contactMethodPills}>
                     {CONTACT_METHODS.map(method => {
                       const isSelected = selectedContactMethods.includes(method);
