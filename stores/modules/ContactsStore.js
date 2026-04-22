@@ -202,6 +202,18 @@ class ContactsStore {
             if (this.filters.actualMax && this.filters.actualMax < 1000000) {
                 params.set('actualMax', String(this.filters.actualMax));
             }
+            // סינון לפי סוג תרומה בפועל
+            if (this.filters.donationAmountType) {
+                params.set('donationAmountType', this.filters.donationAmountType);
+            }
+            // סינון לפי סוג תשלום
+            if (this.filters.paymentMethods?.length) {
+                this.filters.paymentMethods.forEach(pm => params.append('paymentMethods', pm));
+            }
+            // סינון לפי יחס לצפי
+            if (this.filters.vsExpected?.length) {
+                this.filters.vsExpected.forEach(v => params.append('vsExpected', v));
+            }
             // סינון לפי מקור תרומה (מרובה)
             if (this.filters.sources?.length) {
                 this.filters.sources.forEach(s => params.append('sources', s));

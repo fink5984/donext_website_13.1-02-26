@@ -159,6 +159,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   const [standingOrder, setStandingOrder] = useState(null); // null=no filter, true, false
   const [expectedRange, setExpectedRange] = useState({ min: 0, max: 1000000 });
   const [actualRange, setActualRange] = useState({ min: 0, max: 1000000 });
+  const [donationAmountType, setDonationAmountType] = useState(null); // null=all, 'monthly', 'yearly', 'occasional'
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
+  const [vsExpected, setVsExpected] = useState([]); // [] | ['above','equal','below'] multi-select
   const [isFundraiser, setIsFundraiser] = useState(false);
   const [rating, setRating] = useState(0);
   const [selectedContactMethods, setSelectedContactMethods] = useState([]);
@@ -292,6 +295,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       filters.actualMin = actualRange.min;
       filters.actualMax = actualRange.max;
     }
+    if (donationAmountType) filters.donationAmountType = donationAmountType;
+    if (selectedPaymentMethods.length > 0) filters.paymentMethods = selectedPaymentMethods;
+    if (vsExpected.length > 0) filters.vsExpected = vsExpected;
     if (isFundraiser) filters.isFundraiser = true;
     if (rating > 0) filters.rating = rating;
     if (selectedContactMethods.length > 0) filters.contactMethod = selectedContactMethods;
@@ -308,7 +314,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     if (ageTo) filters.ageTo = parseInt(ageTo);
 
     return filters;
-  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
+  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
 
   // Apply filters
   const handleApply = () => {
@@ -350,6 +356,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setStandingOrder(null);
     setExpectedRange({ min: 0, max: 1000000 });
     setActualRange({ min: 0, max: 1000000 });
+    setDonationAmountType(null);
+    setSelectedPaymentMethods([]);
+    setVsExpected([]);
     setIsFundraiser(false);
     setRating(0);
     setSelectedContactMethods([]);
@@ -392,6 +401,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       min: storeFilters.actualMin || 0,
       max: storeFilters.actualMax || 1000000,
     });
+    setDonationAmountType(storeFilters.donationAmountType || null);
+    setSelectedPaymentMethods(storeFilters.paymentMethods || []);
+    setVsExpected(storeFilters.vsExpected || []);
     setIsFundraiser(!!storeFilters.isFundraiser);
     setRating(storeFilters.rating || 0);
     setSelectedContactMethods(storeFilters.contactMethod || []);
@@ -460,6 +472,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       (standingOrder !== null ? 1 : 0) +
       (expectedRange.min > 0 || expectedRange.max < 1000000 ? 1 : 0) +
       (actualRange.min > 0 || actualRange.max < 1000000 ? 1 : 0) +
+      (donationAmountType ? 1 : 0) +
+      selectedPaymentMethods.length +
+      vsExpected.length +
       (isFundraiser ? 1 : 0) +
       (rating > 0 ? 1 : 0) +
       selectedContactMethods.length,
@@ -471,7 +486,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       selectedSynagogues.length +
       (ageFrom ? 1 : 0) +
       (ageTo ? 1 : 0),
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -704,6 +719,91 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                     type="actual"
                     onChange={handleActualChange}
                   />
+                  <div className={styles.donationTypeRow}>
+                    {[
+                      { value: null, label: t('af_donationTypeTotal') },
+                      { value: 'monthly', label: t('af_donationTypeMonthly') },
+                      { value: 'yearly', label: t('af_donationTypeYearly') },
+                      { value: 'occasional', label: t('af_donationTypeOccasional') },
+                    ].map(({ value, label }) => (
+                      <button
+                        key={String(value)}
+                        type="button"
+                        className={`${styles.donationTypeBtn} ${donationAmountType === value ? styles.donationTypeBtnActive : ''}`}
+                        onClick={() => setDonationAmountType(donationAmountType === value ? null : value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment Method */}
+                <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_paymentMethod')}</h4>
+                  <div className={styles.paymentMethodGrid}>
+                    {[
+                      { value: 'CREDIT', label: t('af_pm_credit') },
+                      { value: 'CASH', label: t('af_pm_cash') },
+                      { value: 'CHECKS', label: t('af_pm_checks') },
+                      { value: 'BANK_TRANSFER', label: t('af_pm_bankTransfer') },
+                      { value: 'HOK_BANK', label: t('af_pm_hokBank') },
+                      { value: 'HOK_NEW', label: t('af_pm_hokNew') },
+                      { value: 'COMMITMENT', label: t('af_pm_commitment') },
+                      { value: 'BIT', label: 'Bit' },
+                      { value: 'PAYBOX', label: 'PayBox' },
+                      { value: 'PAYPAL', label: 'PayPal' },
+                      { value: 'APPLE_PAY', label: 'Apple Pay' },
+                      { value: 'GOOGLE_PAY', label: 'Google Pay' },
+                      { value: 'STRIPE', label: 'Stripe' },
+                      { value: 'BEVEL', label: 'Bevel' },
+                      { value: 'PLEDGER', label: 'Pledger' },
+                      { value: 'MATBIA', label: 'Matbia' },
+                      { value: 'OJC', label: 'OJC' },
+                      { value: 'NEDARIM_PLUS', label: 'Nedarim Plus' },
+                      { value: 'OTHER', label: t('af_pm_other') },
+                    ].map(({ value, label }) => {
+                      const isSelected = selectedPaymentMethods.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`${styles.paymentMethodPill} ${isSelected ? styles.paymentMethodPillSelected : ''}`}
+                          onClick={() => setSelectedPaymentMethods(prev =>
+                            isSelected ? prev.filter(v => v !== value) : [...prev, value]
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* vs Expected */}
+                <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>{t('af_vsExpected')}</h4>
+                  <div className={styles.paymentMethodGrid}>
+                    {[
+                      { value: 'above', label: t('af_vsExpected_above') },
+                      { value: 'equal', label: t('af_vsExpected_equal') },
+                      { value: 'below', label: t('af_vsExpected_below') },
+                    ].map(({ value, label }) => {
+                      const isSelected = vsExpected.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`${styles.paymentMethodPill} ${isSelected ? styles.paymentMethodPillSelected : ''}`}
+                          onClick={() => setVsExpected(prev =>
+                            isSelected ? prev.filter(v => v !== value) : [...prev, value]
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Is Fundraiser + Star Rating */}

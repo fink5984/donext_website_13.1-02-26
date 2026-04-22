@@ -450,7 +450,8 @@ const ContactsPage = observer(function ContactsPage() {
     (contactsStore.filters.expectedMin > 0) ||
     (contactsStore.filters.expectedMax !== undefined && contactsStore.filters.expectedMax < 1000000) ||
     (contactsStore.filters.actualMin > 0) ||
-    (contactsStore.filters.actualMax !== undefined && contactsStore.filters.actualMax < 1000000);
+    (contactsStore.filters.actualMax !== undefined && contactsStore.filters.actualMax < 1000000) ||
+    !!contactsStore.filters.donationAmountType;
 
   // Detect filters that are ONLY in the advanced panel (not visible as chip filters)
   // Chip bar covers: name, city, campaignIds, source, type
@@ -479,7 +480,10 @@ const ContactsPage = observer(function ContactsPage() {
     (contactsStore.filters.expectedMin > 0) ||
     (contactsStore.filters.expectedMax !== undefined && contactsStore.filters.expectedMax < 1000000) ||
     (contactsStore.filters.actualMin > 0) ||
-    (contactsStore.filters.actualMax !== undefined && contactsStore.filters.actualMax < 1000000);
+    (contactsStore.filters.actualMax !== undefined && contactsStore.filters.actualMax < 1000000) ||
+    !!contactsStore.filters.donationAmountType ||
+    contactsStore.filters.paymentMethods?.length > 0 ||
+    contactsStore.filters.vsExpected?.length > 0;
 
   // Advanced filter apply — replace all advanced filters (keep search/sort intact)
   const handleAdvancedFilterApply = useCallback((filters) => {
@@ -488,7 +492,7 @@ const ContactsPage = observer(function ContactsPage() {
       'firstNames', 'lastNames', 'cities', 'streets', 'houseNumbers',
       'titlesBefore', 'titlesAfter', 'fundraiserNames',
       'campaignIds', 'sources', 'source', 'standingOrder', 'expectedMin', 'expectedMax',
-      'actualMin', 'actualMax', 'isFundraiser', 'rating', 'contactMethod',
+      'actualMin', 'actualMax', 'donationAmountType', 'paymentMethods', 'vsExpected', 'isFundraiser', 'rating', 'contactMethod',
       'fatherNames', 'motherNames', 'groomAt', 'wifeNames', 'synagogues',
       'ageFrom', 'ageTo',
       // legacy single-value keys

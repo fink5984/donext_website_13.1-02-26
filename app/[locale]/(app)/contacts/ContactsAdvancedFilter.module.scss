@@ -516,6 +516,71 @@
 
 /* ==================== TOGGLE ==================== */
 
+.donationTypeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  direction: rtl;
+}
+
+/* Payment Method Pills */
+.paymentMethodGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  direction: rtl;
+  margin-top: 4px;
+}
+
+.paymentMethodPill {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 24px;
+  border: 1.5px solid #0C4AD5;
+  background: #fff;
+  color: #0C4AD5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(12, 74, 213, 0.06);
+  }
+
+  &.paymentMethodPillSelected {
+    background: #0C4AD5;
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.donationTypeBtn {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 24px;
+  border: 1.5px solid #0C4AD5;
+  background: #fff;
+  color: #0C4AD5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(12, 74, 213, 0.06);
+  }
+
+  &.donationTypeBtnActive {
+    background: #0C4AD5;
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
 .toggleWrapper {
   display: flex;
   flex-direction: row-reverse;

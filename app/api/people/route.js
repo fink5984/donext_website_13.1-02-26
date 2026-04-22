@@ -199,6 +199,9 @@ export async function GET(request) {
         const expectedMaxFilter = searchParams.get('expectedMax') ? parseFloat(searchParams.get('expectedMax')) : null;
         const actualMinFilter = searchParams.get('actualMin') ? parseFloat(searchParams.get('actualMin')) : null;
         const actualMaxFilter = searchParams.get('actualMax') ? parseFloat(searchParams.get('actualMax')) : null;
+        const donationAmountType = searchParams.get('donationAmountType') || null; // null, 'monthly', 'yearly', 'occasional'
+        const paymentMethodsFilter = searchParams.getAll('paymentMethods').filter(Boolean);
+        const vsExpectedFilter = searchParams.getAll('vsExpected').filter(v => ['above','equal','below'].includes(v));
         const sourcesFilter = searchParams.getAll('sources').filter(Boolean);
         const contactMethodFilter = searchParams.getAll('contactMethod').filter(Boolean);
         const ageFromFilter = searchParams.get('ageFrom') ? parseInt(searchParams.get('ageFrom')) : null;
@@ -454,34 +457,90 @@ export async function GET(request) {
 
         // סינון לפי טווח צפי תרומה
         if (expectedMinFilter !== null || expectedMaxFilter !== null) {
-            const expectedCondition = { donors: { some: { active: true } } };
+            const expectedSome = { active: true, ...(campaignIds.length > 0 && { campaignId: { in: campaignIds } }) };
             if (expectedMinFilter !== null) {
-                expectedCondition.donors.some.expected = { ...(expectedCondition.donors.some.expected || {}), gte: expectedMinFilter };
+                expectedSome.expected = { ...(expectedSome.expected || {}), gte: expectedMinFilter };
             }
             if (expectedMaxFilter !== null) {
-                expectedCondition.donors.some.expected = { ...(expectedCondition.donors.some.expected || {}), lte: expectedMaxFilter };
+                expectedSome.expected = { ...(expectedSome.expected || {}), lte: expectedMaxFilter };
             }
-            addAndCondition(expectedCondition);
+            addAndCondition({ donors: { some: expectedSome } });
         }
 
-        // סינון לפי טווח תרומה בפועל (סכום חודשי)
-        if (actualMinFilter !== null || actualMaxFilter !== null) {
-            const donationCondition = {};
-            if (actualMinFilter !== null) donationCondition.gte = actualMinFilter;
-            if (actualMaxFilter !== null) donationCondition.lte = actualMaxFilter;
+        // סינון לפי טווח תרומה בפועל (סכום חודשי) + סוג תרומה
+        if (actualMinFilter !== null || actualMaxFilter !== null || donationAmountType) {
+            const donorSome = {
+                active: true,
+                ...(campaignIds.length > 0 && { campaignId: { in: campaignIds } }),
+            };
+            // Monthly type — filter by campaign.donationType
+            if (donationAmountType === 'monthly') {
+                donorSome.campaign = { donationType: 'monthly' };
+            }
+            // Build donation-level condition
+            const donationSome = { deleted_at: null };
+            if (actualMinFilter !== null || actualMaxFilter !== null) {
+                const amountCondition = {};
+                if (actualMinFilter !== null) amountCondition.gte = actualMinFilter;
+                if (actualMaxFilter !== null) amountCondition.lte = actualMaxFilter;
+                donationSome.monthlyAmount = amountCondition;
+            }
+            if (donationAmountType === 'yearly') {
+                donationSome.numberOfPayments = 12;
+            } else if (donationAmountType === 'occasional') {
+                donationSome.numberOfPayments = 1;
+                donationSome.isUnlimited = false;
+            }
+            // Only add donations.some if there is any donation-level condition beyond deleted_at
+            const hasDonationCondition = Object.keys(donationSome).length > 1;
+            if (hasDonationCondition) {
+                donorSome.donations = { some: donationSome };
+            }
+            addAndCondition({ donors: { some: donorSome } });
+        }
+
+        // סינון לפי סוג תשלום
+        if (paymentMethodsFilter.length > 0) {
             addAndCondition({
                 donors: {
                     some: {
                         active: true,
+                        ...(campaignIds.length > 0 && { campaignId: { in: campaignIds } }),
                         donations: {
                             some: {
                                 deleted_at: null,
-                                monthlyAmount: donationCondition
+                                paymentMethod: { in: paymentMethodsFilter },
                             }
                         }
                     }
                 }
             });
+        }
+
+        // סינון לפי יחס תרומה בפועל מול צפי (raw SQL)
+        if (vsExpectedFilter.length > 0 && vsExpectedFilter.length < 3) {
+            const havingParts = [];
+            if (vsExpectedFilter.includes('above')) havingParts.push('COALESCE(SUM(don.monthly_amount), 0) > COALESCE(d.expected, 0)');
+            if (vsExpectedFilter.includes('equal')) havingParts.push('COALESCE(SUM(don.monthly_amount), 0) = COALESCE(d.expected, 0)');
+            if (vsExpectedFilter.includes('below')) havingParts.push('COALESCE(SUM(don.monthly_amount), 0) < COALESCE(d.expected, 0)');
+            if (havingParts.length > 0) {
+                const campaignClause = campaignIds.length > 0
+                    ? `AND d.campaign_id IN (${campaignIds.map(Number).join(',')})`
+                    : '';
+                const havingClause = havingParts.join(' OR ');
+                const rawSql = `
+                    SELECT DISTINCT d.person_id
+                    FROM donors d
+                    LEFT JOIN donations don ON don.donor_id = d.id AND don.deleted_at IS NULL
+                    WHERE d.active = true AND d.person_id IS NOT NULL
+                    ${campaignClause}
+                    GROUP BY d.person_id, d.expected
+                    HAVING (${havingClause})
+                `;
+                const rows = await prisma.$queryRawUnsafe(rawSql);
+                const personIds = rows.map(r => Number(r.person_id));
+                addAndCondition({ id: { in: personIds } });
+            }
         }
 
         // סינון לפי דרך יצירת קשר
