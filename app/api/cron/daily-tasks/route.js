@@ -11,8 +11,8 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.donext.co.il';
  * נקרא כל בוקר ע"י node-cron (05:00 שעון ישראל)
  * 
  * לוגיקת שליחה:
- * - ביום שיש משימות לאותו יום: שולח מייל עם משימות היום + כל המשימות שלא בוצעו (overdue)
- * - ביום שאין משימות: אם יש משימות ישנות שלא בוצעו → שולח. אם אין → לא שולח.
+ * - שולח מייל רק אם יש משימה שתאריך הטיפול שלה הוא היום או אתמול (יום אחד overdue)
+ * - משימות ישנות יותר (2+ ימים) לא גורמות לשליחה
  * - המנהל מקבל מייל רק אם נשלח מייל לאחראי אחד לפחות (מייל אחד בלבד עם כל המשימות)
  * - אם אין מיילים לאחראים → גם המנהל לא מקבל
  */
@@ -28,6 +28,8 @@ export async function GET(request) {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
 
         // שליפת קמפיינים שהפיצ'ר מופעל אצלם
         const enabledCampaigns = await prisma.campaign.findMany({
@@ -115,11 +117,12 @@ export async function GET(request) {
             }
         });
 
-        // גם הערות ישנות שעברו ולא טופלו (overdue)
+        // הערות של אתמול שלא טופלו (overdue של יום אחד בלבד)
         const overdueDonorNotes = await prisma.donorNote.findMany({
             where: {
                 donor: { campaignId: { in: enabledCampaignIds } },
                 followUpDate: {
+                    gte: yesterday,
                     lt: today
                 },
                 noteCompleted: false
@@ -151,6 +154,7 @@ export async function GET(request) {
             where: {
                 donation: { donor: { campaignId: { in: enabledCampaignIds } } },
                 followUpDate: {
+                    gte: yesterday,
                     lt: today
                 },
                 noteCompleted: false

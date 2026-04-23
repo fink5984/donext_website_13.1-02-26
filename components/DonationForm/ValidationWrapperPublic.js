@@ -35,6 +35,11 @@ const ValidationWrapperPublic = ({
         const hasValidPayments = formData.numberOfPayments > 0 || formData.isUnlimited;
         if (!hasValidPayments) return t('noPeriodSelected');
 
+        // Check if payment method is selected
+        if (!formData.paymentMethod) {
+            return t('paymentMethodRequired');
+        }
+
         return null;
     };
 
@@ -58,6 +63,8 @@ const ValidationWrapperPublic = ({
             } else if (validationMessage === t('noPeriodSelected')) {
                 const hasValidPayments = formData.numberOfPayments > 0 || formData.isUnlimited;
                 currentErrorFixed = hasValidPayments;
+            } else if (validationMessage === t('paymentMethodRequired')) {
+                currentErrorFixed = !!formData.paymentMethod;
             }
 
             if (currentErrorFixed) {

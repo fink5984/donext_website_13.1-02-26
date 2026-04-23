@@ -1612,6 +1612,7 @@
     "mustSelectDonor": "*Must select a donor",
     "noAmountSelected": "*No donation amount selected",
     "noPeriodSelected": "*No donation period selected",
+    "paymentMethodRequired": "*Must select a payment method",
     "paymentRequiresNotes": "*This payment method requires notes to be filled",
     "noteRequiresFollowUpDate": "*When adding a note, follow-up date is required",
     "followUpDateMustBeFuture": "*Follow-up date must be a future date",

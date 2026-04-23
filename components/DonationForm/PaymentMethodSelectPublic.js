@@ -115,7 +115,11 @@ export function PaymentMethodSelectPublic({ value, onChange, campaign, children 
                         style={{ paddingInlineEnd: selectedOption && selectedOption.hasIcon ? '35px' : '8px' }}
                     >
                         {paymentOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>
+                            <option 
+                                key={opt.value} 
+                                value={opt.value}
+                                disabled={opt.value === ''}
+                            >
                                 {opt.label}
                             </option>
                         ))}

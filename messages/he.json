@@ -1638,6 +1638,7 @@
     "mustSelectDonor": "*חייבים לבחור תורם",
     "noAmountSelected": "*לא בחרת את סכום התרומה",
     "noPeriodSelected": "*לא בחרת את תקופת התרומה",
+    "paymentMethodRequired": "*חייבים לבחור אמצעי תשלום",
     "paymentRequiresNotes": "*באמצעי תשלום זה חובה למלא הערות",
     "noteRequiresFollowUpDate": "*כאשר יש הערה, חובה לבחור תאריך טיפול המשך",
     "followUpDateMustBeFuture": "*תאריך טיפול המשך חייב להיות תאריך עתידי",
