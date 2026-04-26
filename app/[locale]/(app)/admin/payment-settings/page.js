@@ -4,6 +4,44 @@ import { useState, useEffect, useContext } from 'react';
 import { AppContext } from '@/app/components/AppContext';
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import styles from './payment-settings.module.scss';
+import Button from '@/app/components/Button';
+
+// System SVG icons
+import CreditIcon from '@/app/icons/credit.svg';
+import BitIcon from '@/app/icons/bit.svg';
+import PaypalIcon from '@/app/icons/paypal.svg';
+import BankTransferIcon from '@/app/icons/bank-transfer.svg';
+import ChecksIcon from '@/app/icons/checks.svg';
+import CashIcon from '@/app/icons/cash.svg';
+import HokIcon from '@/app/icons/hok-new.svg';
+import GooglePayIcon from '@/app/icons/google-pay.svg';
+import ApplePayIcon from '@/app/icons/apple-pay.svg';
+import PayboxIcon from '@/app/icons/paybox.svg';
+import StripeIcon from '@/app/icons/stripe.svg';
+import GiftIcon from '@/app/icons/gift.svg';
+import WalletIcon from '@/app/icons/wallet.svg';
+import NoteIcon from '@/app/icons/note.svg';
+import SettingsIcon from '@/app/icons/settings.svg';
+import LinkIcon from '@/app/icons/link.svg';
+
+const METHOD_ICONS = {
+    credit_card: CreditIcon,
+    bit: BitIcon,
+    paypal: PaypalIcon,
+    bank_transfer: BankTransferIcon,
+    check: ChecksIcon,
+    cash: CashIcon,
+    direct_debit: HokIcon,
+    google_pay: GooglePayIcon,
+    apple_pay: ApplePayIcon,
+    paybox: PayboxIcon,
+    stripe: StripeIcon,
+    bevel: CreditIcon,
+    pledger: GiftIcon,
+    matbia: GiftIcon,
+    ojc: WalletIcon,
+    commitment: NoteIcon,
+};
 
 export default function PaymentSettingsPage() {
     const { campaignId } = useContext(AppContext);
@@ -14,22 +52,22 @@ export default function PaymentSettingsPage() {
     
     // Payment methods with Hebrew names
     const paymentMethods = [
-        { id: 'credit_card', name: 'כרטיס אשראי', icon: '💳' },
-        { id: 'bit', name: 'Bit', icon: '📱' },
-        { id: 'paypal', name: 'PayPal', icon: '💰' },
-        { id: 'bank_transfer', name: 'העברה בנקאית', icon: '🏦' },
-        { id: 'check', name: 'צ\'ק', icon: '📝' },
-        { id: 'cash', name: 'מזומן', icon: '💵' },
-        { id: 'direct_debit', name: 'הוראת קבע', icon: '🔄' },
-        { id: 'google_pay', name: 'Google Pay', icon: '📱' },
-        { id: 'apple_pay', name: 'Apple Pay', icon: '🍎' },
-        { id: 'paybox', name: 'PayBox', icon: '💳' },
-        { id: 'stripe', name: 'Stripe', icon: '💸' },
-        { id: 'bevel', name: 'Bevel', icon: '💎' },
-        { id: 'pledger', name: 'Pledger Charitable', icon: '🤝' },
-        { id: 'matbia', name: 'Matbia', icon: '🎁' },
-        { id: 'ojc', name: 'OJC Charity Card', icon: '💚' },
-        { id: 'commitment', name: 'התחייבות', icon: '📋' },
+        { id: 'credit_card', name: 'כרטיס אשראי', description: 'בחר ספק לעיבוד תשלומי כרטיס אשראי' },
+        { id: 'bit', name: 'Bit', description: 'תשלומים מהירים דרך אפליקציית Bit' },
+        { id: 'paypal', name: 'PayPal', description: 'תשלומים בינלאומיים דרך PayPal' },
+        { id: 'bank_transfer', name: 'העברה בנקאית', description: 'העברה ישירה לחשבון הבנק' },
+        { id: 'check', name: 'צ\'ק', description: 'תשלום באמצעות צ\'ק בנקאי' },
+        { id: 'cash', name: 'מזומן', description: 'תשלום במזומן' },
+        { id: 'direct_debit', name: 'הוראת קבע', description: 'חיוב חודשי אוטומטי' },
+        { id: 'google_pay', name: 'Google Pay', description: 'תשלומים דרך Google Pay' },
+        { id: 'apple_pay', name: 'Apple Pay', description: 'תשלומים דרך Apple Pay' },
+        { id: 'paybox', name: 'PayBox', description: 'מערכת תשלומים PayBox' },
+        { id: 'stripe', name: 'Stripe', description: 'מעבד תשלומים Stripe' },
+        { id: 'bevel', name: 'Bevel', description: 'מעבד תשלומים Bevel/USAePay' },
+        { id: 'pledger', name: 'Pledger Charitable', description: 'מערכת תשלומים לעמותות ומוסדות' },
+        { id: 'matbia', name: 'Matbia', description: 'מערכת תשלומים דיגיטלית לעמותות' },
+        { id: 'ojc', name: 'OJC Charity Card', description: 'כרטיס צדקה דיגיטלי' },
+        { id: 'commitment', name: 'התחייבות', description: 'רישום התחייבות לתרומה עתידית' },
     ];
 
     const [enabledMethods, setEnabledMethods] = useState({});
@@ -444,83 +482,75 @@ export default function PaymentSettingsPage() {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <div className={styles.titleSection}>
-                    <h1>הגדרות תשלום</h1>
-                    <p>בחר את אמצעי התשלום הזמינים עבור הקמפיין</p>
-                </div>
-            </div>
-
-            {successMessage && (
-                <div className={styles.successMessage}>
-                    {successMessage}
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className={styles.errorMessage}>
-                    {errorMessage}
-                </div>
-            )}
-
             <div className={styles.content}>
+                <h1>הגדרות תשלום</h1>
+                <p className={styles.subtitle}>בחר את אמצעי התשלום הזמינים עבור הקמפיין</p>
+
+                {successMessage && (
+                    <div className={styles.successMessage}>
+                        {successMessage}
+                    </div>
+                )}
+
+                {errorMessage && (
+                    <div className={styles.errorMessage}>
+                        {errorMessage}
+                    </div>
+                )}
                 <div className={styles.paymentMethodsList}>
                     {paymentMethods.map(method => {
                         // כרטיס אשראי - תצוגה מיוחדת עם בחירת ספק
                         if (method.id === 'credit_card') {
                             return (
                                 <div key={method.id} className={styles.paymentMethodItem}>
-                                    <div className={styles.methodInfo}>
-                                        <span className={styles.methodIcon}>{method.icon}</span>
-                                        <span className={styles.methodName}>{method.name}</span>
-                                    </div>
-                                    <div className={styles.creditCardProviderSelect}>
-                                        <select 
-                                            value={creditCardProvider}
-                                            onChange={(e) => {
-                                                const provider = e.target.value;
-                                                setCreditCardProvider(provider);
-                                                if (provider) {
-                                                    setEnabledMethods(prev => ({ ...prev, credit_card: true }));
-                                                    if (provider === 'stripe' && !stripeKeys.publicKey) {
-                                                        setShowStripeModal(true);
-                                                    } else if (provider === 'bevel' && !bevelKeys.publicKey) {
-                                                        setShowBevelModal(true);
-                                                    } else if (provider === 'nedarim_plus' && !nedarimPlusKeys.mosad) {
-                                                        setShowNedarimPlusModal(true);
-                                                    }
-                                                } else {
-                                                    // כיבוי כרטיס אשראי - מנקים את כל ההגדרות
-                                                    setEnabledMethods(prev => ({ ...prev, credit_card: false }));
-                                                }
-                                            }}
-                                            className={styles.providerDropdown}
-                                        >
-                                            <option value="">כבוי - לא מופעל</option>
-                                            <option value="stripe">Stripe</option>
-                                            <option value="bevel">Bevel / USAePay</option>
-                                            <option value="nedarim_plus">נדרים פלוס</option>
-                                        </select>
-                                        {creditCardProvider ? (
-                                            <button 
-                                                className={styles.configureButton}
-                                                onClick={() => {
-                                                    if (creditCardProvider === 'stripe') {
-                                                        setShowStripeModal(true);
-                                                    } else if (creditCardProvider === 'bevel') {
-                                                        setShowBevelModal(true);
-                                                    } else if (creditCardProvider === 'nedarim_plus') {
-                                                        setShowNedarimPlusModal(true);
+                                    <div className={styles.methodHeader}>
+                                        <div className={styles.methodInfo}>
+                                            {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                            <div className={styles.methodDetails}>
+                                                <h3>{method.name}</h3>
+                                                <p>בחר ספק לעיבוד תשלומי כרטיס אשראי</p>
+                                            </div>
+                                        </div>
+                                        <div className={styles.methodControl}>
+                                            {creditCardProvider && (
+                                                <button
+                                                    className={styles.inlineSettingsBtn}
+                                                    title="הגדרות"
+                                                    onClick={() => {
+                                                        if (creditCardProvider === 'stripe') setShowStripeModal(true);
+                                                        else if (creditCardProvider === 'bevel') setShowBevelModal(true);
+                                                        else if (creditCardProvider === 'nedarim_plus') setShowNedarimPlusModal(true);
+                                                    }}
+                                                >
+                                                    <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
+                                                </button>
+                                            )}
+                                            <select
+                                                value={creditCardProvider}
+                                                onChange={(e) => {
+                                                    const provider = e.target.value;
+                                                    setCreditCardProvider(provider);
+                                                    if (provider) {
+                                                        setEnabledMethods(prev => ({ ...prev, credit_card: true }));
+                                                        if (provider === 'stripe' && !stripeKeys.publicKey) {
+                                                            setShowStripeModal(true);
+                                                        } else if (provider === 'bevel' && !bevelKeys.publicKey) {
+                                                            setShowBevelModal(true);
+                                                        } else if (provider === 'nedarim_plus' && !nedarimPlusKeys.mosad) {
+                                                            setShowNedarimPlusModal(true);
+                                                        }
+                                                    } else {
+                                                        setEnabledMethods(prev => ({ ...prev, credit_card: false }));
                                                     }
                                                 }}
+                                                className={styles.providerDropdown}
                                             >
-                                                ⚙️ הגדרות {creditCardProvider === 'stripe' ? 'Stripe' : creditCardProvider === 'bevel' ? 'Bevel' : 'נדרים פלוס'}
-                                            </button>
-                                        ) : (
-                                            <span className={styles.disabledIndicator}>
-                                                ❌ כרטיס אשראי מנוטרל
-                                            </span>
-                                        )}
+                                                <option value="">כבוי - לא מופעל</option>
+                                                <option value="stripe">Stripe</option>
+                                                <option value="bevel">Bevel / USAePay</option>
+                                                <option value="nedarim_plus">נדרים פלוס</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -535,27 +565,33 @@ export default function PaymentSettingsPage() {
                         if (method.id === 'pledger') {
                             return (
                                 <div key={method.id} className={styles.paymentMethodItem}>
-                                    <div className={styles.methodInfo}>
-                                        <span className={styles.methodIcon}>{method.icon}</span>
-                                        <span className={styles.methodName}>{method.name}</span>
-                                    </div>
-                                    <div className={styles.pledgerControls}>
-                                        <label className={styles.switch}>
-                                            <input
-                                                type="checkbox"
-                                                checked={enabledMethods[method.id] || false}
-                                                onChange={() => handleToggle(method.id)}
-                                            />
-                                            <span className={styles.slider}></span>
-                                        </label>
-                                        {enabledMethods[method.id] && (
-                                            <button 
-                                                className={styles.configureButton}
-                                                onClick={() => setShowPledgerModal(true)}
-                                            >
-                                                ⚙️ הגדרות Pledger
-                                            </button>
-                                        )}
+                                    <div className={styles.methodHeader}>
+                                        <div className={styles.methodInfo}>
+                                            {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                            <div className={styles.methodDetails}>
+                                                <h3>{method.name}</h3>
+                                                <p>מערכת תשלומים לעמותות ומוסדות</p>
+                                            </div>
+                                        </div>
+                                        <div className={styles.methodControl}>
+                                            {enabledMethods[method.id] && (
+                                                <button
+                                                    className={styles.inlineSettingsBtn}
+                                                    onClick={() => setShowPledgerModal(true)}
+                                                    title="הגדרות"
+                                                >
+                                                    <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
+                                                </button>
+                                            )}
+                                            <label className={styles.switch}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={enabledMethods[method.id] || false}
+                                                    onChange={() => handleToggle(method.id)}
+                                                />
+                                                <span className={styles.slider}></span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -565,27 +601,33 @@ export default function PaymentSettingsPage() {
                         if (method.id === 'matbia') {
                             return (
                                 <div key={method.id} className={styles.paymentMethodItem}>
-                                    <div className={styles.methodInfo}>
-                                        <span className={styles.methodIcon}>{method.icon}</span>
-                                        <span className={styles.methodName}>{method.name}</span>
-                                    </div>
-                                    <div className={styles.pledgerControls}>
-                                        <label className={styles.switch}>
-                                            <input
-                                                type="checkbox"
-                                                checked={enabledMethods[method.id] || false}
-                                                onChange={() => handleToggle(method.id)}
-                                            />
-                                            <span className={styles.slider}></span>
-                                        </label>
-                                        {enabledMethods[method.id] && (
-                                            <button 
-                                                className={styles.configureButton}
-                                                onClick={() => setShowMatbiaModal(true)}
-                                            >
-                                                ⚙️ הגדרות Matbia
-                                            </button>
-                                        )}
+                                    <div className={styles.methodHeader}>
+                                        <div className={styles.methodInfo}>
+                                            {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                            <div className={styles.methodDetails}>
+                                                <h3>{method.name}</h3>
+                                                <p>מערכת תשלומים דיגיטלית לעמותות</p>
+                                            </div>
+                                        </div>
+                                        <div className={styles.methodControl}>
+                                            {enabledMethods[method.id] && (
+                                                <button
+                                                    className={styles.inlineSettingsBtn}
+                                                    onClick={() => setShowMatbiaModal(true)}
+                                                    title="הגדרות"
+                                                >
+                                                    <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
+                                                </button>
+                                            )}
+                                            <label className={styles.switch}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={enabledMethods[method.id] || false}
+                                                    onChange={() => handleToggle(method.id)}
+                                                />
+                                                <span className={styles.slider}></span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -595,11 +637,49 @@ export default function PaymentSettingsPage() {
                         if (method.id === 'ojc') {
                             return (
                                 <div key={method.id} className={styles.paymentMethodItem}>
-                                    <div className={styles.methodInfo}>
-                                        <span className={styles.methodIcon}>{method.icon}</span>
-                                        <span className={styles.methodName}>{method.name}</span>
+                                    <div className={styles.methodHeader}>
+                                        <div className={styles.methodInfo}>
+                                            {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                            <div className={styles.methodDetails}>
+                                                <h3>{method.name}</h3>
+                                                <p>כרטיס צדקה דיגיטלי</p>
+                                            </div>
+                                        </div>
+                                        <div className={styles.methodControl}>
+                                            {enabledMethods[method.id] && (
+                                                <button
+                                                    className={styles.inlineSettingsBtn}
+                                                    onClick={() => setShowOjcModal(true)}
+                                                    title="הגדרות"
+                                                >
+                                                    <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
+                                                </button>
+                                            )}
+                                            <label className={styles.switch}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={enabledMethods[method.id] || false}
+                                                    onChange={() => handleToggle(method.id)}
+                                                />
+                                                <span className={styles.slider}></span>
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div className={styles.pledgerControls}>
+                                </div>
+                            );
+                        }
+                        
+                        return (
+                            <div key={method.id} className={styles.paymentMethodItem}>
+                                <div className={styles.methodHeader}>
+                                    <div className={styles.methodInfo}>
+                                        {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                        <div className={styles.methodDetails}>
+                                            <h3>{method.name}</h3>
+                                            {method.description && <p>{method.description}</p>}
+                                        </div>
+                                    </div>
+                                    <div className={styles.methodControl}>
                                         <label className={styles.switch}>
                                             <input
                                                 type="checkbox"
@@ -608,46 +688,20 @@ export default function PaymentSettingsPage() {
                                             />
                                             <span className={styles.slider}></span>
                                         </label>
-                                        {enabledMethods[method.id] && (
-                                            <button 
-                                                className={styles.configureButton}
-                                                onClick={() => setShowOjcModal(true)}
-                                            >
-                                                ⚙️ הגדרות OJC
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
-                            );
-                        }
-                        
-                        return (
-                            <div key={method.id} className={styles.paymentMethodItem}>
-                                <div className={styles.methodInfo}>
-                                    <span className={styles.methodIcon}>{method.icon}</span>
-                                    <span className={styles.methodName}>{method.name}</span>
-                                </div>
-                                <label className={styles.switch}>
-                                    <input
-                                        type="checkbox"
-                                        checked={enabledMethods[method.id] || false}
-                                        onChange={() => handleToggle(method.id)}
-                                    />
-                                    <span className={styles.slider}></span>
-                                </label>
                             </div>
                         );
                     })}
                 </div>
 
                 <div className={styles.actions}>
-                    <button
-                        className={styles.saveButton}
+                    <Button
+                        text={isSaving ? 'שומר...' : 'שמור הגדרות'}
                         onClick={handleSave}
                         disabled={isSaving}
-                    >
-                        {isSaving ? 'שומר...' : 'שמור הגדרות'}
-                    </button>
+                        primary
+                    />
                 </div>
 
                 <div className={styles.note}>
@@ -658,7 +712,7 @@ export default function PaymentSettingsPage() {
                 <div className={styles.donarySection}>
                     <div className={styles.donaryHeader}>
                         <div className={styles.donaryTitle}>
-                            <span className={styles.donaryIcon}>🔗</span>
+                            <LinkIcon className={styles.donaryIcon} />
                             <div>
                                 <h3>Donary</h3>
                                 <span className={donarySettings.enabled ? styles.statusBadgeActive : styles.statusBadgeInactive}>
@@ -669,8 +723,9 @@ export default function PaymentSettingsPage() {
                         <button
                             className={styles.donarySettingsBtn}
                             onClick={() => setShowDonaryModal(true)}
+                            title="הגדרות Donary"
                         >
-                            ⚙️
+                            <SettingsIcon style={{ width: '16px', height: '16px' }} />
                         </button>
                     </div>
                     
@@ -684,9 +739,9 @@ export default function PaymentSettingsPage() {
                                             onClick={handleDonaryTest}
                                             disabled={donaryTestStatus === 'testing'}
                                         >
-                                            {donaryTestStatus === 'testing' ? '...' : 
-                                             donaryTestStatus === 'success' ? '✓' :
-                                             donaryTestStatus === 'error' ? '✗' : '🔌'} בדיקה
+                                            {donaryTestStatus === 'testing' ? 'בודק...' :
+                                             donaryTestStatus === 'success' ? 'בדיקה הצליחה' :
+                                             donaryTestStatus === 'error' ? 'בדיקה נכשלה' : 'בדיקת חיבור'}
                                         </button>
                                         
                                         <button
@@ -694,7 +749,7 @@ export default function PaymentSettingsPage() {
                                             onClick={handleDonarySync}
                                             disabled={donarySyncStatus === 'syncing'}
                                         >
-                                            {donarySyncStatus === 'syncing' ? '🔄' : '📤'} סנכרון ({donorCount})
+                                            {donarySyncStatus === 'syncing' ? 'מסנכרן...' : `סנכרון (${donorCount})`}
                                         </button>
                                         
                                         <button
@@ -718,7 +773,7 @@ export default function PaymentSettingsPage() {
                                             }}
                                             title="הורד Excel בפורמט Donary עם person.id"
                                         >
-                                            📥 Excel
+                                            ייצוא Excel
                                         </button>
                                     </>
                                 )}
@@ -726,12 +781,12 @@ export default function PaymentSettingsPage() {
                             
                             {donarySyncResults && (
                                 <div className={styles.syncResultsCompact}>
-                                    ✅ {donarySyncResults.success} | ❌ {donarySyncResults.failed}
+                                    הצלחה: {donarySyncResults.success} | כישלון: {donarySyncResults.failed}
                                 </div>
                             )}
                             
                             <details className={styles.webhookDetails}>
-                                <summary>📡 Webhook URLs</summary>
+                                <summary>Webhook URLs</summary>
                                 <div className={styles.webhookUrlsCompact}>
                                     <code>charge/{campaignId}</code>
                                     <code>schedule/{campaignId}</code>
@@ -744,7 +799,7 @@ export default function PaymentSettingsPage() {
                                         }}
                                         title="העתק"
                                     >
-                                        📋
+                                        העתק
                                     </button>
                                 </div>
                             </details>
@@ -752,7 +807,7 @@ export default function PaymentSettingsPage() {
                     )}
                 </div>
             </div>
-            
+
             {/* Stripe Modal */}
             {showStripeModal && (
                 <div className={styles.modal}>
@@ -1078,7 +1133,7 @@ export default function PaymentSettingsPage() {
             {showNedarimPlusModal && (
                 <div className={styles.modal}>
                     <div className={styles.modalContent}>
-                        <h3>✡️ הגדרת נדרים פלוס</h3>
+                        <h3>הגדרת נדרים פלוס</h3>
                         <p>כדי להפעיל את נדרים פלוס, יש להזין את פרטי המוסד:</p>
                         
                         <div className={styles.formGroup}>
@@ -1178,7 +1233,7 @@ export default function PaymentSettingsPage() {
             {showDonaryModal && (
                 <div className={styles.modal}>
                     <div className={styles.modalContent}>
-                        <h3>🔗 הגדרת Donary</h3>
+                        <h3>הגדרת Donary</h3>
                         <p>כדי לחבר את הקמפיין ל-Donary, יש להזין את פרטי החיבור:</p>
                         
                         <div className={styles.formGroup}>
@@ -1243,3 +1298,4 @@ export default function PaymentSettingsPage() {
         </div>
     );
 }
+

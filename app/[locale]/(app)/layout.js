@@ -466,6 +466,15 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
                 ]
             }
         ] : [],
+        managerSettings: (!isAdmin && userType === 'manager') ? [
+            {
+                icon: <Settings />,
+                title: t('settings'),
+                menu: [
+                    { label: t('paymentSettings'), href: `/${locale}/admin/payment-settings` }
+                ]
+            }
+        ] : [],
         logo: [
             {
                 icon: campaign?.logo ? <img src={campaign.logo} alt="Campaign Logo" className={styles.campaignLogo} /> : <Logo />,
@@ -624,6 +633,7 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
                                 <div className={styles.section}>
                                     {renderNavSection(navItems.bottom, 'bottom')}
                                     {renderNavSection(navItems.admin, 'admin')}
+                                    {renderNavSection(navItems.managerSettings, 'managerSettings')}
                                     <LanguageSwitcher />
                                     {renderNavSection(navItems.logo, 'logo')}
                                 </div>
