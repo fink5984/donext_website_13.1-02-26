@@ -316,14 +316,11 @@ async function fetchDonorsWithPagination(params) {
     const isSortingByCommitment = params.sorting.sortField === 'commitmentTotal';
     const isSortingByTraffic = params.sorting.sortField === 'traffic' || params.sorting.sortField === 'traffic_light_color';
     const isSortingByDonorNotes = params.sorting.sortField === 'donorNotes';
-    // זיהוי מיון ברירת מחדל - כאשר המשתמש לא בחר מיון מפורש
-    const isDefaultSort = !params.sorting.sortField;
-    
-    // אם אין מיון מוגדר, השתמש במיון ברירת מחדל לפי שם
+    // אם אין מיון מוגדר, השתמש במיון ברירת מחדל לפי שם (ב-DB - מהיר)
     const sortField = params.sorting.sortField || 'name';
     const sortDir = params.sorting.sortDir || 'asc';
     
-    const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSort
+    const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes
         ? buildOrderByCondition(sortField, sortDir) 
         : undefined;
 
@@ -335,8 +332,9 @@ async function fetchDonorsWithPagination(params) {
     const isForSpecificFundraiser = (params.fundraiserId && params.fundraiserId !== 'null' && params.fundraiserId !== null) ||
                                    (params.fundraiserId && params.fundraiserId !== 'null' && params.fundraiserId !== null);
 
-    // אם ממיינים לפי תרומה בפועל או לפי צבעי רמזור או לפי הערות או מיון ברירת מחדל (עדיפות משימות) או אם זה עבור מתרים מסוים או noLimit - צריך לשלוף הכל, למיין ואז לעשות pagination
-    if (isSortingByActual || isSortingByCommitment || isSortingByTraffic || isSortingByDonorNotes || isDefaultSort || isForSpecificFundraiser || isNoLimit) {
+    // אם ממיינים לפי שדה שדורש חישוב בזיכרון, או מתרים מסוים, או noLimit - שלוף הכל ואז מיין/paginate בזיכרון
+    // מיון ברירת מחדל (לפי שם) רץ ישירות ב-DB עם pagination יעיל
+    if (isSortingByActual || isSortingByCommitment || isSortingByTraffic || isSortingByDonorNotes || isForSpecificFundraiser || isNoLimit) {
         // שליפה של כל התורמים בחלקים קטנים כדי למנוע OOM
         const BATCH_SIZE = 200;
         let allDonors = [];
@@ -442,25 +440,6 @@ async function fetchDonorsWithPagination(params) {
                 if (!priorityA.hasAnyNote && priorityB.hasAnyNote) return 1;
                 
                 return 0;
-            } else if (isDefaultSort) {
-                // מיון ברירת מחדל: קודם משימות להיום, אח"כ משימות שעבר זמנן, אח"כ לפי שם
-                const pA = getDonorNotePriority(a);
-                const pB = getDonorNotePriority(b);
-                
-                if (pA.priority !== pB.priority) {
-                    return pA.priority - pB.priority;
-                }
-                
-                // בתוך קבוצת overdue - ישנים יותר קודם
-                if (pA.priority === 1 && pB.priority === 1 && pA.overdueDate && pB.overdueDate) {
-                    const dateDiff = pA.overdueDate - pB.overdueDate;
-                    if (dateDiff !== 0) return dateDiff;
-                }
-                
-                // בתוך אותה קבוצת עדיפות - מיון לפי שם
-                const lastNameComp = (a.person?.lastName || '').localeCompare(b.person?.lastName || '', 'he');
-                if (lastNameComp !== 0) return lastNameComp;
-                return (a.person?.firstName || '').localeCompare(b.person?.firstName || '', 'he');
             }
             return 0;
         });
