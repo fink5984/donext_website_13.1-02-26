@@ -46,7 +46,7 @@ const getAllPaymentOptions = (t) => [
     { value: 'COMMITMENT', label: t('paymentMethods.commitment'), hasIcon: true, settingKey: 'commitment' }
 ];
 
-export function PaymentMethodSelect({ value, onChange, children, readOnly, showEditButton, onEditPaymentMethod, isEditingPaymentMethod }) {
+export function PaymentMethodSelect({ value, onChange, children, readOnly, showEditButton, onEditPaymentMethod, isEditingPaymentMethod, excludeCommitment }) {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRTL = locale === 'he';
@@ -60,8 +60,8 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
         if (campaignId) {
             fetchPaymentSettings();
         } else {
-            // If no campaign, show all options
-            setPaymentOptions(allPaymentOptions);
+            // If no campaign, show all options (except commitment if excluded)
+            setPaymentOptions(excludeCommitment ? allPaymentOptions.filter(o => o.value !== 'COMMITMENT') : allPaymentOptions);
             setIsLoading(false);
         }
     }, [campaignId]);
@@ -89,6 +89,8 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
                 
                 // Filter payment options based on enabled settings
                 const filteredOptions = allPaymentOptions.filter(option => {
+                    // Hide commitment option when excludeCommitment is true
+                    if (excludeCommitment && option.value === 'COMMITMENT') return false;
                     // Always include the default "select" option
                     if (option.value === '') return true;
                     

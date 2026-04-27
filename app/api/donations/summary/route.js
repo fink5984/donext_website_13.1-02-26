@@ -60,7 +60,9 @@ export async function GET(request) {
             },
             select: {
                 monthlyAmount: true,
-                numberOfPayments: true
+                numberOfPayments: true,
+                paymentMethod: true,
+                isUnlimited: true
             }
         });
         // שליפת סוג הקמפיין ודרגות תרומה מטבלת ranks
@@ -82,15 +84,20 @@ export async function GET(request) {
         
         // חישוב הסכום הכולל בהתאם לסוג הקמפיין (כולל תורמים לא פעילים)
         let totalAmount = 0;
+        let commitmentTotal = 0;
         donations.forEach(donation => {
             const monthlyAmount = Number(donation.monthlyAmount) || 0;
+            const isCommitment = donation.paymentMethod === 'COMMITMENT';
             if (campaign?.donationType === 'project') {
                 // קמפיין פרויקט - כפול במספר התשלומים
                 const numberOfPayments = Number(donation.numberOfPayments) || 1;
-                totalAmount += monthlyAmount * numberOfPayments;
+                const amount = monthlyAmount * numberOfPayments;
+                totalAmount += amount;
+                if (isCommitment) commitmentTotal += amount;
             } else {
                 // קמפיין חודשי - רק הסכום החודשי
                 totalAmount += monthlyAmount;
+                if (isCommitment) commitmentTotal += monthlyAmount;
             }
         });
 
@@ -237,7 +244,8 @@ export async function GET(request) {
             topAttractiveDonors,
             ranks: ranksWithData,
             hasForecast: hasAnyForecast > 0,
-            totalAmount: Number(totalAmount)
+            totalAmount: Number(totalAmount),
+            commitmentTotal: Number(commitmentTotal)
         });
 
     } catch (error) {

@@ -139,7 +139,8 @@ export async function GET(request) {
                 select: {
                     monthlyAmount: true,
                     numberOfPayments: true,
-                    isUnlimited: true
+                    isUnlimited: true,
+                    paymentMethod: true
                 }
             }),
 
@@ -195,25 +196,28 @@ export async function GET(request) {
 
         // חישוב סכום תרומות בפועל לפי סוג קמפיין
         let total_actual = 0;
+        let commitment_total = 0;
         if (campaignInfo?.donationType === 'project') {
             // עבור קמפיין פרויקט - חישוב מורכב
             total_actual = donationStats.reduce((sum, donation) => {
                 const monthlyAmount = Number(donation.monthlyAmount) || 0;
-                
+                let amount;
                 if (donation.isUnlimited || donation.numberOfPayments === 1) {
-                    return sum + monthlyAmount;
+                    amount = monthlyAmount;
+                } else if (donation.numberOfPayments && donation.numberOfPayments > 0) {
+                    amount = monthlyAmount * donation.numberOfPayments;
+                } else {
+                    amount = monthlyAmount;
                 }
-                
-                if (donation.numberOfPayments && donation.numberOfPayments > 0) {
-                    return sum + (monthlyAmount * donation.numberOfPayments);
-                }
-                
-                return sum + monthlyAmount;
+                if (donation.paymentMethod === 'COMMITMENT') commitment_total += amount;
+                return sum + amount;
             }, 0);
         } else {
             // עבור קמפיין חודשי - סכום פשוט
             total_actual = donationStats.reduce((sum, donation) => {
-                return sum + Number(donation.monthlyAmount || 0);
+                const amount = Number(donation.monthlyAmount || 0);
+                if (donation.paymentMethod === 'COMMITMENT') commitment_total += amount;
+                return sum + amount;
             }, 0);
         }
 
@@ -253,7 +257,8 @@ export async function GET(request) {
             red_count: result.red_count,
             gray_count: result.gray_count,
             invitation_sent_count: result.invitation_sent_count,
-            arrival_confirmed_count: result.arrival_confirmed_count
+            arrival_confirmed_count: result.arrival_confirmed_count,
+            commitment_total: Number(commitment_total)
         });
 
     } catch (error) {

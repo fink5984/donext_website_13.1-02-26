@@ -26,6 +26,7 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
     const unassigned = totalActiveDonors - assigned;
     const totalExpected = Number(summary?.total_expected ?? 0);
     const totalActual = Math.floor(Number(summary?.total_actual ?? 0));
+    const commitmentTotal = Math.floor(Number(summary?.commitment_total ?? 0));
     const counts = {
         red: Number(summary?.red_count ?? 0),
         orange: Number(summary?.orange_count ?? 0),
@@ -559,7 +560,7 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
                 <div className={styles.cardContent}>
                     <h2 className={`table-1 ${styles.h2Title}`}>{t('donationRatio')}</h2>
                     <div className={`${styles.cardGraphContent} ${totalActual > totalTarget ? styles.veryGood : ''}`}>
-                        <div className={styles.cardHeader} style={{ color: activeTab === 'target' ? 'var(--Gray-Blue-200, #C5D7F8)' : activeTab === 'expected' ? 'var(--Text-Fundraiser-able, #009FC0)' : 'var(--Text-donor-Select, #B97A00)' }}>
+                        <div className={styles.cardHeader} style={{ color: activeTab === 'target' ? 'var(--Gray-Blue-200, #C5D7F8)' : activeTab === 'expected' ? 'var(--Text-Fundraiser-able, #009FC0)' : activeTab === 'commitment' ? '#7C3AED' : 'var(--Text-donor-Select, #B97A00)' }}>
                             <div className={`${styles.cardTitle} table-1`}>
                                 {activeTab === 'target' && (
                                     <span style={{ color: 'var(--Text-Default, #6E99EC)' }}><Arrow /> {t('campaignTarget')}</span>
@@ -570,8 +571,11 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
                                 {activeTab === 'actual' && (
                                     <span><Money /> {t('actualDonations')}</span>
                                 )}
+                                {activeTab === 'commitment' && (
+                                    <span style={{ color: '#7C3AED' }}><Money /> {t('commitmentDonations')}</span>
+                                )}
                             </div>
-                            <div className={`${activeTab === 'actual' ? styles.cardAmount : ''} card-2`}>
+                            <div className={`${activeTab === 'actual' || activeTab === 'commitment' ? styles.cardAmount : ''} card-2`}>
                                 {activeTab === 'target' && (
                                     <>
                                         {Math.round(totalTarget).toLocaleString()} <span className="tooltip-2"><CurrencySymbol /></span>
@@ -584,7 +588,12 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
                                 )}
                                 {activeTab === 'actual' && (
                                     <>
-                                        {totalActual.toLocaleString()} <span className="tooltip-2"><CurrencySymbol /></span>
+                                        {(totalActual - commitmentTotal).toLocaleString()} <span className="tooltip-2"><CurrencySymbol /></span>
+                                    </>
+                                )}
+                                {activeTab === 'commitment' && (
+                                    <>
+                                        {commitmentTotal.toLocaleString()} <span className="tooltip-2"><CurrencySymbol /></span>
                                     </>
                                 )}
                             </div>
@@ -599,16 +608,23 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
                             <div className={styles.graphBar}>
                                 <div className={styles.targetMarker} style={{ right: `${getPercentage(totalTarget)}%` }} />
                                 {totalExpected > 0 && <div className={styles.expectedBar} style={{ right: `${getPercentage(totalExpected)}%` }} />}
-                                <div className={styles.actualBar} style={{ width: `${getPercentage(totalActual)}%` }} />
+                                <div className={styles.actualBar} style={{ width: `${getPercentage(totalActual)}%` }}>
+                                    {commitmentTotal > 0 && totalActual > 0 && (
+                                        <div
+                                            className={styles.commitmentSegment}
+                                            style={{ width: `${Math.min((commitmentTotal / totalActual) * 100, 100)}%` }}
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             <div className={styles.legend}>
                                 <button
-                                    onClick={() => setActiveTab('actual')}
-                                    className={activeTab === 'actual' ? styles.active : ''}
+                                    onClick={() => setActiveTab('target')}
+                                    className={activeTab === 'target' ? styles.active : ''}
                                 >
                                     <span></span>
-                                    {t('actualDonations')}
+                                    {t('campaignTarget')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('expected')}
@@ -618,12 +634,21 @@ export default function DonorsCards({ summary, fundraisersLength, setShowAssign,
                                     {t('donationForecast')}
                                 </button>
                                 <button
-                                    onClick={() => setActiveTab('target')}
-                                    className={activeTab === 'target' ? styles.active : ''}
+                                    onClick={() => setActiveTab('actual')}
+                                    className={activeTab === 'actual' ? styles.active : ''}
                                 >
                                     <span></span>
-                                    {t('campaignTarget')}
+                                    {t('actualDonations')}
                                 </button>
+                                {commitmentTotal > 0 && (
+                                    <button
+                                        onClick={() => setActiveTab('commitment')}
+                                        className={`${styles.commitmentBtn} ${activeTab === 'commitment' ? styles.active : ''}`}
+                                    >
+                                        <span className={styles.commitmentDot}></span>
+                                        {t('commitmentDonations')}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

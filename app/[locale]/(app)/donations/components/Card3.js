@@ -45,6 +45,7 @@ const Card3 = observer(() => {
     const numberSteps = [1, 0.75, 0.5, 0].map(fraction => Math.round(globalMaxValue * fraction));
     const totalExpected = 0;
     const totalActual = summary?.totalAmount || 0;
+    const commitmentTotal = summary?.commitmentTotal || 0;
     const totalTarget = campaign?.target_amount || 0; // Use campaign from context
     const [activeTab, setActiveTab] = useState("actual");
     const [targetPercentage, setTargetPercentage] = useState(totalExpected * 2 >= totalTarget ? 50 : 75); // קו היעד תמיד ב-75%
@@ -174,7 +175,14 @@ const Card3 = observer(() => {
                             <div className={styles.graphBar}>
                                 <div className={styles.targetMarker} style={{ right: '75%' }} />
                                 {totalExpected > 0 && <div className={styles.expectedBar} style={{ right: `${getPercentage(totalExpected)}%` }} />}
-                                <div className={styles.actualBar} style={{ width: `${getPercentage(totalActual)}%` }} />
+                                <div className={styles.actualBar} style={{ width: `${getPercentage(totalActual)}%` }}>
+                                    {commitmentTotal > 0 && totalActual > 0 && (
+                                        <div
+                                            className={styles.commitmentSegment}
+                                            style={{ width: `${Math.min((commitmentTotal / totalActual) * 100, 100)}%` }}
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             <div className={styles.legend}>
@@ -206,6 +214,17 @@ const Card3 = observer(() => {
                                     <span className={styles.icon} /> <i>{t('target')}</i>
                                     <em className={`${styles.value} ${styles.target} tooltip-1`}><FormattedCurrency amount={Number(totalTarget || 0)} /></em>
                                 </button>
+                                {commitmentTotal > 0 && (
+                                    <button
+                                        type="button"
+                                        className={`${styles.legendBtn}`}
+                                        data-active={activeTab === 'commitment'}
+                                        onClick={() => setActiveTab('commitment')}
+                                    >
+                                        <span className={`${styles.icon} ${styles.commitmentIcon}`} /> <i>{t('commitment')}</i>
+                                        <em className={`${styles.value} ${styles.commitment} tooltip-1`}><FormattedCurrency amount={Number(commitmentTotal || 0)} /></em>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

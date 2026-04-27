@@ -20,6 +20,7 @@ import Menu from '@/app/icons/menu.svg'
 import NewDonor from "@/app/icons/newDonor.svg"
 import Circle from "@/app/icons/circle24.svg"
 import Note from "@/app/icons/note.svg"
+import CommitmentIcon from "@/app/icons/commitment.svg"
 import FilterComponent from '../filter/Filter.js'
 import AlertDialogComponent from '../Alerts/AlertPrint';
 import DoNextLoader from '@/app/components/DoNextLoader';
@@ -142,6 +143,11 @@ export default observer(function DonorsPage() {
     // בדוק אם יש שמות באנגלית בקמפיין (לפי activeFields או נוכחות נתונים)
     const hasEnglishNames = useMemo(() => {
         return donors.some(d => d.english_first_name || d.english_last_name);
+    }, [donors]);
+
+    // בדוק אם יש התחייבויות בקמפיין
+    const hasCommitments = useMemo(() => {
+        return donors.some(d => d.commitmentTotal > 0);
     }, [donors]);
 
     // Deep link: פתיחת כרטיסיית תורם מ-URL param (למשל ממייל משימות יומי)
@@ -730,7 +736,7 @@ export default observer(function DonorsPage() {
         return (
             <div
                 key={donor.id}
-                className={`${styles.tableRow} ${!donor.isActive ? styles.inactiveRow : ''} ${!showInvitationColumn ? styles.noInvitation : ''} table-3`}
+                className={`${styles.tableRow} ${!donor.isActive ? styles.inactiveRow : ''} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-3`}
             >
                 <div className={styles.toggleWrapper}>
                     <button
@@ -805,6 +811,16 @@ export default observer(function DonorsPage() {
                 <span className={`${styles.actual} ${styles.cell}`}>
                     <FormattedCurrency amount={Math.round(donor.actualDonation || 0)} />
                 </span>
+                {hasCommitments && (
+                <div className={styles.commitmentCell}>
+                    {donor.commitmentTotal > 0 && (
+                        <IconTooltip
+                            icon={<CommitmentIcon />}
+                            text={`${t('unfulfilledCommitment')}: ${new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US').format(Math.round(donor.commitmentTotal))} ${currencySymbol}`}
+                        />
+                    )}
+                </div>
+                )}
                 <span className={styles.selectFund}>
                     <label className={`${styles["floating-label"]} ${openSelects[donor.id] ? styles.visible : ""}`}>
                         {t('selectFundraiser')}
@@ -1085,6 +1101,22 @@ export default observer(function DonorsPage() {
                 </div>
                 <span>{t('actualDonation')}</span>
             </div>
+            {hasCommitments && (
+            <div className={`${styles.sortButtons} ${styles.commitmentHeaderCell}`}>
+                <button
+                    onClick={() => handleSort('commitmentTotal', 'desc')}
+                    className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'commitmentTotal' && store.donorsStore.sortConfig.direction === 'desc' ? styles.active : ''}`}
+                >
+                    <Up />
+                </button>
+                <button
+                    onClick={() => handleSort('commitmentTotal', 'asc')}
+                    className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'commitmentTotal' && store.donorsStore.sortConfig.direction === 'asc' ? styles.active : ''}`}
+                >
+                    <Down />
+                </button>
+            </div>
+            )}
             <div className={styles.headerCell}>
                 <div className={styles.sortButtons}>
                     <button
@@ -1253,7 +1285,7 @@ export default observer(function DonorsPage() {
                                             renderRow={renderDonorRow}
                                             headerContent={headerContent}
                                             styles={styles}
-                                            headerClassName={!showInvitationColumn ? styles.noInvitation : ''}
+                                            headerClassName={`${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''}`}
                                         />
                                         {/* Mobile Cards View */}
                                         <div className={styles.mobileCardsView}>

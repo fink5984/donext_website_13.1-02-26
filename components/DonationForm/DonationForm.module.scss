@@ -1914,3 +1914,61 @@
     }
   }
 }
+
+.commitmentEditSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  direction: rtl;
+}
+
+.commitmentEditHeader {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--Text-able-Text, #0C4AD5);
+  padding: 10px 20px;
+  background: var(--Bg-Button-hover-3, #DCEBFB);
+  border-radius: 40px;
+  display: inline-flex;
+  align-items: center;
+  direction: rtl;
+  align-self: center;
+}
+
+.partialFulfillRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--gray-blue-70, #edf5fd);
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.partialFulfillLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--Text-able-Text, #0C4AD5);
+  white-space: nowrap;
+}
+
+.partialFulfillInput {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--Border-able-field, #0C4AD5);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--Text-able-Text, #0C4AD5);
+  text-align: center;
+  background: #fff;
+  outline: none;
+
+  &:focus {
+    border-color: var(--Bg-Button-Primary, #0C4AD5);
+    box-shadow: 0 0 0 2px rgba(12, 74, 213, 0.15);
+  }
+}

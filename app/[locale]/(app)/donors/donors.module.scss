@@ -597,11 +597,23 @@
                             border-radius: 24px;
                             right: 0;
                             z-index: 2;
+                            overflow: hidden;
                             transition: box-shadow 0.2s ease, border 0.2s ease, width 0.3s ease;
 
                             &:hover {
                                 border: 1px solid var(--Text-button);
                                 box-shadow: 0px 3.5px 2px -2px rgba(137, 145, 164, 0.40);
+                            }
+
+                            .commitmentSegment {
+                                display: block;
+                                position: absolute;
+                                left: 0;
+                                top: 0;
+                                height: 100%;
+                                background: #7C3AED;
+                                border-radius: inherit;
+                                transition: width 0.3s ease;
                             }
                         }
 
@@ -666,10 +678,10 @@
                             }
 
                             &:nth-child(1) span {
-                                width: 15px;
+                                width: 2px;
                                 height: 12px;
-                                border-radius: var(--Border-Radius-m);
-                                background: var(--Donor-default);
+                                border-radius: 24px;
+                                background: #CFDEFF;
                             }
 
                             &:nth-child(2) span {
@@ -680,10 +692,28 @@
                             }
 
                             &:nth-child(3) span {
-                                width: 2px;
+                                width: 15px;
                                 height: 12px;
-                                border-radius: 24px;
-                                background: #CFDEFF;
+                                border-radius: var(--Border-Radius-m);
+                                background: var(--Donor-default);
+                            }
+
+                            &.commitmentBtn {
+                                color: #7C3AED;
+
+                                &.active {
+                                    color: #5B21B6;
+                                    font-weight: 600;
+                                }
+
+                                .commitmentDot {
+                                    width: 15px;
+                                    height: 12px;
+                                    border-radius: 4px;
+                                    background: #7C3AED;
+                                    display: inline-block;
+                                    flex-shrink: 0;
+                                }
                             }
                         }
                     }
@@ -905,22 +935,38 @@
                     .tableHeader,
                     .tableRow {
                         display: grid;
-                        grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 166px 50px 108px;
+                        grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 26px 166px 50px 108px;
                         align-items: center;
                         position: relative;
                         padding: var(--Spacing-Spacing-2) var(--Spacing-Spacing-5);
                         
                         &.noInvitation {
+                            grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 26px 166px 50px 108px;
+                        }
+
+                        &.noCommitment {
+                            grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 166px 50px 108px;
+                        }
+
+                        &.noInvitation.noCommitment {
                             grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 166px 50px 108px;
                         }
                         
                         @media (max-width: 1400px) {
-                            grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 140px 50px 100px;
+                            grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 24px 140px 50px 100px;
+
+                            &.noCommitment {
+                                grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 140px 50px 100px;
+                            }
                         }
                         
                         @media (max-width: 1200px) {
-                            grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 120px 45px 90px;
+                            grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 22px 120px 45px 90px;
                             font-size: 13px;
+
+                            &.noCommitment {
+                                grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 120px 45px 90px;
+                            }
                         }
                         
                         @media (max-width: 1024px) {
@@ -1417,7 +1463,21 @@
                             }
 
                             // עיצוב עמודת הערות
-                            .notesCell {
+                            .commitmentCell {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100%;
+                            color: var(--Primary-blue, #0C4AD5);
+                            svg {
+                                width: 16px;
+                                height: 16px;
+                            }
+                        }
+                        .commitmentHeaderCell {
+                            justify-content: center;
+                        }
+                        .notesCell {
                                 position: relative;
                                 display: flex;
                                 align-items: center;

@@ -60,6 +60,9 @@ const DonationsTable = observer(() => {
     // State למיון הטבלה הפנימית (לוקאלי) - מפתח לפי donorId
     const [innerTableSort, setInnerTableSort] = useState({});
 
+    // State לטאבים - תרומות / התחייבויות
+    const [activeTab, setActiveTab] = useState('donations');
+
     // Deep link: פתיחת כרטיסיית תרומה מ-URL param (למשל ממייל משימות יומי)
     const searchParams = useSearchParams();
     const openDonationParam = searchParams.get('openDonation');
@@ -693,11 +696,52 @@ const DonationsTable = observer(() => {
     // בדיקה אם אין תרומות בכלל בקמפיין (לא בגלל פילטרים)
     const hasNoDonationsInCampaign = donationsStore.totalCount === 0 && !donationsStore.hasActiveFilters && !donationsStore.loading;
 
+    // בדיקה אם יש התחייבויות בקמפיין
+    const hasCommitments = React.useMemo(() => {
+        return (donationsStore.groupedDonations || []).some(group =>
+            (group.donations || []).some(d => d.paymentMethod === 'COMMITMENT')
+        );
+    }, [donationsStore.groupedDonations]);
+
+    // איפוס הטאב אם אין התחייבויות
+    React.useEffect(() => {
+        if (!hasCommitments && activeTab === 'commitments') {
+            setActiveTab('donations');
+        }
+    }, [hasCommitments, activeTab]);
+
+    // פילטור תרומות לפי הטאב הפעיל
+    const filteredGroupedDonations = React.useMemo(() => {
+        const groups = donationsStore.groupedDonations || [];
+        const donationType = campaign?.donation_type;
+
+        const calcAmount = (d) => {
+            const monthly = parseFloat(d.monthlyAmount) || 0;
+            if (donationType === 'project' && d.numberOfPayments > 0) return monthly * d.numberOfPayments;
+            return monthly;
+        };
+
+        const filterAndRecalc = (filterFn) =>
+            groups
+                .map(group => {
+                    const donations = (group.donations || []).filter(filterFn);
+                    const totalAmount = donations.reduce((sum, d) => sum + calcAmount(d), 0);
+                    return { ...group, donations, totalAmount };
+                })
+                .filter(group => group.donations.length > 0);
+
+        if (activeTab === 'commitments') {
+            return filterAndRecalc(d => d.paymentMethod === 'COMMITMENT');
+        }
+        // טאב תרומות: מסנן החוצה התחייבויות
+        return filterAndRecalc(d => d.paymentMethod !== 'COMMITMENT');
+    }, [donationsStore.groupedDonations, activeTab, campaign]);
+
     const columns = [
         { header: t('columns.date'), accessor: 'lastDonationDate', sortable: false, className: 'dateHeader' },
         { header: t('columns.expectedDonation'), accessor: 'expected', sortable: true },
         { header: t('columns.comparison'), accessor: 'comparison', sortable: true },
-        { header: t('columns.actualDonation'), accessor: 'totalAmount', sortable: true },
+        { header: activeTab === 'commitments' ? t('columns.commitmentAmount') : t('columns.actualDonation'), accessor: 'totalAmount', sortable: true },
         { header: t('columns.whoDonated'), accessor: 'donor', sortable: true, className: 'donorName' },
         { header: t('columns.responsibleFundraiser'), accessor: 'fundraiser', sortable: true },
         { header: t('columns.paymentMethods'), accessor: 'paymentMethods', sortable: false },
@@ -1038,7 +1082,23 @@ const DonationsTable = observer(() => {
     return (
         <div className={styles.allTable}>
             <div className={styles.tableTitle}>
-                <h2 className='headline-2'>{t('donationsBreakdown')}</h2>
+                {!hasCommitments && <h2 className="headline-2">{t('donationsBreakdown')}</h2>}
+                {hasCommitments && (
+                    <div className={styles.tabsWrapper}>
+                        <button
+                            className={`${styles.tab} ${activeTab === 'donations' ? styles.activeTab : ''}`}
+                            onClick={() => setActiveTab('donations')}
+                        >
+                            {t('donationsBreakdown')}
+                        </button>
+                        <button
+                            className={`${styles.tab} ${activeTab === 'commitments' ? styles.activeTab : ''}`}
+                            onClick={() => setActiveTab('commitments')}
+                        >
+                            {t('commitmentsBreakdown')}
+                        </button>
+                    </div>
+                )}
                 {!hasNoDonationsInCampaign &&
                     <div className={styles.searchWrapper}>
                         <div className={styles.iconButtons}>
@@ -1111,7 +1171,7 @@ const DonationsTable = observer(() => {
                 </div>
             ) : (
                 <Table
-                    data={donationsStore.loading ? [] : (donationsStore.groupedDonations || [])}
+                    data={donationsStore.loading ? [] : filteredGroupedDonations}
                     columns={columns}
                     sortConfig={{ key: donationsStore.sortField, direction: donationsStore.sortDirection }}
                     onSort={handleSort}
@@ -1133,7 +1193,7 @@ const DonationsTable = observer(() => {
             {/* Mobile Cards View */}
             {!hasNoDonationsInCampaign && !donationsStore.loading && (
                 <div className={styles.mobileCardsView}>
-                    {(donationsStore.groupedDonations || []).map((donorGroup) => (
+                    {filteredGroupedDonations.map((donorGroup) => (
                         <MobileDonationCard
                             key={donorGroup.id}
                             donorGroup={donorGroup}

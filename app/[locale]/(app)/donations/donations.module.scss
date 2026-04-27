@@ -971,10 +971,22 @@
           right: 0;
           z-index: 2;
           transition: box-shadow 0.2s ease, border 0.2s ease, width 0.3s ease;
+          overflow: hidden;
 
           &:hover {
             border: 1px solid var(--Text-button, #FFF);
             box-shadow: 0px 3.5px 2px -2px rgba(137, 145, 164, 0.40);
+          }
+
+          .commitmentSegment {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #7C3AED;
+            border-radius: inherit;
+            transition: width 0.3s ease;
           }
         }
 
@@ -1047,6 +1059,11 @@
             &.target {
               color: var(--Text-header, #9DBDF3);
             }
+
+            // סגול
+            &.commitment {
+              color: #7C3AED;
+            }
           }
 
           // פתיחה קבועה כשהכפתור פעיל
@@ -1086,6 +1103,13 @@
             height: 12px;
             border-radius: var(--Border-Radius-lg, 24px);
             background: var(--Gray-Blue-150, #CFDEFF);
+          }
+
+          .commitmentIcon {
+            width: 15px !important;
+            height: 12px !important;
+            border-radius: var(--Border-Radius-m, 16px) !important;
+            background: #7C3AED !important;
           }
         }
       }

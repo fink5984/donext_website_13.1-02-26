@@ -136,6 +136,7 @@ async function fetchDonorsForExport(params) {
         where = await addOperatorFilter(where, params.operatorId, params.campaignId);
     }
     const isSortingByActual = params.sorting.sortField === 'actualDonation';
+    const isSortingByCommitment = params.sorting.sortField === 'commitmentTotal';
     const isSortingByTraffic = params.sorting.sortField === 'traffic' || params.sorting.sortField === 'traffic_light_color';
     const isSortingByDonorNotes = params.sorting.sortField === 'donorNotes';
     const isDefaultSortExport = !params.sorting.sortField;
@@ -144,7 +145,7 @@ async function fetchDonorsForExport(params) {
     const sortField = params.sorting.sortField || 'name';
     const sortDir = params.sorting.sortDir || 'asc';
     
-    const orderBy = !isSortingByActual && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSortExport
+    const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSortExport
         ? buildOrderByCondition(sortField, sortDir) 
         : undefined;
 
@@ -164,6 +165,19 @@ async function fetchDonorsForExport(params) {
             const actualA = calculateActualDonation(a);
             const actualB = calculateActualDonation(b);
             return params.sorting.sortDir === 'asc' ? actualA - actualB : actualB - actualA;
+        });
+    } else if (isSortingByCommitment) {
+        const isMonthlyCampaign = filteredDonors[0]?.campaign?.donationType === 'monthly';
+        const calcCommitment = (donor) => donor.donations?.reduce((sum, d) => {
+            if (d.paymentMethod !== 'COMMITMENT') return sum;
+            const m = Number(d.monthlyAmount) || 0;
+            if (isMonthlyCampaign || d.isUnlimited) return sum + m;
+            return sum + m * (Number(d.numberOfPayments) || 0);
+        }, 0) || 0;
+        sortedDonors = [...filteredDonors].sort((a, b) => {
+            const cA = calcCommitment(a);
+            const cB = calcCommitment(b);
+            return params.sorting.sortDir === 'asc' ? cA - cB : cB - cA;
         });
     } else if (isSortingByTraffic) {
         // מיון לפי צבעי רמזור: green > orange > red > gray
@@ -299,6 +313,7 @@ async function fetchDonorsWithPagination(params) {
         where = await addOperatorFilter(where, params.operatorId);
     }
     const isSortingByActual = params.sorting.sortField === 'actualDonation';
+    const isSortingByCommitment = params.sorting.sortField === 'commitmentTotal';
     const isSortingByTraffic = params.sorting.sortField === 'traffic' || params.sorting.sortField === 'traffic_light_color';
     const isSortingByDonorNotes = params.sorting.sortField === 'donorNotes';
     // זיהוי מיון ברירת מחדל - כאשר המשתמש לא בחר מיון מפורש
@@ -308,7 +323,7 @@ async function fetchDonorsWithPagination(params) {
     const sortField = params.sorting.sortField || 'name';
     const sortDir = params.sorting.sortDir || 'asc';
     
-    const orderBy = !isSortingByActual && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSort
+    const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSort
         ? buildOrderByCondition(sortField, sortDir) 
         : undefined;
 
@@ -321,7 +336,7 @@ async function fetchDonorsWithPagination(params) {
                                    (params.fundraiserId && params.fundraiserId !== 'null' && params.fundraiserId !== null);
 
     // אם ממיינים לפי תרומה בפועל או לפי צבעי רמזור או לפי הערות או מיון ברירת מחדל (עדיפות משימות) או אם זה עבור מתרים מסוים או noLimit - צריך לשלוף הכל, למיין ואז לעשות pagination
-    if (isSortingByActual || isSortingByTraffic || isSortingByDonorNotes || isDefaultSort || isForSpecificFundraiser || isNoLimit) {
+    if (isSortingByActual || isSortingByCommitment || isSortingByTraffic || isSortingByDonorNotes || isDefaultSort || isForSpecificFundraiser || isNoLimit) {
         // שליפה של כל התורמים ללא pagination
         const allDonors = await prisma.donor.findMany({
             where,
@@ -337,6 +352,17 @@ async function fetchDonorsWithPagination(params) {
                 const actualA = calculateActualDonation(a);
                 const actualB = calculateActualDonation(b);
                 return params.sorting.sortDir === 'asc' ? actualA - actualB : actualB - actualA;
+            } else if (isSortingByCommitment) {
+                const isMonthlyCampaign = a?.campaign?.donationType === 'monthly' || b?.campaign?.donationType === 'monthly';
+                const calcCommitment = (donor) => donor.donations?.reduce((sum, d) => {
+                    if (d.paymentMethod !== 'COMMITMENT') return sum;
+                    const m = Number(d.monthlyAmount) || 0;
+                    if (isMonthlyCampaign || d.isUnlimited) return sum + m;
+                    return sum + m * (Number(d.numberOfPayments) || 0);
+                }, 0) || 0;
+                const cA = calcCommitment(a);
+                const cB = calcCommitment(b);
+                return params.sorting.sortDir === 'asc' ? cA - cB : cB - cA;
             } else if (isSortingByTraffic) {
                 // מיון לפי צבעי רמזור: green > orange > red > gray
                 const trafficOrder = { green: 1, orange: 2, red: 3, gray: 4 };

@@ -48,7 +48,7 @@
 
     .tableTitle {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         gap: 12px;
         align-self: stretch;
 
@@ -69,10 +69,64 @@
             }
         }
 
+        .tabsWrapper {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 0;
+            direction: rtl;
+
+            .tab {
+                padding: 8px 0;
+                background: var(--gray-blue-70, #edf5fd);
+                border: none;
+                border-radius: 24px 24px 0 0;
+                color: var(--Text-able-Text, #0C4AD5);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: var(--font-ping);
+                font-size: 20px;
+                font-weight: 400;
+                line-height: 24px;
+                white-space: nowrap;
+                width: 200px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-inline-start: -16px;
+                position: relative;
+                z-index: 1;
+
+                &:first-child {
+                    margin-inline-start: 0;
+                }
+
+                &:hover {
+                    background: var(--Surface-02, #daeafe);
+                }
+
+                &.activeTab {
+                    background: var(--button-disable, #ffffff);
+                    color: var(--Text-able-Text, #0C4AD5);
+                    font-weight: 700;
+                    z-index: 2;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .tab {
+                    width: 140px;
+                    font-size: 16px;
+                }
+            }
+        }
+
         .searchWrapper {
             display: flex;
             align-items: center;
             gap: 24px;
+            margin-inline-start: auto;
 
             @media (max-width: 768px) {
                 gap: 8px;

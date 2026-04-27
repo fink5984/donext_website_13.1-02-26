@@ -116,6 +116,7 @@ class DonorsStore {
       traffic_light_color: d.traffic_light_color || 'gray',
       expectedDonation: d.expected || 0,
       actualDonation: d.amount || 0,
+      commitmentTotal: d.commitmentTotal || 0,
       isActive: d.active !== null ? d.active : true,
       synagogue: d.synagogue || '',
       invitationSent: d.invitationSent || false,

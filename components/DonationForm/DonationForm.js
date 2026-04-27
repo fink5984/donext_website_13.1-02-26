@@ -181,6 +181,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     // Commitment payment method editing state
     const [isEditingPaymentMethod, setIsEditingPaymentMethod] = useState(false);
     const originalPaymentMethod = useRef(donation?.paymentMethod || null);
+    // Partial fulfillment amount for commitment editing
+    const [partialFulfillAmount, setPartialFulfillAmount] = useState('');
     
     // Credit card provider state
     const [creditCardProvider, setCreditCardProvider] = useState(''); // 'stripe' or 'bevel'
@@ -255,6 +257,15 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
             });
             setNoteCompleted(donation.noteCompleted || false);
             setDonationNotes(donation.donationNotes || []);
+            // Initialize partial fulfill amount to full commitment total
+            if (donation.paymentMethod === 'COMMITMENT') {
+                const isMonthlyCamp = campaign?.donation_type === 'monthly';
+                const total = isMonthlyCamp
+                    ? parseFloat(donation.monthlyAmount)
+                    : parseFloat(donation.monthlyAmount) * (donation.numberOfPayments || 1);
+                setPartialFulfillAmount(String(Math.round(total)));
+                setIsEditingPaymentMethod(true);
+            }
         }
     }, [donation, campaign]);
 
@@ -601,6 +612,63 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
             if (!selectedDonor || !campaign || isLoading || !formData.paymentMethod || formData.paymentMethod === 'COMMITMENT') {
                 return;
             }
+            const fulfillAmt = parseFloat(partialFulfillAmount);
+            if (!fulfillAmt || fulfillAmt <= 0) return;
+
+            // Calculate original commitment total
+            const originalTotal = isMonthlyCampaign
+                ? parseFloat(donation.monthlyAmount)
+                : parseFloat(donation.monthlyAmount) * (donation.numberOfPayments || 1);
+            const remainingAmount = Math.round((originalTotal - fulfillAmt) * 100) / 100;
+            const isPartial = remainingAmount > 0;
+
+            setIsLoading(true);
+            try {
+                // Step 1 (partial only): Update the original commitment to the remaining amount
+                if (isPartial) {
+                    await fetchWithAuth('/api/donations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            donorId: selectedDonor.id,
+                            donationId: donation.id,
+                            monthlyAmount: remainingAmount,
+                            numberOfPayments: 1,
+                            isUnlimited: false,
+                            paymentMethod: 'COMMITMENT',
+                            hasPaymentMethod: true,
+                            mode: 'edit'
+                        })
+                    });
+                }
+
+                // Step 2: Create new regular donation for the fulfilled amount
+                await fetchWithAuth('/api/donations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        donorId: selectedDonor.id,
+                        donationId: isPartial ? undefined : donation.id,
+                        monthlyAmount: fulfillAmt,
+                        numberOfPayments: 1,
+                        isUnlimited: false,
+                        paymentMethod: formData.paymentMethod,
+                        hasPaymentMethod: true,
+                        mode: isPartial ? 'add' : 'edit'
+                    })
+                });
+
+                // Reload stores to reflect both changes
+                if (stores?.donationsStore) {
+                    stores.donationsStore.invalidateCacheAndRefresh(campaign?.id);
+                }
+                if (typeof onClose === 'function') onClose();
+                if (typeof onSuccess === 'function') onSuccess();
+            } catch (err) {
+                console.error('Error fulfilling commitment:', err);
+                setIsLoading(false);
+            }
+            return;
         } else if (!validationState.isValid || !selectedDonor || !campaign || isLoading) {
             return;
         }
@@ -930,7 +998,89 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     />
                     
                     {/* Full form - shown in both modes, readOnly in edit mode */}
-                    {isLoadingRanks ? (
+                    {mode === 'edit' && donation?.paymentMethod === 'COMMITMENT' ? (
+                        (() => {
+                            const fullAmount = Math.round(
+                                isMonthlyCampaign
+                                    ? parseFloat(donation.monthlyAmount || 0)
+                                    : parseFloat(donation.monthlyAmount || 0) * (donation.numberOfPayments || 1)
+                            );
+                            const currencySymbol = getCampaignCurrencySymbol(campaign);
+                            const isFullSelected = partialFulfillAmount === String(fullAmount);
+                            const isCustomActive = !isFullSelected && partialFulfillAmount !== '';
+                            return (
+                                <div className={styles.commitmentEditSection}>
+                                    <div className={styles.amountSelectionContainer}>
+                                        <div className={styles.commitmentEditHeader}>
+                                            התחייבות בסך {fullAmount.toLocaleString()} {currencySymbol}
+                                        </div>
+                                        <div className={styles.amountSelection}>
+                                            <h3 className={`${styles.sectionTitle} headline-3`}>כמה סה&quot;כ למימוש?</h3>
+                                            <div className={styles.amountButtons} style={{ flexWrap: 'nowrap' }}>
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.amountButton} ${isFullSelected ? styles.selected : ''}`}
+                                                    onClick={() => setPartialFulfillAmount(String(fullAmount))}
+                                                >
+                                                    <span className={`${styles.amountText} headline-4`}>{fullAmount.toLocaleString()} {currencySymbol}</span>
+                                                </button>
+                                                <div
+                                                    className={`${styles.customAmountContainer} headline-4 ${isCustomActive ? styles.selected : ''}`}
+                                                    onClick={() => {
+                                                        if (isFullSelected) {
+                                                            setPartialFulfillAmount('');
+                                                            setTimeout(() => document.querySelector(`.${styles.customAmountField}`)?.focus(), 50);
+                                                        }
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="text"
+                                                        placeholder={t('otherAmount')}
+                                                        value={isFullSelected ? '' : partialFulfillAmount}
+                                                        onChange={e => {
+                                                            const val = e.target.value.replace(/[^0-9.]/g, '');
+                                                            setPartialFulfillAmount(val);
+                                                        }}
+                                                        onFocus={() => { if (isFullSelected) setPartialFulfillAmount(''); }}
+                                                        className={styles.customAmountField}
+                                                    />
+                                                    {isCustomActive ? (
+                                                        <div className={styles.currencySymbol}>{currencySymbol}</div>
+                                                    ) : (
+                                                        <div className={styles.editIcon}>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                <path d="M18.5 2.50023C18.8978 2.10244 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.10244 21.5 2.50023C21.8978 2.89801 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.10244 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <PaymentFrequency
+                                            isMonthlyCampaign={isMonthlyCampaign}
+                                            numberOfPayments={formData.numberOfPayments}
+                                            isUnlimited={formData.isUnlimited}
+                                            onFrequencyChange={handlePaymentFrequencyChange}
+                                            campaign={campaign}
+                                            disabled={false}
+                                            readOnly={false}
+                                        />
+
+                                        <DonationSummary
+                                            isMonthlyCampaign={isMonthlyCampaign}
+                                            selectedAmount={parseFloat(partialFulfillAmount) || 0}
+                                            numberOfPayments={formData.numberOfPayments}
+                                            isUnlimited={formData.isUnlimited}
+                                            campaign={campaign}
+                                            formData={formData}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })()
+                    ) : isLoadingRanks ? (
                         <div className={styles.loadingRanks}>
                             <DoNextLoader />
                             <span>טוען דרגות תרומה...</span>
@@ -970,7 +1120,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         </div>
                     )}
                     
-                    <PaymentMethodSelect value={formData.paymentMethod} onChange={handlePaymentMethodChange} readOnly={mode === 'edit' && !isEditingPaymentMethod} isEditingPaymentMethod={isEditingPaymentMethod} onEditPaymentMethod={() => setIsEditingPaymentMethod(true)} showEditButton={mode === 'edit' && donation?.paymentMethod === 'COMMITMENT' && !isEditingPaymentMethod}>
+                    <PaymentMethodSelect value={formData.paymentMethod} onChange={handlePaymentMethodChange} readOnly={mode === 'edit' && !isEditingPaymentMethod} isEditingPaymentMethod={isEditingPaymentMethod} onEditPaymentMethod={() => setIsEditingPaymentMethod(true)} showEditButton={false} excludeCommitment={mode === 'edit' && donation?.paymentMethod === 'COMMITMENT'}>
                         {/* Payment provider sub-components only in add mode or when editing payment method from COMMITMENT */}
                         {(mode !== 'edit' || isEditingPaymentMethod) && (
                             <>

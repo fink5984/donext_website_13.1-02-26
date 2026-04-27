@@ -333,6 +333,7 @@ function getBasicInclude() {
                 monthlyAmount: true,
                 numberOfPayments: true,
                 isUnlimited: true,
+                paymentMethod: true,
                 donateApproval: true,
                 note: true,
                 followUpDate: true,
@@ -360,6 +361,15 @@ function getBasicInclude() {
  */
 function mapDonorToFrontend(donor) {
     const actualDonationAmount = calculateActualDonation(donor);
+
+    const isMonthlyCampaign = donor?.campaign?.donationType === 'monthly';
+    const commitmentTotal = donor.donations?.reduce((sum, donation) => {
+        if (donation.paymentMethod !== 'COMMITMENT') return sum;
+        const monthlyAmount = Number(donation.monthlyAmount) || 0;
+        if (isMonthlyCampaign || donation.isUnlimited) return sum + monthlyAmount;
+        const numberOfPayments = Number(donation.numberOfPayments) || 0;
+        return sum + (monthlyAmount * numberOfPayments);
+    }, 0) || 0;
 
     return {
         id: donor.id,
@@ -392,6 +402,7 @@ function mapDonorToFrontend(donor) {
         fundraiser_last_name: donor.fundraiser?.person?.lastName,
         isFundraiser: donor.isFundraiser,
         amount: actualDonationAmount,
+        commitmentTotal,
         lastQuestionnaireByFundraiserId: donor.lastQuestionnaireByFundraiserId,
         lastForecastByFundraiserId: donor.lastForecastByFundraiserId,
         donations: donor.donations,
