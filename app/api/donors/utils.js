@@ -261,13 +261,13 @@ function buildWhereConditions(params) {
         ...activeCondition
     };
 
-    // מקרה רגיל - לא מציג אנשים עם status (בעיות לטיפול)
-    // סינון בית כנסת פשוט - מציג את כל התורמים מהבית כנסת
+    // סינון רגיל - מציג רק תורמים עם status: null (בסטטוס תקין)
+    // תורמים עם בעיות יופיעו רק בדף "שמות לטיפול"
     return {
         ...baseConditions,
         person: {
             ...personFilters,
-            status: null // סינון אנשים עם בעיות - הם יופיעו רק ב"שמות לטיפול"
+            status: null // סינון אנשים עם status - הם יופיעו רק ב"שמות לטיפול"
         }
     };
 }
@@ -406,7 +406,8 @@ function mapDonorToFrontend(donor) {
         lastQuestionnaireByFundraiserId: donor.lastQuestionnaireByFundraiserId,
         lastForecastByFundraiserId: donor.lastForecastByFundraiserId,
         donations: donor.donations,
-        donorNotes: donor.donorNotes || []
+        donorNotes: donor.donorNotes || [],
+        person_status: donor.person?.status || null  // סטטוס בעיה (missing_phone, duplicated_name וכו')
     };
 }
 

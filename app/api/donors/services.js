@@ -337,11 +337,22 @@ async function fetchDonorsWithPagination(params) {
 
     // אם ממיינים לפי תרומה בפועל או לפי צבעי רמזור או לפי הערות או מיון ברירת מחדל (עדיפות משימות) או אם זה עבור מתרים מסוים או noLimit - צריך לשלוף הכל, למיין ואז לעשות pagination
     if (isSortingByActual || isSortingByCommitment || isSortingByTraffic || isSortingByDonorNotes || isDefaultSort || isForSpecificFundraiser || isNoLimit) {
-        // שליפה של כל התורמים ללא pagination
-        const allDonors = await prisma.donor.findMany({
-            where,
-            include: getBasicInclude()
-        });
+        // שליפה של כל התורמים בחלקים קטנים כדי למנוע OOM
+        const BATCH_SIZE = 200;
+        let allDonors = [];
+        let batchOffset = 0;
+        while (true) {
+            const batch = await prisma.donor.findMany({
+                where,
+                include: getBasicInclude(),
+                take: BATCH_SIZE,
+                skip: batchOffset,
+                orderBy: { id: 'asc' }
+            });
+            allDonors = allDonors.concat(batch);
+            if (batch.length < BATCH_SIZE) break;
+            batchOffset += BATCH_SIZE;
+        }
 
         // סינון לפי תרומה בפועל אם נדרש
         const filteredDonors = filterByActualDonation(allDonors, params.filters.actualMin, params.filters.actualMax);
