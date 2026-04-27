@@ -1,0 +1,180 @@
+// פירוט תרומות תורם - MyDonors table expand
+// same visual language as DonationsTable inner table
+
+.donationsList {
+    margin: 0;
+    border: var(--Strock-Width-1, 1px) solid var(--Border-able-field, #0C4AD5);
+    border-top: none;
+    border-radius: 0 0 var(--Border-Radius-lg, 24px) var(--Border-Radius-lg, 24px);
+    background: var(--other-White, #FFF);
+    padding: 0 var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-5, 12px);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+
+    .innerTableWrapper {
+        background: var(--Bg-Button-hover-2, #EDF5FD);
+        padding: var(--Spacing-Spacing-3, 4px) var(--Spacing-Spacing-10, 40px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-10, 40px);
+        border-radius: var(--Border-Radius-m, 16px);
+        display: flex;
+        flex-direction: column;
+        gap: var(--Spacing-Spacing-2, 2px);
+        width: 100%;
+        box-sizing: border-box;
+
+        @media (max-width: 1200px) {
+            padding: var(--Spacing-Spacing-3, 4px) var(--Spacing-Spacing-6, 16px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-6, 16px);
+        }
+    }
+
+    .tableDonationHeader {
+        display: grid;
+        grid-template-columns: 210px 148px 1fr 100px 1fr 60px 80px;
+        align-items: center;
+        padding: 10px 18px 10px 10px;
+        color: var(--table-Header, #0C4AD5);
+        width: 100%;
+        box-sizing: border-box;
+
+        .headerCell {
+            color: var(--table-Header, #0C4AD5);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+
+            .sortButtons {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5px;
+                width: 16px;
+                align-items: center;
+
+                .sortButton {
+                    color: var(--Gray-Blue-325, #98B8FF);
+                    background: none;
+                    border: none;
+                    padding: 0;
+                    cursor: pointer;
+
+                    &:hover { color: var(--Icon-able-Icon, #0C4AD5); }
+                    &.active { color: var(--Brand-Primary-blue, #0C4AD5); }
+                }
+            }
+
+            span { margin-right: 4px; }
+        }
+
+        .dateDonationHeader {
+            color: var(--Gray-Blue-300, #9DBDF3);
+            padding-right: 16px;
+        }
+    }
+
+    .tableDonationBody {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--Spacing-Spacing-2, 2px);
+        align-self: stretch;
+
+        .loadingRow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: var(--Spacing-Spacing-6, 16px);
+            min-height: 80px;
+            color: var(--Text-Default, #6E99EC);
+            border-radius: var(--Border-Radius-lg, 24px);
+            background: var(--Bg-Button-disable, #FFF);
+        }
+
+        .tableDonationRow {
+            display: grid;
+            grid-template-columns: 210px 148px 1fr 100px 1fr 60px 80px;
+            width: 100%;
+            align-items: center;
+            padding: var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-6, 16px);
+            border-radius: var(--Border-Radius-lg, 24px);
+            background: var(--Bg-Button-disable, #FFF);
+            height: 40px;
+            box-sizing: border-box;
+
+            .cell {
+                color: var(--Text-Default, #6E99EC);
+                padding: 0 var(--Spacing-Spacing-6, 16px) 0 var(--Spacing-Spacing-2, 2px);
+                font-size: 13px;
+
+                &.statusBadge { color: var(--Text-able-Text, #0C4AD5); }
+                &.expandedNoteCell { position: relative; }
+            }
+
+            .dateTimeColumn {
+                display: flex;
+                padding: 0 var(--Spacing-Spacing-5, 12px);
+                justify-content: center;
+                align-items: center;
+                gap: var(--Spacing-Spacing-3, 4px);
+
+                .timePart, .datePart {
+                    width: 52px;
+                    color: var(--Gray-Blue-300, #9DBDF3);
+                }
+
+                .separator { color: var(--Border-disable-field, #C5D7F8); }
+            }
+
+            .actions {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                justify-content: flex-start;
+
+                .actionButton {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: var(--Gray-Blue-325, #98B8FF);
+                    padding: 4px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+
+                    &:hover { color: var(--Icon-able-Icon, #0C4AD5); background: var(--Bg-Button-hover-3, #DCEBFB); }
+                }
+            }
+
+            .notesCell {
+                display: flex;
+                align-items: center;
+            }
+
+            .notesIcon {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .overdueDot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--Alert-red, #FF4040);
+                position: absolute;
+                top: -2px;
+                right: -2px;
+            }
+
+            .unreadDot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--Brand-Primary-blue, #0C4AD5);
+                position: absolute;
+                top: -2px;
+                right: -2px;
+            }
+        }
+    }
+}

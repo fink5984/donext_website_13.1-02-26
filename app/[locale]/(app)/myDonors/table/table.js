@@ -19,7 +19,9 @@ import Button from "@/app/components/Button";
 import DonationForm from "@/components/DonationForm/DonationForm";
 import Check from "@/app/icons/check.svg";
 import Edit from "@/app/icons/edit.svg";
+import DropDown from "@/app/icons/dropDownSmall.svg";
 import AddEdit from '../../AddEdit/AddEdit';
+import DonorDonationsExpand from './DonorDonationsExpand';
 import NewDonor from "@/app/icons/newDonor.svg";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencySymbol } from '@/app/components/CurrencySymbol';
@@ -72,6 +74,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
     const [selectedDonor, setSelectedDonor] = useState(null);
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [editingDonor, setEditingDonor] = useState(null);
+    const [expandedDonors, setExpandedDonors] = useState({});
     const tableBodyRef = useRef(null);
     const [rowGap, setRowGap] = useState(8);
     const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 900);
@@ -494,21 +497,21 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                     ))}
                                     <div></div>
                                     <div></div>
-
+                                    <div></div>   {/* expand arrow header spacer */}
                                 </div>
                                 <div
                                     className={`${styles.tableBody} ${hasScroll ? styles.hasScroll : styles.noScroll}`}
                                     ref={tableBodyRef}
                                     style={{
                                         overflowY: hasScroll ? 'auto' : 'hidden',
-                                        maxHeight: windowHeight <= 750 ? 'calc(100vh - 520px)' : windowHeight <= 900 ? 'calc(100vh - 620px)' : 'calc(100vh - 756px)',
+                                        maxHeight: windowHeight <= 750 ? 'calc(100vh - 400px)' : windowHeight <= 900 ? 'calc(100vh - 470px)' : 'calc(100vh - 580px)',
                                         '--row-gap': `${rowGap}px`
                                     }}
                                 >
                                     {getSortedDonors().map((donor) => (
                                         <React.Fragment key={donor.id}>
                                             {/* Desktop table row */}
-                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} table-3 ${styles.desktopRow}`}>
+                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} table-3 ${styles.desktopRow} ${expandedDonors[donor.id] ? styles.expanded : ''}`}>
                                                 <div className={styles.checkbox}>
                                                     <input
                                                         type="checkbox"
@@ -567,7 +570,18 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                             <button className={styles.coins} onClick={() => handleOpenDonationForm(donor)}>
                                                 <IconTooltip icon={<Coins />} text={t('addDonation')} />
                                             </button>
+                                            <button
+                                                className={`${styles.expandBtn} ${expandedDonors[donor.id] ? styles.rotated : ''}`}
+                                                onClick={() => setExpandedDonors(prev => ({ ...prev, [donor.id]: !prev[donor.id] }))}
+                                            >
+                                                <DropDown />
+                                            </button>
                                         </div>
+
+                                        {/* פירוט תרומות מורחב */}
+                                        {expandedDonors[donor.id] && (
+                                            <DonorDonationsExpand donor={donor} campaign={campaign} />
+                                        )}
 
                                             {/* Mobile table card */}
                                             <div className={styles.mobileTableCard}>

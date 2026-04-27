@@ -1137,6 +1137,33 @@
   "myDonors": {
     "pageTitle": "התורמים שלי",
     "loading": "טוען...",
+    "noDonations": "אין תרומות",
+    "donationDate": "תאריך תרומה",
+    "donationAmount": "סכום תרומה",
+    "paymentMethod": "אמצעי תשלום",
+    "payments": "תשלומים",
+    "donationSource": "מקור תרומה",
+    "notes": "הערות",
+    "unlimited": "ללא הגבלה",
+    "noPayment": "לא צוין",
+    "donationSources": {
+      "system": "מערכת",
+      "manual": "ידני",
+      "landing": "דף נחיתה",
+      "phone": "טלפון",
+      "creditCard": "כרטיס אשראי"
+    },
+    "paymentMethods": {
+      "CASH": "מזומן",
+      "CHECK": "המחאה",
+      "BANK_TRANSFER": "העברה בנקאית",
+      "CREDIT_CARD": "כרטיס אשראי",
+      "BIT": "Bit",
+      "PAYPAL": "PayPal",
+      "NEDARIM_PLUS": "נדרים פלוס",
+      "COMMITMENT": "התחייבות",
+      "OTHER": "אחר"
+    },
     "greeting": "שלום, {firstName} {lastName}",
     "greetingFallback": "מתרים",
     "notSpecified": "לא צוין",

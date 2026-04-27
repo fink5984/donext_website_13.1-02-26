@@ -1115,6 +1115,33 @@
   "myDonors": {
     "pageTitle": "My Donors",
     "loading": "Loading...",
+    "noDonations": "No donations",
+    "donationDate": "Donation Date",
+    "donationAmount": "Donation Amount",
+    "paymentMethod": "Payment Method",
+    "payments": "Payments",
+    "donationSource": "Donation Source",
+    "notes": "Notes",
+    "unlimited": "Unlimited",
+    "noPayment": "Not specified",
+    "donationSources": {
+      "system": "System",
+      "manual": "Manual",
+      "landing": "Landing Page",
+      "phone": "Phone",
+      "creditCard": "Credit Card"
+    },
+    "paymentMethods": {
+      "CASH": "Cash",
+      "CHECK": "Check",
+      "BANK_TRANSFER": "Bank Transfer",
+      "CREDIT_CARD": "Credit Card",
+      "BIT": "Bit",
+      "PAYPAL": "PayPal",
+      "NEDARIM_PLUS": "Nedarim Plus",
+      "COMMITMENT": "Commitment",
+      "OTHER": "Other"
+    },
     "greeting": "Hello, {firstName} {lastName}",
     "greetingFallback": "Fundraiser",
     "notSpecified": "Not specified",

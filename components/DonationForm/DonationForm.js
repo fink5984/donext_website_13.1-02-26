@@ -178,6 +178,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     // Nedarim Plus ref
     const nedarimPlusPaymentRef = useRef(null);
     
+    // Context stored when fulfilling a commitment (used by payment callbacks)
+    const fulfillmentContextRef = useRef(null);
+
     // Commitment payment method editing state
     const [isEditingPaymentMethod, setIsEditingPaymentMethod] = useState(false);
     const originalPaymentMethod = useRef(donation?.paymentMethod || null);
@@ -186,7 +189,12 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     
     // Credit card provider state
     const [creditCardProvider, setCreditCardProvider] = useState(''); // 'stripe' or 'bevel'
-    
+
+    // Compute the effective payment amount: use partialFulfillAmount when fulfilling a commitment
+    const paymentAmount = isEditingPaymentMethod
+        ? (parseFloat(partialFulfillAmount) || 0)
+        : (formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount);
+
     // Memoize Stripe promise to prevent re-initialization
     const stripePromise = useMemo(() => {
         if (!stripePublicKey) return null;
@@ -473,6 +481,17 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
 
     const handleStripePaymentSuccess = async (stripeResult) => {
         try {
+            // If fulfilling a commitment, do fulfillment DB logic instead of regular save
+            if (fulfillmentContextRef.current) {
+                await fulfillCommitmentInDB({
+                    ...fulfillmentContextRef.current,
+                    paymentMethod: 'STRIPE',
+                    transactionId: stripeResult?.transactionId || null
+                });
+                fulfillmentContextRef.current = null;
+                return;
+            }
+
             const amount = formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount;
             const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
             
@@ -513,8 +532,68 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         setIsLoading(false);
     };
 
+    const fulfillCommitmentInDB = async ({ isPartial, fulfillAmt, remainingAmount, paymentMethod, transactionId }) => {
+        try {
+            // Step 1 (partial only): Update the original commitment to the remaining amount
+            if (isPartial) {
+                await fetchWithAuth('/api/donations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        donorId: selectedDonor.id,
+                        donationId: donation.id,
+                        monthlyAmount: remainingAmount,
+                        numberOfPayments: 1,
+                        isUnlimited: false,
+                        paymentMethod: 'COMMITMENT',
+                        hasPaymentMethod: true,
+                        mode: 'edit'
+                    })
+                });
+            }
+
+            // Step 2: Create new regular donation for the fulfilled amount
+            await fetchWithAuth('/api/donations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    donorId: selectedDonor.id,
+                    donationId: isPartial ? undefined : donation.id,
+                    monthlyAmount: fulfillAmt,
+                    numberOfPayments: 1,
+                    isUnlimited: false,
+                    paymentMethod: paymentMethod,
+                    hasPaymentMethod: true,
+                    transactionId: transactionId || null,
+                    mode: isPartial ? 'add' : 'edit'
+                })
+            });
+
+            // Reload stores
+            if (stores?.donationsStore) {
+                stores.donationsStore.invalidateCacheAndRefresh(campaign?.id);
+            }
+            if (typeof onClose === 'function') onClose();
+            if (typeof onSuccess === 'function') onSuccess();
+        } catch (err) {
+            console.error('Error fulfilling commitment:', err);
+            setIsLoading(false);
+        }
+    };
+
     const handleBevelPaymentSuccess = async (bevelResult) => {
         try {
+            // If fulfilling a commitment, do fulfillment DB logic instead of regular save
+            if (fulfillmentContextRef.current) {
+                await fulfillCommitmentInDB({
+                    ...fulfillmentContextRef.current,
+                    paymentMethod: 'BEVEL',
+                    transactionId: bevelResult?.transactionId || null
+                });
+                fulfillmentContextRef.current = null;
+                return;
+            }
+
             const amount = formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount;
             const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
             
@@ -607,7 +686,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     };
 
     const handleSubmit = async () => {
-        // When editing payment method from COMMITMENT, skip validation wrapper check
+        // When editing payment method from COMMITMENT, process payment first then fulfill
         if (isEditingPaymentMethod) {
             if (!selectedDonor || !campaign || isLoading || !formData.paymentMethod || formData.paymentMethod === 'COMMITMENT') {
                 return;
@@ -622,50 +701,88 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
             const remainingAmount = Math.round((originalTotal - fulfillAmt) * 100) / 100;
             const isPartial = remainingAmount > 0;
 
+            // Determine actual provider
+            let actualProvider = formData.paymentMethod;
+            if (formData.paymentMethod === 'CREDIT' && creditCardProvider) {
+                actualProvider = creditCardProvider.toUpperCase();
+            }
+
             setIsLoading(true);
+            setStripeError('');
+            setBevelError('');
+
+            // For Stripe/Bevel: store fulfillment context so callbacks can finish the flow
+            if (actualProvider === 'STRIPE' || actualProvider === 'BEVEL') {
+                fulfillmentContextRef.current = { isPartial, fulfillAmt, remainingAmount };
+            }
+
             try {
-                // Step 1 (partial only): Update the original commitment to the remaining amount
-                if (isPartial) {
-                    await fetchWithAuth('/api/donations', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            donorId: selectedDonor.id,
-                            donationId: donation.id,
-                            monthlyAmount: remainingAmount,
-                            numberOfPayments: 1,
-                            isUnlimited: false,
-                            paymentMethod: 'COMMITMENT',
-                            hasPaymentMethod: true,
-                            mode: 'edit'
-                        })
-                    });
+                if (actualProvider === 'STRIPE') {
+                    if (stripePaymentHandlerRef.current) {
+                        const paymentSuccess = await stripePaymentHandlerRef.current.processStripePayment();
+                        if (!paymentSuccess) {
+                            fulfillmentContextRef.current = null;
+                            setIsLoading(false);
+                        }
+                    } else {
+                        fulfillmentContextRef.current = null;
+                        setStripeError('שגיאה במערכת התשלום');
+                        setIsLoading(false);
+                    }
+                    return;
+                } else if (actualProvider === 'BEVEL') {
+                    if (bevelPaymentRef.current) {
+                        await bevelPaymentRef.current.handleSubmit();
+                        // Payment result handled via handleBevelPaymentSuccess callback
+                    } else {
+                        fulfillmentContextRef.current = null;
+                        setBevelError('שגיאה במערכת התשלום');
+                        setIsLoading(false);
+                    }
+                    return;
+                } else if (actualProvider === 'NEDARIM_PLUS') {
+                    if (nedarimPlusPaymentRef.current) {
+                        const paymentResult = await nedarimPlusPaymentRef.current.handlePayment();
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'NEDARIM_PLUS', transactionId: paymentResult?.transactionId || null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
+                } else if (actualProvider === 'PLEDGER') {
+                    if (pledgerPaymentRef.current) {
+                        const success = await pledgerPaymentRef.current.handlePayment();
+                        if (!success) { setIsLoading(false); return; }
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'PLEDGER', transactionId: null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
+                } else if (actualProvider === 'MATBIA') {
+                    if (matbiaPaymentRef.current) {
+                        const success = await matbiaPaymentRef.current.handlePayment();
+                        if (!success) { setIsLoading(false); return; }
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'MATBIA', transactionId: null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
+                } else if (actualProvider === 'OJC') {
+                    if (ojcPaymentRef.current) {
+                        const success = await ojcPaymentRef.current.handlePayment();
+                        if (!success) { setIsLoading(false); return; }
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'OJC', transactionId: null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
+                } else {
+                    // Non-credit payment methods (cash, check, etc.) - no payment processing needed
+                    await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: formData.paymentMethod, transactionId: null });
+                    return;
                 }
-
-                // Step 2: Create new regular donation for the fulfilled amount
-                await fetchWithAuth('/api/donations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        donorId: selectedDonor.id,
-                        donationId: isPartial ? undefined : donation.id,
-                        monthlyAmount: fulfillAmt,
-                        numberOfPayments: 1,
-                        isUnlimited: false,
-                        paymentMethod: formData.paymentMethod,
-                        hasPaymentMethod: true,
-                        mode: isPartial ? 'add' : 'edit'
-                    })
-                });
-
-                // Reload stores to reflect both changes
-                if (stores?.donationsStore) {
-                    stores.donationsStore.invalidateCacheAndRefresh(campaign?.id);
-                }
-                if (typeof onClose === 'function') onClose();
-                if (typeof onSuccess === 'function') onSuccess();
             } catch (err) {
-                console.error('Error fulfilling commitment:', err);
+                console.error('Error processing payment for commitment fulfillment:', err);
+                fulfillmentContextRef.current = null;
                 setIsLoading(false);
             }
             return;
@@ -1142,7 +1259,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                                 />
                                 <StripePaymentHandler
                                     ref={stripePaymentHandlerRef}
-                                    amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                    amount={paymentAmount}
                                     donorName={selectedDonor?.full_name || ''}
                                     donorEmail={selectedDonor?.email || ''}
                                     donorPhone={selectedDonor?.phone || ''}
@@ -1158,7 +1275,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         {((formData.paymentMethod === 'BEVEL') || (formData.paymentMethod === 'CREDIT' && creditCardProvider === 'bevel')) && (
                             <BevelPayment
                                 ref={bevelPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={paymentAmount}
                                 campaignId={campaign?.id}
                                 donorName={selectedDonor 
                                     ? ((selectedDonor.englishFirstName || selectedDonor.english_first_name || selectedDonor.englishLastName || selectedDonor.english_last_name)
@@ -1179,7 +1296,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         {formData.paymentMethod === 'PLEDGER' && (
                             <PledgerPayment
                                 ref={pledgerPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={paymentAmount}
                                 campaignId={campaign?.id}
                                 donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
                                 donorEmail={selectedDonor?.email || ''}
@@ -1196,7 +1313,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         {formData.paymentMethod === 'MATBIA' && (
                             <MatbiaPayment
                                 ref={matbiaPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={paymentAmount}
                                 campaignId={campaign?.id}
                                 donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
                                 donorEmail={selectedDonor?.email || ''}
@@ -1213,7 +1330,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         {formData.paymentMethod === 'OJC' && (
                             <OJCPayment
                                 ref={ojcPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={paymentAmount}
                                 campaignId={campaign?.id}
                                 donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
                                 donorEmail={selectedDonor?.email || ''}
@@ -1230,7 +1347,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         {((formData.paymentMethod === 'NEDARIM_PLUS') || (formData.paymentMethod === 'CREDIT' && creditCardProvider === 'nedarim_plus')) && (
                             <NedarimPlusPayment
                                 ref={nedarimPlusPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={paymentAmount}
                                 campaignId={campaign?.id}
                                 donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
                                 donorEmail={selectedDonor?.email || ''}

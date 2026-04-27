@@ -307,46 +307,46 @@
             .tableRow,
             .tableHeader {
                 display: grid;
-                grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 100fr;
+                grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 100fr 36px;
                 padding-left: 23px !important;
                 
                 &.noInvitation {
-                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 100fr;
+                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 100fr 36px;
                 }
 
                 @media (max-width: 1200px) {
-                    grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 80fr;
+                    grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 80fr 36px;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 80fr;
+                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 80fr 36px;
                     }
                 }
 
                 @media (max-width: 1024px) {
-                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr;
+                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
                     font-size: 12px;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr;
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
                     }
                 }
 
                 @media (max-width: 768px) {
-                    grid-template-columns: 16px 24px 1fr 1fr 1fr 36px;
+                    grid-template-columns: 16px 24px 1fr 1fr 1fr 36px 36px;
                     padding-left: 8px !important;
                     gap: 4px;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 24px 1fr 1fr 1fr 36px;
+                        grid-template-columns: 16px 24px 1fr 1fr 1fr 36px 36px;
                     }
                 }
 
                 @media (max-width: 480px) {
-                    grid-template-columns: 16px 1fr 1fr 36px;
+                    grid-template-columns: 16px 1fr 1fr 36px 36px;
                     padding-left: 4px !important;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 1fr 1fr 36px;
+                        grid-template-columns: 16px 1fr 1fr 36px 36px;
                     }
                 }
             }
@@ -534,6 +534,29 @@
                     .coins {
                         color: var(--Icon-donor-Default, #B97A00);
                         justify-self: flex-end;
+                    }
+
+                    .expandBtn {
+                        color: var(--Icon-difault-icon, #6E99EC);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 4px;
+                        border-radius: 6px;
+                        transition: transform 0.2s ease, color 0.15s;
+
+                        &:hover { color: var(--Icon-able-Icon, #0C4AD5); }
+                        &.rotated { transform: rotate(180deg); }
+                    }
+
+                    &.expanded {
+                        border-radius: var(--Border-Radius-sm, 8px) var(--Border-Radius-sm, 8px) 0 0;
+                        border: 1px solid var(--Border-able-field, #0C4AD5);
+                        border-bottom: none;
+                        box-shadow: none;
                     }
                     
                     .editButton {
@@ -912,6 +935,179 @@
             width: 100%;
             justify-content: center;
             margin-top: 12px;
+        }
+    }
+
+    // Styles for expanded donations table
+    .actionButtons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .expandButton {
+        color: var(--Icon-icon-disable, #C5D7F8);
+        transition: transform 0.3s ease;
+
+        &.rotated {
+            transform: rotate(-180deg);
+        }
+
+        &:hover {
+            color: var(--Icon-able-Icon, #0C4AD5);
+        }
+    }
+
+    .donationsList {
+        margin: 0;
+        border: var(--Strock-Width-1, 1px) solid var(--Border-able-field, #0C4AD5);
+        border-top: none;
+        border-radius: 0 0 var(--Border-Radius-lg, 24px) var(--Border-Radius-lg, 24px);
+        background: var(--other-White, #FFF);
+        padding: 0 var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-5, 12px);
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        box-sizing: border-box;
+
+        @media (max-width: 768px) {
+            display: none;
+        }
+
+        .innerTableWrapper {
+            background: var(--Bg-Button-hover-2, #EDF5FD);
+            padding: var(--Spacing-Spacing-3, 4px) var(--Spacing-Spacing-10, 40px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-10, 40px);
+            border-radius: var(--Border-Radius-m, 16px);
+            display: flex;
+            flex-direction: column;
+            gap: var(--Spacing-Spacing-2, 2px);
+            width: 100%;
+            box-sizing: border-box;
+
+            @media (max-width: 1200px) {
+                padding: var(--Spacing-Spacing-3, 4px) var(--Spacing-Spacing-6, 16px) var(--Spacing-Spacing-5, 12px) var(--Spacing-Spacing-6, 16px);
+            }
+        }
+
+        .tableDonationHeader {
+            display: grid;
+            grid-template-columns: 210px 148px 148fr 128fr 148fr 150px;
+            align-items: center;
+            padding: 10px 18px 10px 10px;
+            color: var(--table-Header, #0C4AD5);
+            width: 100%;
+            box-sizing: border-box;
+
+            .headerCell {
+                color: var(--table-Header, #0C4AD5);
+                display: flex;
+                align-items: center;
+
+                .sortButtons {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5px;
+                    width: 16px;
+                    align-items: center;
+
+                    .sortButton {
+                        color: var(--Gray-Blue-325, #98B8FF);
+
+                        &:hover {
+                            color: var(--Icon-able-Icon, #0C4AD5);
+                        }
+
+                        &.active {
+                            color: var(--Brand-Primary-blue, #0C4AD5);
+                        }
+                    }
+                }
+
+                span {
+                    margin-right: 4px;
+                }
+            }
+
+            .dateDonationHeader {
+                color: var(--Gray-Blue-300, #9DBDF3);
+                padding-right: 16px;
+            }
+        }
+
+        .tableDonationBody {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--Spacing-Spacing-2, 2px);
+            align-self: stretch;
+
+            .loadingRow {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: var(--Spacing-Spacing-6, 16px);
+                min-height: 80px;
+                color: var(--Text-Default, #6E99EC);
+                border-radius: var(--Border-Radius-lg, 24px);
+                background: var(--Bg-Button-disable, #FFF);
+            }
+
+            .tableDonationRow {
+                display: grid;
+                grid-template-columns: 210px 148px 148fr 128fr 148fr 150px;
+                width: 100%;
+                align-items: center;
+                padding: var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-4, 8px) var(--Spacing-Spacing-2, 2px) var(--Spacing-Spacing-6, 16px);
+                border-radius: var(--Border-Radius-lg, 24px);
+                background: var(--Bg-Button-disable, #FFF);
+                height: 40px;
+                box-sizing: border-box;
+
+                .cell {
+                    color: var(--Text-Default, #6E99EC);
+                    padding: var(--Spacing-Spacing-1, 0) var(--Spacing-Spacing-6, 16px) var(--Spacing-Spacing-1, 0) var(--Spacing-Spacing-2, 2px);
+
+                    &.expandedNoteCell {
+                        position: relative;
+                        z-index: 1;
+                    }
+
+                    &.statusBadge {
+                        color: var(--Text-able-Text, #0C4AD5);
+                    }
+                }
+
+                .dateTimeColumn {
+                    display: flex;
+                    padding: 0 var(--Spacing-Spacing-5, 12px);
+                    justify-content: center;
+                    align-items: center;
+                    gap: var(--Spacing-Spacing-3, 4px);
+
+                    .timePart,
+                    .datePart {
+                        width: 52px;
+                        color: var(--Gray-Blue-300, #9DBDF3);
+                    }
+
+                    .separator {
+                        color: var(--Border-disable-field, #C5D7F8);
+                    }
+                }
+
+                .notesCell {
+                    display: flex;
+                    align-items: center;
+                    color: var(--table-cell, #6E99EC);
+
+                    .notesIcon {
+                        display: flex;
+                        align-items: center;
+                        position: relative;
+                    }
+                }
+            }
         }
     }
 }
