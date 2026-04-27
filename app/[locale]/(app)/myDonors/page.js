@@ -180,10 +180,6 @@ export default observer(function MyDonorsPage() {
                 />
             )}
             <div className={styles.pageContainer}>
-                <div className={styles.header}>
-                    <div className={`${styles.greeting} headline-4`}>{t('greeting', { firstName: fundraiser?.first_name || fundraiser?.firstName || t('greetingFallback'), lastName: fundraiser?.last_name || fundraiser?.lastName || '' })}</div>
-                    {/*  <div className={`${styles.subtitle} text`}>כל התורמים - קהילה</div> */}
-                </div>
                 <div className={styles.cardsTableWrapper}>
                     <Cards 
                         fundraiserStatus={fundraiser} 

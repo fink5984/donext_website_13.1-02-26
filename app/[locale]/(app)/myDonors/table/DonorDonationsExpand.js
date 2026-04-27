@@ -9,7 +9,6 @@ import IconTooltip from '@/app/components/IconTooltip/IconTooltip';
 import Up from '@/app/icons/up.svg';
 import Down from '@/app/icons/down.svg';
 import Edit from '@/app/icons/edit.svg';
-import Trash from '@/app/icons/delete.svg';
 import Note from '@/app/icons/note.svg';
 import styles from './DonorDonationsExpand.module.scss';
 
@@ -130,16 +129,6 @@ export default function DonorDonationsExpand({ donor, campaign }) {
         setIsDonationFormOpen(true);
     };
 
-    const handleDelete = async (donationId) => {
-        if (!confirm(t('confirmDelete') || 'למחוק תרומה זו?')) return;
-        try {
-            await fetchWithAuth(`/api/donations/${donationId}`, { method: 'DELETE' });
-            setDonations(prev => prev.filter(d => d.id !== donationId));
-        } catch (e) {
-            console.error('Delete error:', e);
-        }
-    };
-
     const SortBtn = ({ field }) => (
         <div className={styles.sortButtons}>
             <button
@@ -236,10 +225,7 @@ export default function DonorDonationsExpand({ donor, campaign }) {
                                 {/* Actions */}
                                 <div className={styles.actions}>
                                     <button className={styles.actionButton} onClick={() => handleOpenEdit(donation)}>
-                                        <IconTooltip icon={<Edit />} text={t('editDonation')} />
-                                    </button>
-                                    <button className={styles.actionButton} onClick={() => handleDelete(donation.id)}>
-                                        <IconTooltip icon={<Trash />} text={t('deleteDonation')} />
+                                        <IconTooltip icon={<Edit />} text="עריכת תרומה" />
                                     </button>
                                 </div>
                             </div>

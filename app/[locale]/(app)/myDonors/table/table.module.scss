@@ -307,26 +307,50 @@
             .tableRow,
             .tableHeader {
                 display: grid;
-                grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 100fr 36px;
+                grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 26px 100fr 36px;
                 padding-left: 23px !important;
                 
                 &.noInvitation {
+                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 26px 100fr 36px;
+                }
+
+                &.noCommitment {
+                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 100fr 36px;
+                }
+
+                &.noInvitation.noCommitment {
                     grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 100fr 36px;
                 }
 
                 @media (max-width: 1200px) {
-                    grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 80fr 36px;
+                    grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 24px 80fr 36px;
                     
                     &.noInvitation {
+                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 24px 80fr 36px;
+                    }
+
+                    &.noCommitment {
+                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 80fr 36px;
+                    }
+
+                    &.noInvitation.noCommitment {
                         grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 80fr 36px;
                     }
                 }
 
                 @media (max-width: 1024px) {
-                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
+                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 22px 70fr 36px;
                     font-size: 12px;
                     
                     &.noInvitation {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 22px 70fr 36px;
+                    }
+
+                    &.noCommitment {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
+                    }
+
+                    &.noInvitation.noCommitment {
                         grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
                     }
                 }
@@ -336,7 +360,9 @@
                     padding-left: 8px !important;
                     gap: 4px;
                     
-                    &.noInvitation {
+                    &.noInvitation,
+                    &.noCommitment,
+                    &.noInvitation.noCommitment {
                         grid-template-columns: 16px 24px 1fr 1fr 1fr 36px 36px;
                     }
                 }
@@ -345,7 +371,9 @@
                     grid-template-columns: 16px 1fr 1fr 36px 36px;
                     padding-left: 4px !important;
                     
-                    &.noInvitation {
+                    &.noInvitation,
+                    &.noCommitment,
+                    &.noInvitation.noCommitment {
                         grid-template-columns: 16px 1fr 1fr 36px 36px;
                     }
                 }
@@ -417,6 +445,10 @@
                             }
                         }
                     }
+
+                    &.commitmentHeaderCell {
+                        justify-content: center;
+                    }
                 }
             }
 
@@ -443,6 +475,11 @@
                     .tableRow {
                         padding: var(--Spacing-Spacing-3) var(--Spacing-Spacing-5);
                     }
+                }
+
+                .rowExpandWrapper {
+                    display: flex;
+                    flex-direction: column;
                 }
 
                 .tableRow {
@@ -527,7 +564,23 @@
                         }
 
                         &.actual {
-                            background: var(--Surface-02, #EDF5FD);
+                            background: var(--Bg-Button-hover-2, #EDF5FD);
+                            border-radius: var(--Border-Radius-sm, 8px) var(--Border-Radius-sm, 8px) 0 0;
+                            padding: 4px 8px;
+                        }
+                    }
+
+                    .commitmentCell {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        justify-self: center;
+                        height: 100%;
+                        color: var(--Primary-blue, #0C4AD5);
+                        
+                        svg {
+                            width: 16px;
+                            height: 16px;
                         }
                     }
 
@@ -549,11 +602,11 @@
                         transition: transform 0.2s ease, color 0.15s;
 
                         &:hover { color: var(--Icon-able-Icon, #0C4AD5); }
-                        &.rotated { transform: rotate(180deg); }
+                        &.rotated { transform: rotate(-90deg); }
                     }
 
                     &.expanded {
-                        border-radius: var(--Border-Radius-sm, 8px) var(--Border-Radius-sm, 8px) 0 0;
+                        border-radius: var(--Border-Radius-lg, 24px) var(--Border-Radius-lg, 24px) 0 0;
                         border: 1px solid var(--Border-able-field, #0C4AD5);
                         border-bottom: none;
                         box-shadow: none;

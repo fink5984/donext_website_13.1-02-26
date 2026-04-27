@@ -9,7 +9,7 @@ import Coins from "@/app/icons/coinsSmall.svg"
 import GalleryIcon from "@/app/icons/gallery.svg";
 import TableIcon from "@/app/icons/table.svg";
 import Menu from "@/app/icons/menu.svg";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import CardPerson from "./CardPerson";
 import AlertDialogComponent from "@/app/[locale]/(app)/Alerts/AlertPrint";
 import Filter from '@/app/icons/filter.svg'
@@ -20,6 +20,7 @@ import DonationForm from "@/components/DonationForm/DonationForm";
 import Check from "@/app/icons/check.svg";
 import Edit from "@/app/icons/edit.svg";
 import DropDown from "@/app/icons/dropDownSmall.svg";
+import CommitmentIcon from "@/app/icons/commitment.svg";
 import AddEdit from '../../AddEdit/AddEdit';
 import DonorDonationsExpand from './DonorDonationsExpand';
 import NewDonor from "@/app/icons/newDonor.svg";
@@ -27,11 +28,15 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { CurrencySymbol } from '@/app/components/CurrencySymbol';
 import { exportToPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
 import { useCurrencySymbol } from '@/app/components/CurrencySymbol';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function Table({ donors, searchTerm, onSearch, filters, setFilters, campaign, isCrowdfunding, onAddDonor }) {
     const t = useTranslations('myDonors');
+    const locale = useLocale();
     const showInvitationColumn = campaign?.showInvitationColumn || false;
+    const hasCommitments = useMemo(() => {
+        return donors?.some(d => d.commitmentTotal > 0) || false;
+    }, [donors]);
     
     const columns = [
         { label: "", key: "traffic", sortable: true },
@@ -60,8 +65,8 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
         key: null,
         direction: null
     });
-    const [viewMode, setViewMode] = useState('cards');
-    const [displayedViewMode, setDisplayedViewMode] = useState('cards');
+    const [viewMode, setViewMode] = useState('table');
+    const [displayedViewMode, setDisplayedViewMode] = useState('table');
     const [animating, setAnimating] = useState(false);
     const [dialogType, setDialogType] = useState("");
     const currencySymbol = useCurrencySymbol();
@@ -332,6 +337,11 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                     const aStage = (a.actuallyArrived ? 3 : 0) + (a.arrivalConfirmed ? 2 : 0) + (a.invitationSent ? 1 : 0);
                     const bStage = (b.actuallyArrived ? 3 : 0) + (b.arrivalConfirmed ? 2 : 0) + (b.invitationSent ? 1 : 0);
                     return (aStage - bStage) * direction;
+                
+                case 'commitmentTotal':
+                    aValue = Number(a.commitmentTotal) || 0;
+                    bValue = Number(b.commitmentTotal) || 0;
+                    return (aValue - bValue) * direction;
                     
                 default:
                     return 0;
@@ -459,7 +469,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                     >
                         {displayedViewMode === 'table' && (
                             <div className={styles.table}>
-                                <div className={`${styles.tableHeader} ${!showInvitationColumn ? styles.noInvitation : ''} table-4`}>
+                                <div className={`${styles.tableHeader} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-4`}>
                                     <div className={styles.checkbox}>
                                         <input
                                             type="checkbox"
@@ -495,6 +505,24 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                             <span className={column.key === 'name' ? styles.donorName : ''}>{column.label}</span>
                                         </div>
                                     ))}
+                                    {hasCommitments && (
+                                        <div className={`${styles.headerCell} ${styles.commitmentHeaderCell}`}>
+                                            <div className={styles.sortButtons}>
+                                                <button
+                                                    onClick={() => handleLocalSort('commitmentTotal', 'desc')}
+                                                    className={`${styles.sortButton} ${sortConfig.key === 'commitmentTotal' && sortConfig.direction === 'desc' ? styles.active : ''}`}
+                                                >
+                                                    <Up />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleLocalSort('commitmentTotal', 'asc')}
+                                                    className={`${styles.sortButton} ${sortConfig.key === 'commitmentTotal' && sortConfig.direction === 'asc' ? styles.active : ''}`}
+                                                >
+                                                    <Down />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div></div>
                                     <div></div>
                                     <div></div>   {/* expand arrow header spacer */}
@@ -510,8 +538,10 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                 >
                                     {getSortedDonors().map((donor) => (
                                         <React.Fragment key={donor.id}>
+                                        {/* Desktop table row + expand wrapper */}
+                                        <div className={styles.rowExpandWrapper}>
                                             {/* Desktop table row */}
-                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} table-3 ${styles.desktopRow} ${expandedDonors[donor.id] ? styles.expanded : ''}`}>
+                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-3 ${styles.desktopRow} ${expandedDonors[donor.id] ? styles.expanded : ''}`}>
                                                 <div className={styles.checkbox}>
                                                     <input
                                                         type="checkbox"
@@ -567,6 +597,16 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                                 </button>
                                             )}
                                             {!showInvitationColumn && <div></div>}
+                                            {hasCommitments && (
+                                                <div className={styles.commitmentCell}>
+                                                    {donor.commitmentTotal > 0 && (
+                                                        <IconTooltip
+                                                            icon={<CommitmentIcon />}
+                                                            text={`${t('unfulfilledCommitment')}: ${new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US').format(Math.round(donor.commitmentTotal))} ${currencySymbol}`}
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
                                             <button className={styles.coins} onClick={() => handleOpenDonationForm(donor)}>
                                                 <IconTooltip icon={<Coins />} text={t('addDonation')} />
                                             </button>
@@ -576,14 +616,15 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                             >
                                                 <DropDown />
                                             </button>
+                                            </div>
+
+                                            {/* פירוט תרומות מורחב */}
+                                            {expandedDonors[donor.id] && (
+                                                <DonorDonationsExpand donor={donor} campaign={campaign} />
+                                            )}
                                         </div>
 
-                                        {/* פירוט תרומות מורחב */}
-                                        {expandedDonors[donor.id] && (
-                                            <DonorDonationsExpand donor={donor} campaign={campaign} />
-                                        )}
-
-                                            {/* Mobile table card */}
+                                        {/* Mobile table card */}
                                             <div className={styles.mobileTableCard}>
                                                 <div className={styles.mobileCardTop}>
                                                     <div className={styles.mobileCardTopRight}>

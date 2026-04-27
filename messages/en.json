@@ -1176,6 +1176,7 @@
     "sortBy": "Sort by:",
     "searchPlaceholder": "Looking for someone?",
     "noInfo": "No info",
+    "unfulfilledCommitment": "Unfulfilled Commitment",
     "mediumPotential": "Medium Potential",
     "invitationStatus": {
       "waitingToSend": "Waiting to send invitation",

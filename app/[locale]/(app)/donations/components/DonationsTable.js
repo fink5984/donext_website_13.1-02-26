@@ -168,17 +168,26 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
 
     const handleDelete = async (donationId) => {
 
-        // חיפוש התרומה בנתונים המקובצים
+        // חיפוש התרומה בנתונים המקובצים (תרומות רגילות)
         let donation = null;
         for (const donorGroup of donationsStore.groupedDonations || []) {
             donation = donorGroup.donations.find(d => d.id === donationId);
             if (donation) break;
         }
 
+        // אם לא נמצא, חפש בהתחייבויות
+        if (!donation) {
+            for (const donorGroup of donationsStore.allCommitmentsGrouped || []) {
+                donation = donorGroup.donations.find(d => d.id === donationId);
+                if (donation) break;
+            }
+        }
+
         if (donation) {
             setDonationToDelete(donation);
             setIsDeleteAlertOpen(true);
         } else {
+            console.error('Donation not found:', donationId);
         }
     };
 

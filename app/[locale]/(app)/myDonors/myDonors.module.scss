@@ -7,7 +7,7 @@
     flex-direction: column;
     justify-content: center;
     gap: 15px;
-    overflow-x: hidden;
+    overflow: hidden;
     
     @media (max-width: 1200px) {
         padding: 40px 32px;
@@ -42,36 +42,6 @@
     @media (max-width: 480px) {
         padding: 16px 10px;
         gap: 10px;
-    }
-
-    .header {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--Spacing-Spacing-3);
-
-        @media (max-width: 768px) {
-            gap: var(--Spacing-Spacing-2);
-        }
-
-        .greeting {
-            color: var(--Blue-Blue-Blue-60, #76A0FF);
-            word-break: break-word;
-            overflow-wrap: break-word;
-
-            @media (max-width: 768px) {
-                font-size: 20px;
-            }
-
-            @media (max-width: 480px) {
-                font-size: 18px;
-            }
-        }
-
-        .subtitle {
-            color: var(--Text-able-Text, #0C4AD5);
-        }
     }
 
     .cardsTableWrapper {

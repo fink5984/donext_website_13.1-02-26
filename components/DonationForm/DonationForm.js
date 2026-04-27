@@ -271,7 +271,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 const total = isMonthlyCamp
                     ? parseFloat(donation.monthlyAmount)
                     : parseFloat(donation.monthlyAmount) * (donation.numberOfPayments || 1);
-                setPartialFulfillAmount(String(Math.round(total)));
+                setPartialFulfillAmount(String(total));
                 setIsEditingPaymentMethod(true);
             }
         }
@@ -1117,11 +1117,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     {/* Full form - shown in both modes, readOnly in edit mode */}
                     {mode === 'edit' && donation?.paymentMethod === 'COMMITMENT' ? (
                         (() => {
-                            const fullAmount = Math.round(
-                                isMonthlyCampaign
-                                    ? parseFloat(donation.monthlyAmount || 0)
-                                    : parseFloat(donation.monthlyAmount || 0) * (donation.numberOfPayments || 1)
-                            );
+                            const fullAmount = isMonthlyCampaign
+                                ? parseFloat(donation.monthlyAmount || 0)
+                                : parseFloat(donation.monthlyAmount || 0) * (donation.numberOfPayments || 1);
                             const currencySymbol = getCampaignCurrencySymbol(campaign);
                             const isFullSelected = partialFulfillAmount === String(fullAmount);
                             const isCustomActive = !isFullSelected && partialFulfillAmount !== '';
