@@ -70,6 +70,8 @@ export async function GET(request) {
         const filterNumberOfPayments = searchParams.get('numberOfPayments');
         const filterIsUnlimited = searchParams.get('isUnlimited');
         const filterHasPaymentMethod = searchParams.get('hasPaymentMethod');
+        const filterPaymentMethod = searchParams.get('paymentMethod');
+        const excludePaymentMethod = searchParams.get('excludePaymentMethod');
 
         // פילטרים חדשים
         const expectedMin = searchParams.get('expectedMin');
@@ -120,6 +122,8 @@ export async function GET(request) {
             ...(filterNumberOfPayments && { numberOfPayments: parseInt(filterNumberOfPayments) }),
             ...(filterIsUnlimited && { isUnlimited: filterIsUnlimited === 'true' }),
             ...(filterHasPaymentMethod && { hasPaymentMethod: filterHasPaymentMethod === 'true' }),
+            ...(filterPaymentMethod && { paymentMethod: filterPaymentMethod }),
+            ...(excludePaymentMethod && { NOT: { paymentMethod: excludePaymentMethod } }),
             ...(includeDeleted !== 'true' && { deleted_at: null }) // מחיקה רכה - רק רשומות שלא נמחקו
         };
 

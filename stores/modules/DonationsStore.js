@@ -36,6 +36,12 @@ class DonationsStore {
     pageSize = 10;
     totalCount = 0;
 
+    // התחייבויות - פגינציה נפרדת
+    allCommitmentsGrouped = [];
+    commitmentCurrentPage = 1;
+    commitmentLoading = false;
+    _commitmentsCampaignId = null; // לזיהוי שינוי קמפיין
+
     // קאשינג
     donationsCache = new Map(); // key -> { ts, data, total }
     summaryCache = new Map(); // key -> { ts, data }
@@ -117,7 +123,8 @@ class DonationsStore {
                 sortDir: this.sortDirection,
                 limit: this.pageSize,
                 offset: (this.currentPage - 1) * this.pageSize,
-                groupByDonor: 'true' // תמיד נקבץ לפי תורמים
+                groupByDonor: 'true', // תמיד נקבץ לפי תורמים
+                excludePaymentMethod: 'COMMITMENT' // מסנן התחייבויות מפירוט תרומות
             });
 
             // הוספת campaignId אם קיים
@@ -181,6 +188,14 @@ class DonationsStore {
                     
                     // שמירת התוצאות בקאש
                     this.donationsCache.set(cacheKey, { ts: Date.now(), data: donations, total });
+
+                    // טעינת/רענון התחייבויות ברקע (עם אותם פרמטרי חיפוש)
+                    if (campaignId && !this.commitmentLoading) {
+                        runInAction(() => {
+                            this.allCommitmentsGrouped = [];
+                        });
+                        this.fetchCommitments(campaignId);
+                    }
                 }
             } else {
                 throw new Error('Failed to load donations');
@@ -231,6 +246,7 @@ class DonationsStore {
     setPageSize(size, campaignId = null) {
         this.pageSize = size;
         this.currentPage = 1; // איפוס לעמוד הראשון
+        this.commitmentCurrentPage = 1; // איפוס גם עמוד התחייבויות
         this.loadDonations(campaignId);
     }
 
@@ -557,9 +573,71 @@ class DonationsStore {
         return Math.ceil(this.totalCount / this.pageSize);
     }
 
+    // מספר עמודים עבור התחייבויות
+    get commitmentTotalPages() {
+        return Math.ceil(this.allCommitmentsGrouped.length / this.pageSize);
+    }
+
+    // התחייבויות מפוגינציה
+    get paginatedCommitmentsGrouped() {
+        const start = (this.commitmentCurrentPage - 1) * this.pageSize;
+        return this.allCommitmentsGrouped.slice(start, start + this.pageSize);
+    }
+
+    setCommitmentPage(page) {
+        this.commitmentCurrentPage = page;
+    }
+
+    async fetchCommitments(campaignId) {
+        this.commitmentLoading = true;
+        try {
+            const params = new URLSearchParams({
+                paymentMethod: 'COMMITMENT',
+                groupByDonor: 'true',
+                limit: 10000,
+                offset: 0
+            });
+            if (campaignId) params.append('campaignId', campaignId.toString());
+            // שמירת אותו context חיפוש ופילטרים
+            if (this.searchTerm) params.append('search', this.searchTerm);
+            if (this.filters.expectedRange.min > 0) params.append('expectedMin', this.filters.expectedRange.min.toString());
+            if (this.filters.expectedRange.max < 1000000) params.append('expectedMax', this.filters.expectedRange.max.toString());
+            if (this.filters.actualRange.min > 0) params.append('actualMin', this.filters.actualRange.min.toString());
+            if (this.filters.actualRange.max < 1000000) params.append('actualMax', this.filters.actualRange.max.toString());
+            if (this.filters.trafficScore) params.append('trafficScore', this.filters.trafficScore);
+            if (this.filters.city) params.append('city', this.filters.city);
+            if (this.filters.street) params.append('street', this.filters.street);
+            if (this.filters.houseNumber) params.append('houseNumber', this.filters.houseNumber);
+            if (this.filters.firstName) params.append('firstName', this.filters.firstName);
+            if (this.filters.lastName) params.append('lastName', this.filters.lastName);
+            if (this.filters.phone) params.append('phone', this.filters.phone);
+            if (this.filters.mobile) params.append('mobile', this.filters.mobile);
+            if (this.filters.email) params.append('email', this.filters.email);
+            const response = await fetchWithAuth(`/api/donations?${params}`);
+            if (response.ok) {
+                const responseData = await response.json();
+                runInAction(() => {
+                    this.allCommitmentsGrouped = responseData.data?.donations || [];
+                    this._commitmentsCampaignId = campaignId;
+                    this.commitmentCurrentPage = 1;
+                    this.commitmentLoading = false;
+                });
+            } else {
+                runInAction(() => { this.commitmentLoading = false; });
+            }
+        } catch (error) {
+            runInAction(() => { this.commitmentLoading = false; });
+        }
+    }
+
     // בדיקה אם יש תוצאות
     get hasResults() {
         return this.groupedDonations.length > 0;
+    }
+
+    // בדיקה אם יש תוצאות בהתחייבויות
+    get hasCommitmentResults() {
+        return this.allCommitmentsGrouped.length > 0;
     }
 
     // בדיקה אם יש פילטרים פעילים

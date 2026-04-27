@@ -33,7 +33,7 @@ import { exportToPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
 import ComparisonIndicator from './ComparisonIndicator';
 import MobileDonationCard from './MobileDonationCard';
 
-const DonationsTable = observer(() => {
+const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {}) => {
     const t = useTranslations('donations');
     const locale = useLocale();
     const isRTL = locale === 'he';
@@ -61,7 +61,9 @@ const DonationsTable = observer(() => {
     const [innerTableSort, setInnerTableSort] = useState({});
 
     // State לטאבים - תרומות / התחייבויות
-    const [activeTab, setActiveTab] = useState('donations');
+    const [activeTabInternal, setActiveTabInternal] = useState('donations');
+    const activeTab = activeTabProp !== undefined ? activeTabProp : activeTabInternal;
+    const setActiveTab = (tab) => { if (onTabChange) onTabChange(tab); else setActiveTabInternal(tab); };
 
     // Deep link: פתיחת כרטיסיית תרומה מ-URL param (למשל ממייל משימות יומי)
     const searchParams = useSearchParams();
@@ -698,17 +700,26 @@ const DonationsTable = observer(() => {
 
     // בדיקה אם יש התחייבויות בקמפיין
     const hasCommitments = React.useMemo(() => {
+        // אם בטעינה - נשמור על הטאב הנוכחי
+        if (donationsStore.commitmentLoading) return true;
         return (donationsStore.groupedDonations || []).some(group =>
             (group.donations || []).some(d => d.paymentMethod === 'COMMITMENT')
-        );
-    }, [donationsStore.groupedDonations]);
+        ) || donationsStore.allCommitmentsGrouped.length > 0;
+    }, [donationsStore.groupedDonations, donationsStore.allCommitmentsGrouped, donationsStore.commitmentLoading]);
 
-    // איפוס הטאב אם אין התחייבויות
+    // טעינת התחייבויות כשעוברים לטאב (רק אם לא נטענו עדיין)
     React.useEffect(() => {
-        if (!hasCommitments && activeTab === 'commitments') {
+        if (activeTab === 'commitments' && campaignId && donationsStore.allCommitmentsGrouped.length === 0 && !donationsStore.commitmentLoading) {
+            donationsStore.fetchCommitments(campaignId);
+        }
+    }, [activeTab, campaignId, donationsStore.allCommitmentsGrouped.length, donationsStore.commitmentLoading]);
+
+    // איפוס הטאב אם אין התחייבויות (רק אחרי שהטעינה הסתיימה)
+    React.useEffect(() => {
+        if (!hasCommitments && activeTab === 'commitments' && !donationsStore.commitmentLoading) {
             setActiveTab('donations');
         }
-    }, [hasCommitments, activeTab]);
+    }, [hasCommitments, activeTab, donationsStore.commitmentLoading]);
 
     // פילטור תרומות לפי הטאב הפעיל
     const filteredGroupedDonations = React.useMemo(() => {
@@ -731,11 +742,14 @@ const DonationsTable = observer(() => {
                 .filter(group => group.donations.length > 0);
 
         if (activeTab === 'commitments') {
-            return filterAndRecalc(d => d.paymentMethod === 'COMMITMENT');
+            // חישוב ישיר של העמוד הנוכחי מתוך allCommitmentsGrouped
+            const all = donationsStore.allCommitmentsGrouped || [];
+            const start = (donationsStore.commitmentCurrentPage - 1) * donationsStore.pageSize;
+            return all.slice(start, start + donationsStore.pageSize);
         }
-        // טאב תרומות: מסנן החוצה התחייבויות
-        return filterAndRecalc(d => d.paymentMethod !== 'COMMITMENT');
-    }, [donationsStore.groupedDonations, activeTab, campaign]);
+        // טאב תרומות: השרת כבר מסנן החוצה התחייבויות
+        return groups;
+    }, [donationsStore.groupedDonations, activeTab, campaign, donationsStore.commitmentCurrentPage, donationsStore.allCommitmentsGrouped, donationsStore.pageSize]);
 
     const columns = [
         { header: t('columns.date'), accessor: 'lastDonationDate', sortable: false, className: 'dateHeader' },
@@ -1171,7 +1185,7 @@ const DonationsTable = observer(() => {
                 </div>
             ) : (
                 <Table
-                    data={donationsStore.loading ? [] : filteredGroupedDonations}
+                    data={(activeTab === 'commitments' ? donationsStore.commitmentLoading : donationsStore.loading) ? [] : filteredGroupedDonations}
                     columns={columns}
                     sortConfig={{ key: donationsStore.sortField, direction: donationsStore.sortDirection }}
                     onSort={handleSort}
@@ -1183,7 +1197,7 @@ const DonationsTable = observer(() => {
                     styles={styles}
                     headerContent={headerContent}
                     noScrollMaxHeight={673}
-                    loading={donationsStore.loading}
+                    loading={activeTab === 'commitments' ? donationsStore.commitmentLoading : donationsStore.loading}
                     loadingMessage={t('loadingDonations')}
                     error={donationsStore.error}
                     errorMessage={donationsStore.error ? `${t('errorPrefix')}${donationsStore.error}` : null}
@@ -1215,11 +1229,18 @@ const DonationsTable = observer(() => {
                 </div>
             )}
 
-            {!donationsStore.hasResults && donationsStore.hasActiveFilters && (
-                <div className={styles.noResults}>
-                    {t('noResults')}
-                </div>
-            )}
+            {activeTab === 'commitments'
+                ? (!donationsStore.hasCommitmentResults && donationsStore.hasActiveFilters && !donationsStore.commitmentLoading && (
+                    <div className={styles.noResults}>
+                        {t('noResults')}
+                    </div>
+                ))
+                : (!donationsStore.hasResults && donationsStore.hasActiveFilters && (
+                    <div className={styles.noResults}>
+                        {t('noResults')}
+                    </div>
+                ))
+            }
             <DonationForm
                 donor={selectedDonor}
                 donation={selectedDonation}

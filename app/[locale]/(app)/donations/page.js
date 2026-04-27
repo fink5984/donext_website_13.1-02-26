@@ -22,6 +22,7 @@ const DonationsPage = observer(() => {
     const { campaignId, stores, donationsStore } = useAppContext();
     const [isDonationFormOpen, setIsDonationFormOpen] = useState(false);
     const [firstLoad, setFirstLoad] = useState(true);
+    const [activeTab, setActiveTab] = useState('donations');
 
     React.useEffect(() => {
         if (campaignId) {
@@ -111,10 +112,8 @@ const DonationsPage = observer(() => {
     }, [campaignId, donationsStore.loading, donationsStore.loadingSummary]);
 
     // Memoized handlers לשיפור ביצועים
-    const handlePageChange = React.useCallback((newPage) => {
-        donationsStore.setPage(newPage, campaignId);
+    const scrollToTop = React.useCallback(() => {
         setTimeout(() => {
-            // מצא את כל האלמנטים שיש להם scroll ואפס אותם
             const scrollableElements = document.querySelectorAll('*');
             scrollableElements.forEach(element => {
                 if (element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) {
@@ -122,17 +121,25 @@ const DonationsPage = observer(() => {
                     element.scrollLeft = 0;
                 }
             });
-            
-            // גם window
             window.scrollTo(0, 0);
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
         }, 50);
-    }, [donationsStore, campaignId]);
+    }, []);
+
+    const handlePageChange = React.useCallback((newPage) => {
+        donationsStore.setPage(newPage, campaignId);
+        scrollToTop();
+    }, [donationsStore, campaignId, scrollToTop]);
+
+    const handleCommitmentPageChange = React.useCallback((page) => {
+        donationsStore.setCommitmentPage(page);
+        scrollToTop();
+    }, [donationsStore, scrollToTop]);
 
     const handleRowsInPageChange = React.useCallback((value) => {
-        donationsStore.setPageSize(parseInt(value));
-    }, [donationsStore]);
+        donationsStore.setPageSize(parseInt(value), campaignId);
+    }, [donationsStore, campaignId]);
 
     const handleOpenDonationForm = React.useCallback(() => {
         setIsDonationFormOpen(true);
@@ -152,7 +159,7 @@ const DonationsPage = observer(() => {
                         <DonationSummaryCards />
                         <div className={styles.wrapper}>
                             <div className={styles.donors}>
-                                <DonationsTable />
+                                <DonationsTable activeTab={activeTab} onTabChange={setActiveTab} />
                             {donationsStore.donations && donationsStore.donations.length > 0 ?(
                                 <div className={styles.tableBottom}>
                                     <div className={styles.rowsInPage}>
@@ -184,11 +191,19 @@ const DonationsPage = observer(() => {
                                         icon={<NewDoant />}
                                     />
                                     <div className={styles.pagination}>
-                                        <Pagination
-                                            currentPage={donationsStore.currentPage}
-                                            totalPages={donationsStore.totalPages}
-                                            onPageChange={handlePageChange}
-                                        />
+                                        {activeTab === 'commitments' ? (
+                                            <Pagination
+                                                currentPage={donationsStore.commitmentCurrentPage}
+                                                totalPages={donationsStore.commitmentTotalPages}
+                                                onPageChange={handleCommitmentPageChange}
+                                            />
+                                        ) : (
+                                            <Pagination
+                                                currentPage={donationsStore.currentPage}
+                                                totalPages={donationsStore.totalPages}
+                                                onPageChange={handlePageChange}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             ):<div style={{height: '32px'}}></div>}
