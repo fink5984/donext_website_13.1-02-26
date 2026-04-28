@@ -312,8 +312,9 @@ export async function GET(request) {
                 tasksByManager[task.managerEmail].campaigns[task.campaignId].tasks.push(task);
             }
 
-            // קיבוץ לאחראי (אם יש אחראי עם מייל, ושונה מהמנהל)
-            if (task.assignedToEmail && task.assignedToEmail !== task.managerEmail) {
+            // קיבוץ לאחראי (אם יש אחראי עם מייל)
+            // אם האחראי הוא המנהל עצמו - נכניס אותו ל-tasksByAssignee בכל זאת כדי שיקבל מייל
+            if (task.assignedToEmail) {
                 if (!tasksByAssignee[task.assignedToEmail]) {
                     tasksByAssignee[task.assignedToEmail] = {
                         email: task.assignedToEmail,
@@ -360,10 +361,14 @@ export async function GET(request) {
         }
 
         // שלב 2: שליחת מיילים למנהלים - רק אם נשלח מייל לאחראי אחד לפחות
+        // ואם המנהל כבר קיבל מייל כאחראי - לא שולחים שוב
         let managersNotifiedCount = 0;
         for (const managerData of Object.values(tasksByManager)) {
             if (!managersToNotify.has(managerData.email)) {
                 continue; // לא נשלח מייל לאף אחראי בקמפיינים של מנהל זה - לא שולחים
+            }
+            if (tasksByAssignee[managerData.email]) {
+                continue; // המנהל כבר קיבל מייל כאחראי - לא שולחים שוב
             }
             try {
                 const totalAmount = calcTotalAmountForGroup(managerData.campaigns);
