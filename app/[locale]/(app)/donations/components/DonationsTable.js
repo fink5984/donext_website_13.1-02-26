@@ -395,9 +395,9 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
                 if (isUnlimited) {
                     totalAmountMonthly = 0; // לא ניתן לחשב
                 } else if (numberOfPayments > 0) {
-                    totalAmountMonthly = Math.round(monthlyAmount * numberOfPayments);
+                    totalAmountMonthly = monthlyAmount * numberOfPayments;
                 } else {
-                    totalAmountMonthly = Math.round(monthlyAmount);
+                    totalAmountMonthly = monthlyAmount;
                 }
             }
 
@@ -411,8 +411,8 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
                 landline: String(landline || ''),
                 mobile: String(mobile || ''),
                 email: String(email || ''),
-                expected: d.donor?.expected ? Math.round(parseFloat(d.donor.expected)) : 0,
-                actualAmount: Math.round(calculateActualAmount(d)),
+                expected: d.donor?.expected ? parseFloat(d.donor.expected) : 0,
+                actualAmount: calculateActualAmount(d),
                 fundraiserFirstName: String(fundraiserFirstName || ''),
                 fundraiserLastName: String(fundraiserLastName || ''),
                 fundraiserMobile: String(d.donor?.fundraiser?.person?.mainMobile || ''),

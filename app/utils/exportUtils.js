@@ -1,5 +1,26 @@
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import autoTable from "jspdf-autotable";
+import '../fonts/Alef-normal.js';
+
+// היפוך טקסט עברי/ערבי לתצוגה נכונה ב-jsPDF (שאינו תומך RTL)
+// הופך סדר מילים בשורה (RTL) + הופך תווים בתוך מילים עבריות בלבד
+function reverseHebrewText(text) {
+    if (text === null || text === undefined) return '';
+    const str = String(text);
+    if (!/[\u0590-\u05FF\uFB1D-\uFB4F\u0600-\u06FF]/.test(str)) return str;
+    return str.split('\n').map(line => {
+        const words = line.split(' ');
+        // הפוך סדר המילים לתצוגה RTL ב-jsPDF
+        const reversedWords = [...words].reverse();
+        // הפוך תווים בתוך מילים עבריות; אנגלית/מספרים נשארים כמו שהם
+        return reversedWords.map(word => {
+            if (/[\u0590-\u05FF\uFB1D-\uFB4F\u0600-\u06FF]/.test(word)) {
+                return word.split('').reverse().join('');
+            }
+            return word;
+        }).join(' ');
+    }).join('\n');
+}
 
 export async function exportToPdf({ columns, data, fileName }) {
     // בדיקה אם יש נתונים
@@ -12,8 +33,91 @@ export async function exportToPdf({ columns, data, fileName }) {
     await exportSinglePdf({ columns, data, fileName });
 }
 
-// פונקציה פנימית לייצוא PDF בודד - גרסה מחולקת לבלוקים
+// פונקציה פנימית לייצוא PDF בודד - גרסה מהירה עם jspdf-autotable
 async function exportSinglePdf({ columns, data, fileName }) {
+    try {
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.setFont('Alef', 'normal');
+
+        const pageWidthMm = 297;
+        const marginMm = 8;
+
+        // כותרת
+        pdf.setFontSize(16);
+        pdf.text(reverseHebrewText(fileName), pageWidthMm / 2, 14, { align: 'center' });
+
+        // עמודות - הפוך סדר לתצוגה RTL (הטבלה מוצגת משמאל לימין בפועל)
+        const reversedColumns = [...columns].reverse();
+        const tableColumns = reversedColumns.map(col => ({
+            header: reverseHebrewText(col.header),
+            dataKey: col.accessor,
+        }));
+
+        // נתונים - המר מספרים לטקסט עם שמירת עשרוניים
+        const tableRows = data.map(row =>
+            Object.fromEntries(reversedColumns.map(col => {
+                const val = row[col.accessor];
+                if (val === null || val === undefined) return [col.accessor, ''];
+                if (typeof val === 'number') {
+                    // הצג עשרוניים רק אם קיימים (לא נחתוך אפסים מיותרים)
+                    return [col.accessor, Number.isInteger(val) ? String(val) : val.toString()];
+                }
+                return [col.accessor, reverseHebrewText(val)];
+            }))
+        );
+
+        autoTable(pdf, {
+            columns: tableColumns,
+            body: tableRows,
+            startY: 20,
+            margin: { left: marginMm, right: marginMm },
+            styles: {
+                font: 'Alef',
+                fontSize: 6.5,
+                cellPadding: 1.5,
+                overflow: 'linebreak',
+                halign: 'right',
+                textColor: [30, 30, 30],
+            },
+            headStyles: {
+                font: 'Alef',
+                fillColor: [208, 208, 208],
+                textColor: [0, 0, 0],
+                fontStyle: 'normal',
+                halign: 'center',
+                fontSize: 7.5,
+            },
+            alternateRowStyles: {
+                fillColor: [245, 248, 255],
+            },
+            tableLineColor: [180, 180, 180],
+            tableLineWidth: 0.2,
+            didDrawPage: (hookData) => {
+                const pageCount = pdf.internal.getNumberOfPages();
+                const currentPage = hookData.pageNumber;
+                pdf.setFontSize(8);
+                pdf.setFont('Alef', 'normal');
+                pdf.text(
+                    reverseHebrewText(`עמוד ${currentPage} מתוך ${pageCount}`),
+                    pageWidthMm / 2,
+                    pdf.internal.pageSize.getHeight() - 4,
+                    { align: 'center' }
+                );
+            },
+        });
+
+        pdf.save(`${fileName}.pdf`);
+
+    } catch (error) {
+        console.error('❌ [PDF Export] שגיאה ביצירת PDF:', error);
+        alert('שגיאה ביצירת ה-PDF. אנא נסה שוב או השתמש בייצוא CSV');
+        throw error;
+    }
+}
+
+// פונקציה ישנה - נשמרת לצרכי גיבוי בלבד
+async function exportSinglePdfLegacy({ columns, data, fileName }) {
+    const html2canvas = (await import('html2canvas')).default;
     
     const startTime = Date.now();
     
@@ -34,148 +138,8 @@ async function exportSinglePdf({ columns, data, fileName }) {
     `;
     loadingMessage.innerHTML = `מייצא ${data.length} רשומות ל-PDF...<br>אנא המתן`;
     document.body.appendChild(loadingMessage);
-
-    try {
-        // Use landscape orientation for better table display with many columns
-        const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
-        const pageWidthMm = 297; // A4 landscape width
-        const pageHeightMm = 210; // A4 landscape height
-        const marginMm = 5;
-        const contentWidthMm = pageWidthMm - (2 * marginMm);
-        const contentHeightMm = pageHeightMm - (2 * marginMm);
-        
-        // חלוקה לבלוקים של 15 שורות לכל עמוד - כדי למלא את כל הדף
-        const rowsPerPage = 15;
-        const totalPages = Math.ceil(data.length / rowsPerPage);
-
-        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
-            const startIdx = pageNum * rowsPerPage;
-            const endIdx = Math.min(startIdx + rowsPerPage, data.length);
-            const pageData = data.slice(startIdx, endIdx);
-            
-            loadingMessage.innerHTML = `מייצא ${data.length} רשומות ל-PDF...<br>עמוד ${pageNum + 1} מתוך ${totalPages}<br>אנא המתן`;
-            
-            // חישוב גובה השורה כדי למלא את כל הדף (בערך 180mm גובה זמין / 16 שורות כולל header)
-            const rowHeight = pageNum === 0 ? '38px' : '42px'; // גובה שורה גדול יותר
-            const headerHeight = '35px';
-            
-            // יצירת HTML לעמוד הנוכחי - טבלה רחבה שממלאת את כל הדף
-            const tableHTML = `
-                <div style="direction: rtl; font-family: Arial, sans-serif; padding: 8px; width: 1450px; box-sizing: border-box;">
-                    ${pageNum === 0 ? `<h2 style="text-align: center; margin: 0 0 8px 0; font-size: 18px; font-weight: bold;">דוח ${fileName}</h2>` : ''}
-                    <table dir="rtl" style="width: 100%; border-collapse: collapse; border: 2px solid #333; table-layout: fixed;">
-                        <thead>
-                            <tr style="background-color: #d0d0d0; height: ${headerHeight};">
-                                ${columns.map(col => {
-                                    return `<th style="border: 1px solid #333; padding: 4px 3px; text-align: center; font-weight: bold; font-size: 9px; vertical-align: middle; word-wrap: break-word; white-space: normal;">
-                                        ${col.header}
-                                    </th>`;
-                                }).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${pageData.map(row => `
-                                <tr style="height: ${rowHeight};">
-                                    ${columns.map(col => {
-                                        const value = row[col.accessor] || '';
-                                        return `<td style="border: 1px solid #333; padding: 3px 2px; text-align: right; font-size: 8px; vertical-align: middle; word-wrap: break-word; white-space: normal; overflow: hidden;">${value}</td>`;
-                                    }).join('')}
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    <div style="text-align: center; margin-top: 6px; font-size: 10px; color: #444;">
-                        עמוד ${pageNum + 1} מתוך ${totalPages}
-                    </div>
-                </div>
-            `;
-
-            // יצירת element זמני
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = tableHTML;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.top = '0';
-            document.body.appendChild(tempDiv);
-
-            // המתנה קצרה לוודא שה-DOM עודכן
-            await new Promise(resolve => setTimeout(resolve, 10));
-
-            try {
-                // המרה ל-canvas
-                const canvas = await html2canvas(tempDiv, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    windowWidth: 1500,
-                    windowHeight: tempDiv.scrollHeight + 50
-                });
-
-                // בדיקה שה-canvas תקין
-                if (!canvas || canvas.width === 0 || canvas.height === 0) {
-                    throw new Error(`Canvas לא תקין עבור עמוד ${pageNum + 1}`);
-                }
-
-                // המרה לתמונה
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                
-                if (!imgData || imgData === 'data:,' || imgData.length < 100) {
-                    throw new Error(`המרה לתמונה נכשלה עבור עמוד ${pageNum + 1}`);
-                }
-
-                // הוספת עמוד חדש אם צריך
-                if (pageNum > 0) {
-                    pdf.addPage();
-                }
-
-                // הוספת התמונה ל-PDF - ממלאת את כל הדף
-                pdf.addImage(
-                    imgData, 
-                    'JPEG', 
-                    marginMm, 
-                    marginMm, 
-                    contentWidthMm, 
-                    contentHeightMm
-                );
-
-
-            } catch (error) {
-                console.error(`❌ [PDF Export] שגיאה בעמוד ${pageNum + 1}:`, error);
-                throw error;
-            } finally {
-                // ניקוי ה-element הזמני
-                if (document.body.contains(tempDiv)) {
-                    document.body.removeChild(tempDiv);
-                }
-            }
-
-            // המתנה קצרה בין עמודים למניעת עומס על הדפדפן
-            if (pageNum < totalPages - 1) {
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-        }
-
-        // שמירת ה-PDF
-        pdf.save(`${fileName}.pdf`);
-        
-        
-        // הסרת הודעת הטעינה
-        if (document.body.contains(loadingMessage)) {
-            document.body.removeChild(loadingMessage);
-        }
-
-    } catch (error) {
-        console.error('❌ [PDF Export] שגיאה ביצירת PDF:', error);
-        
-        if (document.body.contains(loadingMessage)) {
-            document.body.removeChild(loadingMessage);
-        }
-        
-        alert('שגיאה ביצירת ה-PDF. אנא נסה שוב או השתמש בייצוא CSV');
-        throw error;
-    }
+    // פונקציה זו לא בשימוש יותר
+    if (document.body.contains(loadingMessage)) document.body.removeChild(loadingMessage);
 }
 
 export function exportToCsv({ columns, data, fileName }) {
