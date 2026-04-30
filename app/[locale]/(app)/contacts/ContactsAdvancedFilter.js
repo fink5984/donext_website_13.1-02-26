@@ -721,10 +721,8 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                   />
                   <div className={styles.donationTypeRow}>
                     {[
-                      { value: null, label: t('af_donationTypeTotal') },
+                      { value: 'total', label: t('af_donationTypeTotal') },
                       { value: 'monthly', label: t('af_donationTypeMonthly') },
-                      { value: 'yearly', label: t('af_donationTypeYearly') },
-                      { value: 'occasional', label: t('af_donationTypeOccasional') },
                     ].map(({ value, label }) => (
                       <button
                         key={String(value)}
@@ -739,46 +737,42 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                 </div>
 
                 {/* Payment Method */}
-                <div className={styles.filterField}>
-                  <h4 className={styles.sectionHeading}>{t('af_paymentMethod')}</h4>
-                  <div className={styles.paymentMethodGrid}>
-                    {[
-                      { value: 'CREDIT', label: t('af_pm_credit') },
-                      { value: 'CASH', label: t('af_pm_cash') },
-                      { value: 'CHECKS', label: t('af_pm_checks') },
-                      { value: 'BANK_TRANSFER', label: t('af_pm_bankTransfer') },
-                      { value: 'HOK_BANK', label: t('af_pm_hokBank') },
-                      { value: 'HOK_NEW', label: t('af_pm_hokNew') },
-                      { value: 'COMMITMENT', label: t('af_pm_commitment') },
-                      { value: 'BIT', label: 'Bit' },
-                      { value: 'PAYBOX', label: 'PayBox' },
-                      { value: 'PAYPAL', label: 'PayPal' },
-                      { value: 'APPLE_PAY', label: 'Apple Pay' },
-                      { value: 'GOOGLE_PAY', label: 'Google Pay' },
-                      { value: 'STRIPE', label: 'Stripe' },
-                      { value: 'BEVEL', label: 'Bevel' },
-                      { value: 'PLEDGER', label: 'Pledger' },
-                      { value: 'MATBIA', label: 'Matbia' },
-                      { value: 'OJC', label: 'OJC' },
-                      { value: 'NEDARIM_PLUS', label: 'Nedarim Plus' },
-                      { value: 'OTHER', label: t('af_pm_other') },
-                    ].map(({ value, label }) => {
-                      const isSelected = selectedPaymentMethods.includes(value);
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`${styles.paymentMethodPill} ${isSelected ? styles.paymentMethodPillSelected : ''}`}
-                          onClick={() => setSelectedPaymentMethods(prev =>
-                            isSelected ? prev.filter(v => v !== value) : [...prev, value]
-                          )}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {(() => {
+                  const pmList = [
+                    { value: 'CREDIT', label: t('af_pm_credit') },
+                    { value: 'CASH', label: t('af_pm_cash') },
+                    { value: 'CHECKS', label: t('af_pm_checks') },
+                    { value: 'BANK_TRANSFER', label: t('af_pm_bankTransfer') },
+                    { value: 'HOK_BANK', label: t('af_pm_hokBank') },
+                    { value: 'HOK_NEW', label: t('af_pm_hokNew') },
+                    { value: 'COMMITMENT', label: t('af_pm_commitment') },
+                    { value: 'BIT', label: 'Bit' },
+                    { value: 'PAYBOX', label: 'PayBox' },
+                    { value: 'PAYPAL', label: 'PayPal' },
+                    { value: 'APPLE_PAY', label: 'Apple Pay' },
+                    { value: 'GOOGLE_PAY', label: 'Google Pay' },
+                    { value: 'STRIPE', label: 'Stripe' },
+                    { value: 'BEVEL', label: 'Bevel' },
+                    { value: 'PLEDGER', label: 'Pledger' },
+                    { value: 'MATBIA', label: 'Matbia' },
+                    { value: 'OJC', label: 'OJC' },
+                    { value: 'NEDARIM_PLUS', label: 'Nedarim Plus' },
+                    { value: 'OTHER', label: t('af_pm_other') },
+                  ];
+                  const labelToValue = Object.fromEntries(pmList.map(p => [p.label, p.value]));
+                  const valueToLabel = Object.fromEntries(pmList.map(p => [p.value, p.label]));
+                  return (
+                    <div className={styles.filterField}>
+                      <SearchableMultiSelect
+                        label={t('af_paymentMethod')}
+                        options={pmList.map(p => p.label)}
+                        selected={selectedPaymentMethods.map(v => valueToLabel[v] || v)}
+                        onChange={(labels) => setSelectedPaymentMethods(labels.map(l => labelToValue[l] || l))}
+                        placeholder={t('af_paymentMethod')}
+                      />
+                    </div>
+                  );
+                })()}
 
                 {/* vs Expected */}
                 <div className={styles.filterField}>
