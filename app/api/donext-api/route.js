@@ -74,7 +74,10 @@ export async function POST(request) {
             fundraiserPhone,
             numberOfPayments,
             isUnlimited,
-            hasPaymentMethod
+            hasPaymentMethod,
+            paymentMethod,
+            createdInSystem,
+            sourceLabel
         } = data;
 
         if (action === 'addDonation') {
@@ -86,7 +89,10 @@ export async function POST(request) {
                 fundraiserPhone,
                 numberOfPayments,
                 isUnlimited,
-                hasPaymentMethod
+                hasPaymentMethod,
+                paymentMethod,
+                createdInSystem,
+                sourceLabel
             });
         }
 
@@ -558,7 +564,10 @@ async function addDonation({
                                fundraiserPhone,
                                numberOfPayments,
                                isUnlimited,
-                               hasPaymentMethod
+                               hasPaymentMethod,
+                               paymentMethod,
+                               createdInSystem,
+                               sourceLabel
                            }) {
     if (!campaignId || !amount) {
         return apiError('מספר קמפיין וסכום חסרים', 'MISSING_REQUIRED_FIELDS', 400);
@@ -745,7 +754,10 @@ async function addDonation({
                 numberOfPayments: finalIsUnlimited ? null : finalNumberOfPayments,
                 isUnlimited: finalIsUnlimited,
                 hasPaymentMethod: finalHasPaymentMethod,
-                donateApproval: true
+                donateApproval: true,
+                ...(paymentMethod && { paymentMethod }),
+                ...(createdInSystem && { createdInSystem }),
+                sourceLabel: sourceLabel || 'API'
             }
         });
     } else {
@@ -757,7 +769,10 @@ async function addDonation({
                 numberOfPayments: finalIsUnlimited ? null : finalNumberOfPayments,
                 isUnlimited: finalIsUnlimited,
                 hasPaymentMethod: finalHasPaymentMethod,
-                donateApproval: true
+                donateApproval: true,
+                ...(paymentMethod && { paymentMethod }),
+                ...(createdInSystem && { createdInSystem }),
+                sourceLabel: sourceLabel || 'API'
             }
         });
     }

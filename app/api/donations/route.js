@@ -123,9 +123,22 @@ export async function GET(request) {
             ...(filterIsUnlimited && { isUnlimited: filterIsUnlimited === 'true' }),
             ...(filterHasPaymentMethod && { hasPaymentMethod: filterHasPaymentMethod === 'true' }),
             ...(filterPaymentMethod && { paymentMethod: filterPaymentMethod }),
-            ...(excludePaymentMethod && { NOT: { paymentMethod: excludePaymentMethod } }),
             ...(includeDeleted !== 'true' && { deleted_at: null }) // מחיקה רכה - רק רשומות שלא נמחקו
         };
+
+        // excludePaymentMethod חייב להשתמש ב-OR כדי לכלול תרומות עם paymentMethod=null
+        // ב-Prisma/PostgreSQL, NOT: { field: value } מוציא גם NULL — לכן נוסיף OR מפורש
+        if (excludePaymentMethod) {
+            where.AND = [
+                ...(where.AND || []),
+                {
+                    OR: [
+                        { paymentMethod: null },
+                        { NOT: { paymentMethod: excludePaymentMethod } }
+                    ]
+                }
+            ];
+        }
 
         // בניית תנאי donor מורכב
         let donorConditions = {};
@@ -282,10 +295,13 @@ export async function GET(request) {
             // אם יש כבר תנאי donor, נוסיף אליו OR
             if (where.donor) {
                 where.AND = [
+                    ...(where.AND || []),
                     { donor: where.donor },
                     { OR: searchConditions }
                 ];
                 delete where.donor;
+            } else if (where.AND) {
+                where.AND = [...where.AND, { OR: searchConditions }];
             } else {
                 where.OR = searchConditions;
             }

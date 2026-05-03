@@ -331,6 +331,7 @@ model Donation {
   donateApproval     Boolean               @default(false) @map("donate_approval")
   moneyDonorId       Int?                  @map("money_donor_id")
   createdInSystem    donation_source_enum? @map("created_in_system")
+  sourceLabel        String?               @map("source_label")
   note               String?               @map("note")
   noteRead           Boolean?              @default(false) @map("note_read")
   noteCompleted      Boolean?              @default(false) @map("note_completed")
@@ -730,6 +731,7 @@ enum donation_source_enum {
   CLEARING_POS   @map("מסוף סליקה")
   PUBLIC_SCREEN  @map("PUBLIC_SCREEN")
   DONARY         @map("DONARY")
+  HAYIM_VAKNIN   @map("חיים ועקנין")
 }
 
 enum user_role_enum {

@@ -420,6 +420,8 @@ export async function exportDetailedFundraisersPdf({ fundraiserIds, campaignId, 
         
         loadingMessage.innerHTML = `יוצר PDF עבור ${fundraisers.length} מתרימים...<br>אנא המתן`;
 
+        const html2canvas = (await import('html2canvas')).default;
+
         const pdfStart = Date.now();
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidthMm = 210;
