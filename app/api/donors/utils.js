@@ -164,7 +164,6 @@ function buildExpectedDonationCondition(expectedMin, expectedMax) {
 function buildPersonFilters(filters, personSearchCondition) {
     // Handle synagogue filter - supports both single value and array
     let synagogueCondition = undefined;
-    console.log('🏛️ Synagogue filter received:', filters.synagogue);
     if (filters.synagogue) {
         let synagogueList;
         try {
@@ -176,8 +175,6 @@ function buildPersonFilters(filters, personSearchCondition) {
             // If parsing fails, treat as single value
             synagogueList = [filters.synagogue];
         }
-        
-        console.log('🏛️ Synagogue list:', JSON.stringify(synagogueList));
         
         if (Array.isArray(synagogueList) && synagogueList.length > 0) {
             const hasNoSynagogue = synagogueList.includes('no-synagogue');
@@ -205,7 +202,6 @@ function buildPersonFilters(filters, personSearchCondition) {
                 synagogueCondition = { synagogue: { in: otherSynagogues } };
             }
         }
-        console.log('🏛️ Synagogue condition:', JSON.stringify(synagogueCondition));
     }
 
     return {
@@ -238,14 +234,11 @@ function buildWhereConditions(params) {
         // אם יש סינון מפורש - השתמש בו
         const activeValue = filters.activeStatus === 'true' || filters.activeStatus === true;
         activeCondition = { active: activeValue };
-        console.log('🔍 Using activeStatus filter:', activeValue);
     } else if (includeInactive === 'false' || includeInactive === false) {
         // רק אם includeInactive הוא במפורש false - הצג רק פעילים
         activeCondition = { active: true };
-        console.log('🔍 includeInactive is explicitly false, showing only active donors');
     } else {
         // ברירת מחדל - הצג הכל (כולל לא פעילים)
-        console.log('🔍 Default or includeInactive=true, showing all donors (active and inactive)');
     }
     // אחרת - לא מוסיפים תנאי (מציג הכל)
 

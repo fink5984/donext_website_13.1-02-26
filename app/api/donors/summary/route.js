@@ -107,7 +107,10 @@ export async function GET(request) {
             donorStats,
             donationStats,
             fundraiserStats,
-            trafficLightStats
+            trafficLightStats,
+            donorsWithDonations,
+            invitationSentCount,
+            arrivalConfirmedCount
         ] = await Promise.all([
             // 1. מידע קמפיין
             prisma.campaign.findUnique({
@@ -158,41 +161,24 @@ export async function GET(request) {
                 by: ['trafficLightColor'],
                 where,
                 _count: true
-            })
-        ]);
+            }),
 
-        // חישוב תורמים שתרמו
-        const donorsWithDonations = await prisma.donor.count({
-            where: {
-                ...where,
-                donations: {
-                    some: {
-                        deleted_at: null
+            // 6. תורמים שתרמו
+            prisma.donor.count({
+                where: {
+                    ...where,
+                    donations: {
+                        some: {
+                            deleted_at: null
+                        }
                     }
                 }
-            }
-        });
+            }),
 
-        // חישוב הזמנות ואישורים - נספור רק תורמים שאכן מסומנים כ-true
-        // Debug: נבדוק גם כמה תורמים יש בכלל
-        const totalDonorsDebug = await prisma.donor.count({ where });
-        console.log('🔍 Debug summary - Total donors:', totalDonorsDebug);
-        
-        const invitationSentCount = await prisma.donor.count({
-            where: {
-                ...where,
-                invitationSent: true
-            }
-        });
-        console.log('🔍 Debug summary - invitationSent=true:', invitationSentCount);
-
-        const arrivalConfirmedCount = await prisma.donor.count({
-            where: {
-                ...where,
-                arrivalConfirmed: true
-            }
-        });
-        console.log('🔍 Debug summary - arrivalConfirmed=true:', arrivalConfirmedCount);
+            // 7. הזמנות ואישורים
+            prisma.donor.count({ where: { ...where, invitationSent: true } }),
+            prisma.donor.count({ where: { ...where, arrivalConfirmed: true } })
+        ]);
 
         // חישוב סכום תרומות בפועל לפי סוג קמפיין
         let total_actual = 0;
