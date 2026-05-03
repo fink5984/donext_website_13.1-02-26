@@ -488,6 +488,7 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
     const handleLogout = () => {
         rootStore.resetAllStores();
         sessionStore.logout();
+        try { localStorage.removeItem('campaignOptionsCache'); } catch (_) {}
         setClientId(null);
         setCampaignId(null);
         setFundraiserId(null);

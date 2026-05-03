@@ -128,6 +128,31 @@ async function fetchDonors(where, orderBy, limit, offset, idFilter = undefined) 
 }
 
 /**
+ * שליפת תורמים ב-batches כדי למנוע קריסת Prisma בסריאליזציה של אוסף גדול
+ */
+async function fetchInBatches(where, orderBy, batchSize = 500) {
+    // קבל רשימת IDs תחילה (query קל)
+    const idRows = await prisma.donor.findMany({
+        where,
+        select: { id: true },
+        ...(orderBy && { orderBy }),
+    });
+    const ids = idRows.map(r => r.id);
+
+    const results = [];
+    for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize);
+        const batch = await prisma.donor.findMany({
+            where: { id: { in: batchIds } },
+            include: getBasicInclude(),
+            ...(orderBy && { orderBy }),
+        });
+        results.push(...batch);
+    }
+    return results;
+}
+
+/**
  * שליפת תורמים לייצוא (ללא פגינציה)
  */
 async function fetchDonorsForExport(params) {
@@ -149,11 +174,7 @@ async function fetchDonorsForExport(params) {
         ? buildOrderByCondition(sortField, sortDir) 
         : undefined;
 
-    const donors = await prisma.donor.findMany({
-        where,
-        include: getBasicInclude(),
-        ...(orderBy && { orderBy })
-    });
+    const donors = await fetchInBatches(where, orderBy);
 
     // סינון לפי תרומה בפועל אם נדרש
     const filteredDonors = filterByActualDonation(donors, params.filters.actualMin, params.filters.actualMax);

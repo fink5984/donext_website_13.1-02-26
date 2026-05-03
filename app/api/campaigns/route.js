@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { handlePrismaError, buildPrismaInclude } from '@/lib/prisma/utils';
+import { handlePrismaError } from '@/lib/prisma/utils';
 import { sendEmail } from '@/lib/email';
 import { toJewishDate } from 'jewish-date';
 
@@ -9,18 +9,20 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const clientId = searchParams.get('clientId');
 
-        const include = buildPrismaInclude([
-            'client',
-            'category',
-            'fundraisers',
-            'donors'
-        ]);
-
         const where = clientId ? { clientId: parseInt(clientId) } : {};
         
         const campaigns = await prisma.campaign.findMany({
             where,
-            include
+            include: {
+                client: true,
+                category: true,
+                _count: {
+                    select: {
+                        fundraisers: { where: { deleted_at: null } },
+                        donors: { where: { active: true } }
+                    }
+                }
+            }
         });
 
         return NextResponse.json(campaigns);

@@ -53,31 +53,30 @@ export default function Login() {
 
   // פונקציה לשליפת קמפיינים למשתמש מחובר
   async function fetchCampaignsForLoggedInUser() {
+    // הצג מיד מ-cache אם קיים - ואחר כך רענן ברקע
+    try {
+      const cached = localStorage.getItem('campaignOptionsCache');
+      if (cached) {
+        const { options, userName: cachedName, role: cachedRole } = JSON.parse(cached);
+        if (options && options.length > 0) {
+          setCampaignOptions(options);
+          setUserName(cachedName || '');
+          setUserRole(cachedRole || getRoleFromToken(sessionStore.token));
+          setStep('selectCampaign');
+          // רענן ברקע בלי loading
+          fetchCampaignsBackground();
+          return;
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    // אין cache - טען עם loading
     try {
       setGlobalLoading(true);
-      const res = await fetch('/api/login/get-campaigns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: sessionStore.token })
-      });
-      const data = await res.json();
-
-      if (data.success && data.campaignOptions) {
-        setCampaignOptions(data.campaignOptions);
-        setUserName(data.userName || '');
-        // Get role from token
-        const role = getRoleFromToken(sessionStore.token);
-        setUserRole(role);
-        
-        // שמירת clientId מהתשובה - חשוב לפתיחת קמפיין חדש
-        if (data.clientId && !sessionStore.clientId) {
-          sessionStore.setClientId(data.clientId);
-          console.log('✅ ClientId saved from get-campaigns:', data.clientId);
-        }
-        
+      const data = await fetchCampaignsFromServer();
+      if (data) {
         setStep('selectCampaign');
       } else {
-        // אם נכשל - חזור ללוגין
         setStep('login');
       }
     } catch (error) {
@@ -86,6 +85,53 @@ export default function Login() {
     } finally {
       setGlobalLoading(false);
     }
+  }
+
+  // רענון שקט ברקע (כשיש cache)
+  async function fetchCampaignsBackground() {
+    try {
+      const data = await fetchCampaignsFromServer();
+      // עדכן state רק אם השתנה משהו
+      if (data) {
+        setCampaignOptions(prev => {
+          const newStr = JSON.stringify(data.options);
+          const oldStr = JSON.stringify(prev);
+          return newStr !== oldStr ? data.options : prev;
+        });
+      }
+    } catch (_) { /* ignore silent refresh errors */ }
+  }
+
+  // שליפה מהשרת + שמירה ל-cache
+  async function fetchCampaignsFromServer() {
+    const res = await fetch('/api/login/get-campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: sessionStore.token })
+    });
+    const data = await res.json();
+
+    if (data.success && data.campaignOptions) {
+      const role = getRoleFromToken(sessionStore.token);
+      setCampaignOptions(data.campaignOptions);
+      setUserName(data.userName || '');
+      setUserRole(role);
+
+      // שמירה ל-cache
+      try {
+        localStorage.setItem('campaignOptionsCache', JSON.stringify({
+          options: data.campaignOptions,
+          userName: data.userName || '',
+          role
+        }));
+      } catch (_) { /* ignore storage errors */ }
+
+      if (data.clientId && !sessionStore.clientId) {
+        sessionStore.setClientId(data.clientId);
+      }
+      return { options: data.campaignOptions };
+    }
+    return null;
   }
 
   function redirectByRole(campaignsOverride = []) {
@@ -250,6 +296,7 @@ export default function Login() {
   const handleLogout = () => {
     rootStore.resetAllStores();
     sessionStore.logout();
+    try { localStorage.removeItem('campaignOptionsCache'); } catch (_) {}
     setStep("login");
     setCampaignOptions([]);
     setUserName("");
