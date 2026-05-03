@@ -74,20 +74,38 @@ export default observer(function DonorsPage() {
                 }
 
                 const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
+                const wsHost = process.env.NEXT_PUBLIC_PUSHER_HOST || undefined;
+                const wsPort = Number(process.env.NEXT_PUBLIC_PUSHER_PORT || 6001);
+                const forceTLS = String(process.env.NEXT_PUBLIC_PUSHER_TLS || 'false') === 'true';
                 const PusherLib = (await import('pusher-js')).default;
                 
                 pusherClient = new PusherLib(key, {
                     cluster,
+                    ...(wsHost ? {
+                        wsHost,
+                        wsPort,
+                        wssPort: wsPort,
+                        forceTLS,
+                        enabledTransports: ['ws', 'wss']
+                    } : {}),
                     enabledTransports: ['ws', 'wss']
                 });
 
                 const channelName = `campaign.${appContext.campaignId}`;
                 channel = pusherClient.subscribe(channelName);
 
+                const refreshDonors = () => {
+                    store.donorsStore.invalidateCacheAndRefresh();
+                };
+
                 channel.bind('donation-updated', (event) => {
                     console.log('Donation updated via Pusher (donors page):', event);
-                    // רענון שקט ברקע
-                    store.donorsStore.invalidateCacheAndRefresh();
+                    refreshDonors();
+                });
+
+                // תמיכה באירוע שמגיע ממסך התרומות הציבורי או מסלולים חיצוניים
+                channel.bind('DonationScreen', () => {
+                    refreshDonors();
                 });
             } catch (err) {
                 console.error('Failed to setup Pusher:', err);
@@ -99,6 +117,7 @@ export default observer(function DonorsPage() {
         return () => {
             if (channel) {
                 channel.unbind('donation-updated');
+                channel.unbind('DonationScreen');
                 pusherClient?.unsubscribe(`campaign.${appContext.campaignId}`);
             }
             if (pusherClient) {

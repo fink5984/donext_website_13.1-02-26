@@ -816,30 +816,36 @@ async function addDonation({
     const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || process.env.PUSHER_CLUSTER || 'eu';
 
     if (key && secret && appId) {
-        const Pusher = (await import('pusher')).default;
-        const pusher = new Pusher({ appId, key, secret, cluster, useTLS: true });
-
-        // אירוע לדפי הניהול — חייב לרוץ תמיד
         try {
-            await pusher.trigger(`campaign.${campaignIdInt}`, 'donation-updated', {
+            const Pusher = (await import('pusher')).default;
+            const pusher = new Pusher({ appId, key, secret, cluster, useTLS: true });
+
+            const adminPayload = {
                 donationId: donation.id,
                 donorId: donor.id,
                 campaignId: campaignIdInt,
                 action: existingDonation ? 'updated' : 'created'
-            });
-        } catch (e) {
-            console.error('Pusher donation-updated failed:', e);
-        }
+            };
 
-        // אירוע למסך הציבורי — נכשל בנפרד
-        try {
-            await pusher.trigger(`donation-screen.${campaignIdInt}`, 'DonationScreen', {
+            const publicPayload = {
                 donor,
                 donation,
                 skip: { skip: false }
-            });
+            };
+
+            const results = await Promise.allSettled([
+                pusher.trigger(`campaign.${campaignIdInt}`, 'donation-updated', adminPayload),
+                pusher.trigger(`donation-screen.${campaignIdInt}`, 'DonationScreen', publicPayload)
+            ]);
+
+            if (results[0].status === 'rejected') {
+                console.error('Pusher donation-updated failed:', results[0].reason);
+            }
+            if (results[1].status === 'rejected') {
+                console.error('Pusher DonationScreen failed:', results[1].reason);
+            }
         } catch (e) {
-            console.error('Pusher DonationScreen failed:', e);
+            console.error('Pusher setup/trigger failed in addDonation:', e);
         }
     }
 

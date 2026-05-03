@@ -53,6 +53,9 @@ const DonationsPage = observer(() => {
                 console.log('✅ Setting up Pusher connection...');
 
                 const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'eu';
+                const wsHost = process.env.NEXT_PUBLIC_PUSHER_HOST || undefined;
+                const wsPort = Number(process.env.NEXT_PUBLIC_PUSHER_PORT || 6001);
+                const forceTLS = String(process.env.NEXT_PUBLIC_PUSHER_TLS || 'false') === 'true';
                 const PusherLib = (await import('pusher-js')).default;
                 
                 if (!mounted) return;
@@ -61,6 +64,13 @@ const DonationsPage = observer(() => {
                 
                 pusherClient = new PusherLib(key, {
                     cluster,
+                    ...(wsHost ? {
+                        wsHost,
+                        wsPort,
+                        wssPort: wsPort,
+                        forceTLS,
+                        enabledTransports: ['ws', 'wss']
+                    } : {}),
                     enabledTransports: ['ws', 'wss']
                 });
 
@@ -78,11 +88,21 @@ const DonationsPage = observer(() => {
                 console.log('📡 Subscribing to channel:', channelName);
                 channel = pusherClient.subscribe(channelName);
 
+                const refreshDonations = () => {
+                    donationsStore.invalidateCacheAndRefresh(campaignId);
+                };
+
                 channel.bind('donation-updated', (event) => {
                     if (mounted) {
                         console.log('🎉 Donation updated via Pusher:', event);
-                        // רענון שקט ברקע
-                        donationsStore.invalidateCacheAndRefresh(campaignId);
+                        refreshDonations();
+                    }
+                });
+
+                // תמיכה באירוע שמגיע ממסך תרומות/מסלולים חיצוניים
+                channel.bind('DonationScreen', () => {
+                    if (mounted) {
+                        refreshDonations();
                     }
                 });
             } catch (err) {
@@ -97,6 +117,7 @@ const DonationsPage = observer(() => {
             console.log('🔴 Cleaning up Pusher connection...');
             if (channel) {
                 channel.unbind('donation-updated');
+                channel.unbind('DonationScreen');
             }
             if (pusherClient) {
                 pusherClient.unsubscribe(`campaign.${campaignId}`);
