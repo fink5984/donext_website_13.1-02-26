@@ -345,6 +345,7 @@ export async function GET(request) {
                 noteCompletedAt: true,
                 followUpDate: true,
                 createdInSystem: true,
+                sourceLabel: true,
                 donationNotes: {
                     select: {
                         id: true,

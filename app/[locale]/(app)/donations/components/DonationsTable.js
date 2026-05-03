@@ -553,12 +553,18 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
                 'CLEARING_POS': t('sources.clearingPos'),
                 'DONARY': t('sources.donary'),
                 'MATBIA': t('sources.matbia'),
-                'PUBLIC_SCREEN': t('sources.landingPage')
+                'PUBLIC_SCREEN': t('sources.landingPage'),
+                'HAYIM_VAKNIN': 'חיים ועקנין'
             };
-            
+
             return sourceMap[donation.createdInSystem] || donation.createdInSystem;
         }
-        
+
+        // בדיקה שלישית - תווית מקור חופשית (sourceLabel) - למשל "API" או מקור מותאם אישית
+        if (donation.sourceLabel) {
+            return donation.sourceLabel;
+        }
+
         return ''; // ברירת מחדל - אין מידע (תרומות ישנות מאוד)
     };
 
