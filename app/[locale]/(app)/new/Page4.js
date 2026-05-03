@@ -90,6 +90,9 @@ export default function Page4({ campaignData, onClose }) {
             formData.append('campaign_type', campaignData.campaignType || 'community');
             formData.append('has_operators', campaignData.hasOperators || false);
             formData.append('is_event', campaignData.isEvent || false);
+            if (campaignData.comparisonCampaignId) {
+                formData.append('comparison_campaign_id', campaignData.comparisonCampaignId);
+            }
 
             const response = await fetchWithAuth('/api/campaigns', {
                 method: 'POST',

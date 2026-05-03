@@ -249,6 +249,7 @@ model Campaign {
   campaignType         String?                @default("community") @map("campaign_type")
   hasOperators         Boolean?               @default(false) @map("has_operators")
   isEvent              Boolean?               @default(false) @map("is_event")
+  comparisonCampaignId Int?                   @map("comparison_campaign_id")
   screenSettings       CampaignScreenSetting?
   category             CampaignCategory?      @relation(fields: [categoryId], references: [id])
   client               Client                 @relation(fields: [clientId], references: [id])

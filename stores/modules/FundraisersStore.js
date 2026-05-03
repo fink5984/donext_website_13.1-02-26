@@ -223,7 +223,7 @@ class FundraisersStore {
           english_first_name: donor.english_first_name || '',
           english_last_name: donor.english_last_name || '',
           expectedDonation: donor.expected || 0,
-          previousDonation: 0,
+          previousDonation: donor.previous_amount || 0,
           currentDonation: donor.amount || 0,
           trafficLightColor: donor.traffic_light_color || 'gray',
           address: [donor.street_name, donor.houseNumber].filter(Boolean).join(' ') || '',

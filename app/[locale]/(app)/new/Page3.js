@@ -2,13 +2,16 @@
 
 import Button from "@/app/components/Button";
 import styles from './new.module.scss';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { currencies, getDefaultCurrency } from '@/lib/currencies';
 import Edit from '@/app/icons/edit.svg'
 import CalendarIcon from '@/app/icons/calendar2.svg'
 import Lamp from '@/app/icons/lamp.svg'
+import DropDown from '@/app/icons/dropDownSmall.svg'
 import IconTooltip from "@/app/components/IconTooltip/IconTooltip";
 import Tooltip from "@/app/icons/tooltip.svg"
+import { useAppContext } from "@/app/components/AppContext";
+import fetchWithAuth from "@/app/utils/fetchWithAuth";
 
 // משתמש במערך המטבעות המרכזי
 const CURRENCIES = currencies.map(currency => ({
@@ -18,12 +21,47 @@ const CURRENCIES = currencies.map(currency => ({
 }));
 
 export default function Page3({ onNext, campaignData, updateCampaignData }) {
+    const { clientId } = useAppContext();
     const [selectedCurrency, setSelectedCurrency] = useState(campaignData.currency || getDefaultCurrency().symbol);
     const [amount, setAmount] = useState('');
     const [selectedType, setSelectedType] = useState('monthly');
     const [sliderValue, setSliderValue] = useState(1);
     const [sliderMax, setSliderMax] = useState(10000000);
     const [isEditing, setIsEditing] = useState(false);
+    const [allCampaigns, setAllCampaigns] = useState([]);
+    const [comparisonCampaignId, setComparisonCampaignId] = useState(null);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        if (!clientId) return;
+        fetchWithAuth(`/api/campaigns?clientId=${clientId}`)
+            .then(r => r.json())
+            .then(data => setAllCampaigns(Array.isArray(data) ? data : []))
+            .catch(() => {});
+    }, [clientId]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredCampaigns = allCampaigns.filter(c => (c.donationType || c.donation_type) === selectedType);
+
+    const handleSelectComparison = (id) => {
+        setComparisonCampaignId(id);
+        updateCampaignData("comparisonCampaignId", id);
+        setDropdownOpen(false);
+    };
+
+    const selectedCampaignName = comparisonCampaignId
+        ? filteredCampaigns.find(c => c.id === comparisonCampaignId)?.name || ''
+        : '';
 
     useEffect(() => {
         const slider = document.querySelector(`.${styles.slider}`);
@@ -156,6 +194,39 @@ export default function Page3({ onNext, campaignData, updateCampaignData }) {
                                 <p className="text">מתאים לקמפיינים להו&quot;ק ותרומות קבועות לטווח ארוך</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div className={styles.frameFormContainer}>
+                    <span className="body-2">האם תרצה לבדוק מול קמפיין מעבר?</span>
+                    <div style={{ position: 'relative' }} ref={dropdownRef}>
+                        <button
+                            type="button"
+                            className={`${styles.comparisonDropdownTrigger} button-2 ${comparisonCampaignId ? styles.hasValue : ''}`}
+                            onClick={() => setDropdownOpen(o => !o)}
+                            disabled={filteredCampaigns.length === 0}
+                        >
+                            <span>{selectedCampaignName || (filteredCampaigns.length === 0 ? 'אין קמפיינים מסוג זה' : 'בחר קמפיין להשוואה')}</span>
+                            <DropDown />
+                        </button>
+                        {dropdownOpen && filteredCampaigns.length > 0 && (
+                            <div className={styles.comparisonDropdownMenu}>
+                                <div
+                                    className={`${styles.comparisonDropdownItem} ${!comparisonCampaignId ? styles.selectedDropdownItem : ''} button-2`}
+                                    onClick={() => handleSelectComparison(null)}
+                                >
+                                    ללא השוואה
+                                </div>
+                                {filteredCampaigns.map(c => (
+                                    <div
+                                        key={c.id}
+                                        className={`${styles.comparisonDropdownItem} ${comparisonCampaignId === c.id ? styles.selectedDropdownItem : ''} button-2`}
+                                        onClick={() => handleSelectComparison(c.id)}
+                                    >
+                                        {c.name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className={styles.frameFormContainer}>

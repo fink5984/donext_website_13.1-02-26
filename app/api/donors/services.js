@@ -112,6 +112,48 @@ async function handleActualDonationFilter(where, actualMin, actualMax) {
 }
 
 /**
+ * הוספת previousDonation לכל תורם על פי קמפיין ההשוואה
+ */
+async function addPreviousDonations(donors, comparisonCampaignId) {
+    if (!comparisonCampaignId || donors.length === 0) return donors;
+
+    const personIds = donors.map(d => d.personId).filter(Boolean);
+    if (personIds.length === 0) return donors;
+
+    const compCampaign = await prisma.campaign.findUnique({
+        where: { id: comparisonCampaignId },
+        select: { donationType: true }
+    });
+
+    const compDonors = await prisma.donor.findMany({
+        where: {
+            campaignId: comparisonCampaignId,
+            personId: { in: personIds }
+        },
+        select: {
+            personId: true,
+            donations: {
+                where: { deleted_at: null },
+                select: { monthlyAmount: true, numberOfPayments: true, isUnlimited: true }
+            }
+        }
+    });
+
+    const isMonthlyCampaign = compCampaign?.donationType === 'monthly';
+    const previousMap = {};
+    for (const compDonor of compDonors) {
+        const total = (compDonor.donations || []).reduce((sum, d) => {
+            const monthly = Number(d.monthlyAmount) || 0;
+            if (isMonthlyCampaign || d.isUnlimited) return sum + monthly;
+            return sum + monthly * (Number(d.numberOfPayments) || 0);
+        }, 0);
+        if (compDonor.personId) previousMap[compDonor.personId] = total;
+    }
+
+    return donors.map(d => ({ ...d, previousDonation: previousMap[d.personId] || 0 }));
+}
+
+/**
  * שליפת תורמים עיקרית עם פגינציה
  */
 async function fetchDonors(where, orderBy, limit, offset, idFilter = undefined) {
@@ -281,10 +323,12 @@ async function fetchDonorsForExport(params) {
 
     // הוספת isFundraiser
     const donorsWithFundraiserStatus = await addFundraiserStatus(sortedDonors, params.campaignId);
+    const comparisonCampaignIdExport = sortedDonors[0]?.campaign?.comparisonCampaignId || null;
+    const donorsWithPreviousExport = await addPreviousDonations(donorsWithFundraiserStatus, comparisonCampaignIdExport);
 
     return {
-        data: donorsWithFundraiserStatus.map(mapDonorToFrontend),
-        total: donorsWithFundraiserStatus.length
+        data: donorsWithPreviousExport.map(mapDonorToFrontend),
+        total: donorsWithPreviousExport.length
     };
 }
 
@@ -468,8 +512,10 @@ async function fetchDonorsWithPagination(params) {
         // אם זה עבור מתרים מסוים - החזר הכל בלי pagination
         if (isForSpecificFundraiser) {
             const donorsWithFundraiserStatus = await addFundraiserStatus(sortedDonors, params.campaignId);
+            const comparisonCampaignId = sortedDonors[0]?.campaign?.comparisonCampaignId || null;
+            const donorsWithPrevious = await addPreviousDonations(donorsWithFundraiserStatus, comparisonCampaignId);
             return {
-                data: donorsWithFundraiserStatus.map(mapDonorToFrontend),
+                data: donorsWithPrevious.map(mapDonorToFrontend),
                 total: sortedDonors.length
             };
         }
@@ -481,9 +527,11 @@ async function fetchDonorsWithPagination(params) {
 
         // הוספת isFundraiser
         const donorsWithFundraiserStatus = await addFundraiserStatus(paginatedDonors, params.campaignId);
+        const comparisonCampaignIdPaginated = sortedDonors[0]?.campaign?.comparisonCampaignId || null;
+        const donorsWithPrevious = await addPreviousDonations(donorsWithFundraiserStatus, comparisonCampaignIdPaginated);
 
         return {
-            data: donorsWithFundraiserStatus.map(mapDonorToFrontend),
+            data: donorsWithPrevious.map(mapDonorToFrontend),
             total: sortedDonors.length
         };
     }
@@ -491,8 +539,8 @@ async function fetchDonorsWithPagination(params) {
     // מיון רגיל (לא לפי actualDonation או traffic)
     // טיפול בסינון לפי סכום בפועל
     const { totalAfterFilters, idFilter } = await handleActualDonationFilter(
-        where, 
-        params.filters.actualMin, 
+        where,
+        params.filters.actualMin,
         params.filters.actualMax
     );
 
@@ -501,20 +549,22 @@ async function fetchDonorsWithPagination(params) {
     // limit=undefined אומר שלא שלחו limit, אז ברירת מחדל 20
     let limit = params.pagination.limit !== undefined ? params.pagination.limit : 20;
     let offset = params.pagination.offset || 0;
-    
+
     // אם limit הוא 0, זה אומר שרוצים הכל בלי pagination
     if (limit === 0) {
         limit = null;
         offset = null;
     }
-    
+
     const donors = await fetchDonors(where, orderBy, limit, offset, idFilter);
 
     // הוספת isFundraiser
     const donorsWithFundraiserStatus = await addFundraiserStatus(donors, params.campaignId);
+    const comparisonCampaignIdRegular = donors[0]?.campaign?.comparisonCampaignId || null;
+    const donorsWithPrevious = await addPreviousDonations(donorsWithFundraiserStatus, comparisonCampaignIdRegular);
 
     return {
-        data: donorsWithFundraiserStatus.map(mapDonorToFrontend),
+        data: donorsWithPrevious.map(mapDonorToFrontend),
         total: totalAfterFilters
     };
 }

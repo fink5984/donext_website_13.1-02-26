@@ -13,6 +13,9 @@ import Trash from "@/app/icons/delete.svg"
 import LeftArrow from "@/app/icons/leftArrow.svg"
 import Email from "@/app/icons/mail.svg"
 import Voice from "@/app/icons/microphone.svg"
+import PhoneSmall from "@/app/icons/phoneSmall.svg"
+import HomeSmall from "@/app/icons/homeSmall.svg"
+import MailSmall from "@/app/icons/mailSmall.svg"
 import Check from "@/app/icons/check.svg"
 import Search from '@/app/components/Search';
 import Filter from '@/app/icons/filter.svg'
@@ -136,6 +139,7 @@ export default observer(function DonorsPage() {
     
     // בדוק אם להציג את עמודת ההזמנה
     const showInvitationColumn = campaign?.showInvitationColumn || false;
+    const hasComparisonCampaign = !!campaign?.comparison_campaign_id;
     
     // Toggle בין תצוגת שמות עברית/אנגלית - ברירת מחדל לפי ה-locale
     const [showEnglishNames, setShowEnglishNames] = useState(locale === 'en');
@@ -190,6 +194,14 @@ export default observer(function DonorsPage() {
             setFirstLoad(true);
         }
     }, [campaignId, clientId, store]);
+
+    // טעינת נתונים בכל כניסה לדף (כולל חזרה מדפים אחרים)
+    useEffect(() => {
+        if (!campaignId) return;
+        store.donorsStore.fetchDonors({ noLimit: !store.donorsStore.usePagination });
+        store.donorsStore.fetchDonorsSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [campaignId]);
 
     const sortedFundraisers = useMemo(() => {
         const fundraiserList = fundraisersForSelect || fundraisers || [];
@@ -736,7 +748,7 @@ export default observer(function DonorsPage() {
         return (
             <div
                 key={donor.id}
-                className={`${styles.tableRow} ${!donor.isActive ? styles.inactiveRow : ''} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-3`}
+                className={`${styles.tableRow} ${!donor.isActive ? styles.inactiveRow : ''} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} ${hasComparisonCampaign ? styles.withComparison : ''} table-3`}
             >
                 <div className={styles.toggleWrapper}>
                     <button
@@ -760,23 +772,55 @@ export default observer(function DonorsPage() {
                 <div className={`${styles.trafficCell} ${styles.cell}`}>
                     <Circle className={styles[donor.traffic_light_color] || styles.gray} />
                 </div>
-                <span 
-                    className={`${styles.name} ${styles.cell} ${styles.clickableDonorName} table-1`} 
-                    dir={showEnglishNames ? 'ltr' : 'rtl'}
-                    onClick={() => handleOpenEditForm(donor)}
-                >
-                    {showEnglishNames 
-                        ? `${donor.english_first_name || ''} ${donor.english_last_name || ''}`.trim() || `${donor.lastName} ${donor.firstName}`
-                        : `${donor.lastName} ${donor.firstName}`
-                    }
-                </span>
+                <div className={`${styles.name} ${styles.cell} ${styles.donorNameCell}`}>
+                    <span
+                        className={`${styles.clickableDonorName} table-1`}
+                        dir={showEnglishNames ? 'ltr' : 'rtl'}
+                        onClick={() => handleOpenEditForm(donor)}
+                    >
+                        {showEnglishNames
+                            ? `${donor.english_first_name || ''} ${donor.english_last_name || ''}`.trim() || `${donor.lastName} ${donor.firstName}`
+                            : `${donor.lastName} ${donor.firstName}`
+                        }
+                    </span>
+                    {(donor.mobile || donor.address || donor.city || donor.email) && (
+                        <div className={styles.donorInfoTooltip}>
+                            {donor.mobile && (
+                                <div className={styles.donorInfoRow}>
+                                    <PhoneSmall />
+                                    <span>{donor.mobile}</span>
+                                </div>
+                            )}
+                            {(donor.address || donor.city) && (
+                                <div className={styles.donorInfoRow}>
+                                    <HomeSmall />
+                                    <span>{[donor.address, donor.city].filter(Boolean).join(' ')}</span>
+                                </div>
+                            )}
+                            {donor.email && (
+                                <div className={styles.donorInfoRow}>
+                                    <MailSmall />
+                                    <span>{donor.email}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
-                <div className={`${styles.cell} ${styles.city}`}>
-                    <span>{donor.city}</span>
-                </div>
-                <div className={`${styles.cell} ${styles.address}`}>
-                    <span>{donor.street_name} {donor.houseNumber}</span>
-                </div>
+                {hasComparisonCampaign ? (
+                    <div className={`${styles.cell} ${styles.previousDonation}`}>
+                        <span>{donor.previous_amount ? Number(donor.previous_amount).toLocaleString() : '—'}</span>
+                    </div>
+                ) : (
+                    <>
+                        <div className={`${styles.cell} ${styles.city}`}>
+                            <span>{donor.city}</span>
+                        </div>
+                        <div className={`${styles.cell} ${styles.address}`}>
+                            <span>{donor.street_name} {donor.houseNumber}</span>
+                        </div>
+                    </>
+                )}
                 {showInvitationColumn && (
                     <div className={`${styles.cell} ${styles.invitationCell}`}>
                         {(donor.invitationSent || donor.arrivalConfirmed) ? (
@@ -1014,40 +1058,48 @@ export default observer(function DonorsPage() {
                     )}
                 </div>
             </div>
-            <div className={styles.headerCell}>
-                <div className={styles.sortButtons}>
-                    <button
-                        onClick={() => handleSort('city', 'desc')}
-                        className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'city' && store.donorsStore.sortConfig.direction === 'desc' ? styles.active : ''}`}
-                    >
-                        <Up />
-                    </button>
-                    <button
-                        onClick={() => handleSort('city', 'asc')}
-                        className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'city' && store.donorsStore.sortConfig.direction === 'asc' ? styles.active : ''}`}
-                    >
-                        <Down />
-                    </button>
+            {hasComparisonCampaign ? (
+                <div className={styles.headerCell}>
+                    <span>תרומה קודמת</span>
                 </div>
-                <span>{t('city')}</span>
-            </div>
-            <div className={styles.headerCell}>
-                <div className={styles.sortButtons}>
-                    <button
-                        onClick={() => handleSort('address', 'desc')}
-                        className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'address' && store.donorsStore.sortConfig.direction === 'desc' ? styles.active : ''}`}
-                    >
-                        <Up />
-                    </button>
-                    <button
-                        onClick={() => handleSort('address', 'asc')}
-                        className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'address' && store.donorsStore.sortConfig.direction === 'asc' ? styles.active : ''}`}
-                    >
-                        <Down />
-                    </button>
-                </div>
-                <span>{t('address')}</span>
-            </div>
+            ) : (
+                <>
+                    <div className={styles.headerCell}>
+                        <div className={styles.sortButtons}>
+                            <button
+                                onClick={() => handleSort('city', 'desc')}
+                                className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'city' && store.donorsStore.sortConfig.direction === 'desc' ? styles.active : ''}`}
+                            >
+                                <Up />
+                            </button>
+                            <button
+                                onClick={() => handleSort('city', 'asc')}
+                                className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'city' && store.donorsStore.sortConfig.direction === 'asc' ? styles.active : ''}`}
+                            >
+                                <Down />
+                            </button>
+                        </div>
+                        <span>{t('city')}</span>
+                    </div>
+                    <div className={styles.headerCell}>
+                        <div className={styles.sortButtons}>
+                            <button
+                                onClick={() => handleSort('address', 'desc')}
+                                className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'address' && store.donorsStore.sortConfig.direction === 'desc' ? styles.active : ''}`}
+                            >
+                                <Up />
+                            </button>
+                            <button
+                                onClick={() => handleSort('address', 'asc')}
+                                className={`${styles.sortButton} ${store.donorsStore.sortConfig.key === 'address' && store.donorsStore.sortConfig.direction === 'asc' ? styles.active : ''}`}
+                            >
+                                <Down />
+                            </button>
+                        </div>
+                        <span>{t('address')}</span>
+                    </div>
+                </>
+            )}
             {showInvitationColumn && (
                 <div className={`${styles.headerCell} ${styles.invitationHeader}`}>
                     <div className={styles.sortButtons}>
@@ -1285,7 +1337,7 @@ export default observer(function DonorsPage() {
                                             renderRow={renderDonorRow}
                                             headerContent={headerContent}
                                             styles={styles}
-                                            headerClassName={`${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''}`}
+                                            headerClassName={`${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} ${hasComparisonCampaign ? styles.withComparison : ''}`}
                                         />
                                         {/* Mobile Cards View */}
                                         <div className={styles.mobileCardsView}>

@@ -25,7 +25,8 @@ function mapCampaignToSnakeCase(campaign) {
         publicScreenEnabled: campaign.publicScreenSettings?.isEnabled || false,
         campaign_type: campaign.campaignType,
         has_operators: campaign.hasOperators,
-        is_event: campaign.isEvent
+        is_event: campaign.isEvent,
+        comparison_campaign_id: campaign.comparisonCampaignId || null
     };
 }
 

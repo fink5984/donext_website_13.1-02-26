@@ -395,6 +395,7 @@ function mapDonorToFrontend(donor) {
         fundraiser_last_name: donor.fundraiser?.person?.lastName,
         isFundraiser: donor.isFundraiser,
         amount: actualDonationAmount,
+        previous_amount: donor.previousDonation || 0,
         commitmentTotal,
         lastQuestionnaireByFundraiserId: donor.lastQuestionnaireByFundraiserId,
         lastForecastByFundraiserId: donor.lastForecastByFundraiserId,

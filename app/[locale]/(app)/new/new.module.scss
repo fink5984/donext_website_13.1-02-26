@@ -601,6 +601,69 @@
   color: var(--Text-able-Text, #0C4AD5);
 }
 
+/* Comparison Campaign Dropdown */
+.comparisonDropdownTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: var(--Border-Radius-m, 12px);
+  background: var(--Surface-01, #FAFCFF);
+  border: 1.5px solid var(--Border-disable-field, #C5D7F8);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  text-align: right;
+
+  &:hover:not(:disabled) {
+    border-color: var(--Border-able-field, #6E99EC);
+  }
+
+  &.hasValue {
+    border-color: var(--Primary-blue, #0C4AD5);
+    background: var(--Surface-02, #EDF5FD);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.comparisonDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 100;
+  background: #fff;
+  border: 1.5px solid var(--Primary-blue, #0C4AD5);
+  border-radius: var(--Border-Radius-m, 12px);
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(12, 74, 213, 0.1);
+}
+
+.comparisonDropdownItem {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: right;
+
+  &:hover {
+    background: var(--Surface-02, #EDF5FD);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--Border-disable-field, #C5D7F8);
+  }
+}
+
+.selectedDropdownItem {
+  background: var(--Surface-02, #EDF5FD);
+  color: var(--Primary-blue, #0C4AD5);
+}
+
 /* Campaign Type Selection Styles */
 .campaignTypeWrapper {
   display: flex;

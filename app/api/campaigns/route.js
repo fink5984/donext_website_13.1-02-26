@@ -123,7 +123,8 @@ export async function POST(request) {
                 currency: data.currency || null,
                 campaignType: data.campaign_type || 'community',
                 hasOperators: data.has_operators === 'true',
-                isEvent: data.is_event === 'true'
+                isEvent: data.is_event === 'true',
+                comparisonCampaignId: data.comparison_campaign_id ? parseInt(data.comparison_campaign_id) : null
             },
             include: {
                 client: true,
@@ -356,6 +357,7 @@ function mapCampaignToSnakeCase(campaign) {
         questionnaire_type: campaign.questionnaireType,
         campaign_type: campaign.campaignType,
         has_operators: campaign.hasOperators,
-        is_event: campaign.isEvent
+        is_event: campaign.isEvent,
+        comparison_campaign_id: campaign.comparisonCampaignId
     };
 }
