@@ -809,35 +809,38 @@ async function addDonation({
         displayTotalAmount = totalAmount;
     }
 
-    // שליחת אירוע Pusher לעדכון מיידי של הדפים
-    try {
-        const key = process.env.NEXT_PUBLIC_PUSHER_KEY || process.env.PUSHER_KEY;
-        const secret = process.env.PUSHER_SECRET;
-        const appId = process.env.PUSHER_APP_ID;
-        const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || process.env.PUSHER_CLUSTER || 'eu';
+    // שליחת אירועי Pusher לעדכון מיידי של הדפים
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY || process.env.PUSHER_KEY;
+    const secret = process.env.PUSHER_SECRET;
+    const appId = process.env.PUSHER_APP_ID;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || process.env.PUSHER_CLUSTER || 'eu';
 
-        if (key && secret && appId) {
-            const Pusher = (await import('pusher')).default;
-            const pusher = new Pusher({ appId, key, secret, cluster, useTLS: true });
-            
-            // שליחת אירוע למסך הציבורי
-            await pusher.trigger(`donation-screen.${campaignIdInt}`, 'DonationScreen', { 
-                donor, 
-                donation,
-                skip: { skip: false } 
-            });
-            
-            // שליחת אירוע לדפי הניהול
+    if (key && secret && appId) {
+        const Pusher = (await import('pusher')).default;
+        const pusher = new Pusher({ appId, key, secret, cluster, useTLS: true });
+
+        // אירוע לדפי הניהול — חייב לרוץ תמיד
+        try {
             await pusher.trigger(`campaign.${campaignIdInt}`, 'donation-updated', {
                 donationId: donation.id,
                 donorId: donor.id,
                 campaignId: campaignIdInt,
                 action: existingDonation ? 'updated' : 'created'
             });
+        } catch (e) {
+            console.error('Pusher donation-updated failed:', e);
         }
-    } catch (pushError) {
-        console.error('Pusher notification failed:', pushError);
-        // ממשיכים גם אם Pusher נכשל
+
+        // אירוע למסך הציבורי — נכשל בנפרד
+        try {
+            await pusher.trigger(`donation-screen.${campaignIdInt}`, 'DonationScreen', {
+                donor,
+                donation,
+                skip: { skip: false }
+            });
+        } catch (e) {
+            console.error('Pusher DonationScreen failed:', e);
+        }
     }
 
     const response = NextResponse.json({
