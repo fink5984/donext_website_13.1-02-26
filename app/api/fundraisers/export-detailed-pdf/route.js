@@ -12,6 +12,14 @@ export async function POST(request) {
             );
         }
 
+        // שליפת סוג הקמפיין לחישוב התחייבויות
+        const campaign = campaignId ? await prisma.campaign.findUnique({
+            where: { id: campaignId },
+            select: { donationType: true, comparisonCampaignId: true }
+        }) : null;
+        const isMonthlyCampaign = campaign?.donationType === 'monthly';
+        const comparisonCampaignId = campaign?.comparisonCampaignId || null;
+
         // שליפת כל המתרימים עם התורמים שלהם בקריאה אחת - רק תורמים פעילים
         const fundraisers = await prisma.fundraiser.findMany({
             where: {
@@ -51,7 +59,9 @@ export async function POST(request) {
                             },
                             select: {
                                 monthlyAmount: true,
-                                numberOfPayments: true
+                                numberOfPayments: true,
+                                paymentMethod: true,
+                                isUnlimited: true
                             }
                         }
                     }
@@ -59,13 +69,51 @@ export async function POST(request) {
             }
         });
 
+        // בניית מפת תרומות קודמות (personId -> סכום)
+        let previousMap = {};
+        if (comparisonCampaignId) {
+            const allPersonIds = fundraisers.flatMap(f => f.donors.map(d => d.personId).filter(Boolean));
+            if (allPersonIds.length > 0) {
+                const compCampaign = await prisma.campaign.findUnique({
+                    where: { id: comparisonCampaignId },
+                    select: { donationType: true }
+                });
+                const isCompMonthly = compCampaign?.donationType === 'monthly';
+                const compDonors = await prisma.donor.findMany({
+                    where: { campaignId: comparisonCampaignId, personId: { in: allPersonIds } },
+                    select: {
+                        personId: true,
+                        donations: {
+                            where: { deleted_at: null },
+                            select: { monthlyAmount: true, numberOfPayments: true, isUnlimited: true }
+                        }
+                    }
+                });
+                for (const cd of compDonors) {
+                    const total = (cd.donations || []).reduce((sum, d) => {
+                        const monthly = Number(d.monthlyAmount) || 0;
+                        if (isCompMonthly || d.isUnlimited) return sum + monthly;
+                        return sum + monthly * (Number(d.numberOfPayments) || 0);
+                    }, 0);
+                    if (cd.personId) previousMap[cd.personId] = total;
+                }
+            }
+        }
+
         // עיבוד הנתונים לפורמט נוח
         const processedData = fundraisers.map(fundraiser => {
             const donors = fundraiser.donors.map(donor => {
                 const currentDonation = donor.donations.reduce(
-                    (sum, d) => sum + Number(d.monthlyAmount || 0) * (d.numberOfPayments || 1), 
+                    (sum, d) => d.paymentMethod === 'COMMITMENT' ? sum : sum + Number(d.monthlyAmount || 0) * (d.numberOfPayments || 1), 
                     0
                 );
+
+                const commitmentTotal = donor.donations.reduce((sum, d) => {
+                    if (d.paymentMethod !== 'COMMITMENT') return sum;
+                    const monthlyAmount = Number(d.monthlyAmount || 0);
+                    if (isMonthlyCampaign || d.isUnlimited) return sum + monthlyAmount;
+                    return sum + monthlyAmount * (Number(d.numberOfPayments) || 0);
+                }, 0);
                 
                 return {
                     donorId: donor.id,
@@ -78,6 +126,8 @@ export async function POST(request) {
                     city: donor.person?.city?.name || '',
                     expectedDonation: Number(donor.expected || 0),
                     currentDonation,
+                    commitmentTotal,
+                    previousDonation: previousMap[donor.personId] || 0,
                     trafficLightColor: donor.trafficLightColor || null
                 };
             });
@@ -85,6 +135,7 @@ export async function POST(request) {
             // חישוב סכומים
             const expectedSum = donors.reduce((sum, d) => sum + d.expectedDonation, 0);
             const actualDonationSum = donors.reduce((sum, d) => sum + d.currentDonation, 0);
+            const commitmentSum = donors.reduce((sum, d) => sum + d.commitmentTotal, 0);
 
             return {
                 id: fundraiser.id,
@@ -92,6 +143,8 @@ export async function POST(request) {
                 last_name: fundraiser.person?.lastName || '',
                 expected_sum: expectedSum,
                 actual_donation_sum: actualDonationSum,
+                commitment_sum: commitmentSum,
+                has_previous_donations: comparisonCampaignId !== null,
                 donors_count: donors.length,
                 actual_donors_count: donors.filter(d => d.currentDonation > 0).length,
                 donors

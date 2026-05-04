@@ -597,6 +597,11 @@ export async function exportDetailedFundraisersPdf({ fundraiserIds, campaignId, 
 function calculateFundraiserStats(fundraiser, donors, currencySymbol) {
     const totalExpected = fundraiser.expected_sum || 0;
     const totalActual = fundraiser.actual_donation_sum || 0;
+    const totalCommitment = fundraiser.commitment_sum || 0;
+    const hasPreviousDonations = fundraiser.has_previous_donations || false;
+    const totalPrevious = hasPreviousDonations
+        ? donors.reduce((sum, d) => sum + (d.previousDonation || 0), 0)
+        : 0;
     const totalDonors = donors.length;
     const actualDonors = fundraiser.actual_donors_count || 0;
 
@@ -619,6 +624,9 @@ function calculateFundraiserStats(fundraiser, donors, currencySymbol) {
     return {
         totalExpected,
         totalActual,
+        totalCommitment,
+        hasPreviousDonations,
+        totalPrevious,
         totalDonors,
         actualDonors,
         trafficCounts,
@@ -635,6 +643,8 @@ function createFundraiserPageHTML(fundraiser, donors, stats, currencySymbol, isF
         const city = donor.city || '-';
         const expectedDonation = donor.expectedDonation || 0;
         const currentDonation = donor.currentDonation || 0;
+        const commitmentTotal = donor.commitmentTotal || 0;
+        const previousDonation = donor.previousDonation || 0;
         const trafficColor = donor.trafficLightColor || 'gray';
         
         const colorMap = {
@@ -662,6 +672,8 @@ function createFundraiserPageHTML(fundraiser, donors, stats, currencySymbol, isF
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${city}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: left;">${Number(expectedDonation).toLocaleString()} ${currencySymbol}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: left;">${Number(currentDonation).toLocaleString()} ${currencySymbol}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: left;">${commitmentTotal > 0 ? `${Number(commitmentTotal).toLocaleString()} ${currencySymbol}` : '-'}</td>
+                ${stats.hasPreviousDonations ? `<td style="border: 1px solid #ddd; padding: 8px; text-align: left;">${previousDonation > 0 ? `${Number(previousDonation).toLocaleString()} ${currencySymbol}` : '-'}</td>` : ''}
             </tr>
         `;
     }).join('');
@@ -677,13 +689,20 @@ function createFundraiserPageHTML(fundraiser, donors, stats, currencySymbol, isF
                 <!-- סיכום סטטיסטי (רק בעמוד הראשון) -->
                 <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
                     <h2 style="font-size: 20px; margin-bottom: 15px; color: #0C4AD5;">סיכום כללי</h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                         <div style="padding: 10px;">
                             <strong>צפי התרומות הכולל:</strong> ${Number(stats.totalExpected).toLocaleString()} ${currencySymbol}
                         </div>
                         <div style="padding: 10px;">
                             <strong>תרומות בפועל:</strong> ${Number(stats.totalActual).toLocaleString()} ${currencySymbol}
                         </div>
+                        <div style="padding: 10px;">
+                            <strong>התחייבויות:</strong> ${Number(stats.totalCommitment).toLocaleString()} ${currencySymbol}
+                        </div>
+                        ${stats.hasPreviousDonations ? `
+                        <div style="padding: 10px;">
+                            <strong>תרומה קודמת:</strong> ${Number(stats.totalPrevious).toLocaleString()} ${currencySymbol}
+                        </div>` : ''}
                         <div style="padding: 10px;">
                             <strong>תורמים משויכים:</strong> ${stats.totalDonors}
                         </div>
@@ -739,7 +758,9 @@ function createFundraiserPageHTML(fundraiser, donors, stats, currencySymbol, isF
                             <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">נייד</th>
                             <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">עיר</th>
                             <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">צפי תרומה</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">תרומה בפועל</th>
+                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">סך תרומה</th>
+                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">התחייבויות</th>
+                            ${stats.hasPreviousDonations ? `<th style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">תרומה קודמת</th>` : ''}
                         </tr>
                     </thead>
                     <tbody>

@@ -24,6 +24,13 @@ export async function POST(request) {
 
         const startTime = Date.now();
 
+        // שליפת סוג הקמפיין לחישוב התחייבויות
+        const campaign = campaignId ? await prisma.campaign.findUnique({
+            where: { id: campaignId },
+            select: { donationType: true }
+        }) : null;
+        const isMonthlyCampaign = campaign?.donationType === 'monthly';
+
         // שליפת נתונים - רק תורמים פעילים
         const fundraisers = await prisma.fundraiser.findMany({
             where: {
@@ -63,7 +70,9 @@ export async function POST(request) {
                             },
                             select: {
                                 monthlyAmount: true,
-                                numberOfPayments: true
+                                numberOfPayments: true,
+                                paymentMethod: true,
+                                isUnlimited: true
                             }
                         }
                     }
@@ -85,9 +94,16 @@ export async function POST(request) {
             // עיבוד נתונים
             const processedDonors = donors.map(donor => {
                 const currentDonation = donor.donations.reduce(
-                    (sum, d) => sum + Number(d.monthlyAmount || 0) * (d.numberOfPayments || 1),
+                    (sum, d) => d.paymentMethod === 'COMMITMENT' ? sum : sum + Number(d.monthlyAmount || 0) * (d.numberOfPayments || 1),
                     0
                 );
+
+                const commitmentTotal = donor.donations.reduce((sum, d) => {
+                    if (d.paymentMethod !== 'COMMITMENT') return sum;
+                    const monthlyAmount = Number(d.monthlyAmount || 0);
+                    if (isMonthlyCampaign || d.isUnlimited) return sum + monthlyAmount;
+                    return sum + monthlyAmount * (Number(d.numberOfPayments) || 0);
+                }, 0);
                 
                 // Debug log
                 if (i === 0 && donors.indexOf(donor) < 2) {
@@ -103,6 +119,7 @@ export async function POST(request) {
                     city: donor.person?.city?.name || '-',
                     expectedDonation: Number(donor.expected || 0),
                     currentDonation,
+                    commitmentTotal,
                     trafficLightColor: donor.trafficLightColor || 'gray'
                 };
             });
@@ -148,7 +165,8 @@ export async function POST(request) {
                     { text: 'נייד', style: 'tableHeader', alignment: 'right' },
                     { text: 'עיר', style: 'tableHeader', alignment: 'right' },
                     { text: 'צפי', style: 'tableHeader', alignment: 'right' },
-                    { text: 'בפועל', style: 'tableHeader', alignment: 'right' }
+                    { text: 'סך תרומה', style: 'tableHeader', alignment: 'right' },
+                    { text: 'התחייבויות', style: 'tableHeader', alignment: 'right' }
                 ]
             ];
 
@@ -164,14 +182,15 @@ export async function POST(request) {
                     { text: donor.main_mobile, alignment: 'left' },
                     { text: donor.city, alignment: 'right' },
                     { text: `${donor.expectedDonation.toLocaleString()} ${currencySymbol}`, alignment: 'right' },
-                    { text: `${donor.currentDonation.toLocaleString()} ${currencySymbol}`, alignment: 'right' }
+                    { text: `${donor.currentDonation.toLocaleString()} ${currencySymbol}`, alignment: 'right' },
+                    { text: donor.commitmentTotal > 0 ? `${donor.commitmentTotal.toLocaleString()} ${currencySymbol}` : '-', alignment: 'right' }
                 ]);
             });
 
             content.push({
                 table: {
                     headerRows: 1,
-                    widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
+                    widths: ['auto', '*', '*', 'auto', 'auto', 'auto', 'auto'],
                     body: tableBody
                 },
                 layout: 'lightHorizontalLines'

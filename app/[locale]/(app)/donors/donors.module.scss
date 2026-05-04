@@ -1567,6 +1567,10 @@
                                     color: var(--Text-disable-Text, #C5D7F8);
                                 }
 
+                                .clickableDonorName {
+                                    color: var(--Text-disable-Text, #C5D7F8);
+                                }
+
                                 .actual {
                                     color: var(--Text-disable-Text, #C5D7F8);
                                     background: var(--Bg-Button-hover-2, #EDF5FD);
@@ -1580,6 +1584,10 @@
 
                                 &:hover {
                                     .name {
+                                        color: var(--Text-disable-Text, #C5D7F8);
+                                    }
+
+                                    .clickableDonorName {
                                         color: var(--Text-disable-Text, #C5D7F8);
                                     }
 
