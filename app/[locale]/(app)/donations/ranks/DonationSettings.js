@@ -32,6 +32,7 @@ function DonationSettings({ campaignId }) {
     const [defaultHokMonths, setDefaultHokMonths] = useState(12);
     const [customMonths, setCustomMonths] = useState('');
     const [isCustom, setIsCustom] = useState(false);
+    const [isUnlimited, setIsUnlimited] = useState(false);
 
     // הגדרות מסך
     const [lowDonationDisplay, setLowDonationDisplay] = useState('HIDE');
@@ -58,12 +59,20 @@ function DonationSettings({ campaignId }) {
     // עדכון defaultHokMonths מה-campaign שכבר נטען ב-RootStore
     useEffect(() => {
         if (campaign?.defaultHokMonths !== undefined) {
-            setDefaultHokMonths(campaign.defaultHokMonths);
-            // בדיקה אם זה מספר מותאם אישית (לא 12, 24, או 36)
-            const isStandardValue = [12, 24, 36].includes(campaign.defaultHokMonths);
-            if (!isStandardValue) {
-                setIsCustom(true);
-                setCustomMonths(campaign.defaultHokMonths.toString());
+            if (campaign.defaultHokMonths === 0) {
+                setIsUnlimited(true);
+                setDefaultHokMonths(0);
+                setIsCustom(false);
+                setCustomMonths('');
+            } else {
+                setDefaultHokMonths(campaign.defaultHokMonths || 12);
+                setIsUnlimited(false);
+                // בדיקה אם זה מספר מותאם אישית (לא 12, 24, או 36)
+                const isStandardValue = [12, 24, 36].includes(campaign.defaultHokMonths);
+                if (!isStandardValue && campaign.defaultHokMonths) {
+                    setIsCustom(true);
+                    setCustomMonths(campaign.defaultHokMonths.toString());
+                }
             }
         }
     }, [campaign]);
@@ -189,12 +198,22 @@ function DonationSettings({ campaignId }) {
     function handleHokMonthsChange(months) {
         setDefaultHokMonths(months);
         setIsCustom(false);
+        setIsUnlimited(false);
         setCustomMonths('');
         saveDefaultHokMonths(months);
     }
 
+    function handleUnlimitedClick() {
+        setIsUnlimited(true);
+        setIsCustom(false);
+        setCustomMonths('');
+        setDefaultHokMonths(0);
+        saveDefaultHokMonths(0);
+    }
+
     function handleCustomMonthsClick() {
         setIsCustom(true);
+        setIsUnlimited(false);
         if (customMonths) {
             const months = parseInt(customMonths);
             if (!isNaN(months) && months > 0) {
@@ -294,26 +313,35 @@ function DonationSettings({ campaignId }) {
                         </div>
                         <div className={styles.optionsRow}>
                             <button
-                                className={`${styles.optionButton} ${defaultHokMonths === 12 && !isCustom ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
+                                className={`${styles.optionButton} ${defaultHokMonths === 12 && !isCustom && !isUnlimited ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
                                 onClick={() => handleHokMonthsChange(12)}
                                 disabled={savingHokMonths}
                             >
                                 {savingHokMonths && defaultHokMonths === 12 ? t('saving') : t('oneYear')}
                             </button>
                             <button
-                                className={`${styles.optionButton} ${defaultHokMonths === 24 && !isCustom ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
+                                className={`${styles.optionButton} ${defaultHokMonths === 24 && !isCustom && !isUnlimited ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
                                 onClick={() => handleHokMonthsChange(24)}
                                 disabled={savingHokMonths}
                             >
                                 {savingHokMonths && defaultHokMonths === 24 ? t('saving') : t('twoYears')}
                             </button>
                             <button
-                                className={`${styles.optionButton} ${defaultHokMonths === 36 && !isCustom ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
+                                className={`${styles.optionButton} ${defaultHokMonths === 36 && !isCustom && !isUnlimited ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
                                 onClick={() => handleHokMonthsChange(36)}
                                 disabled={savingHokMonths}
                             >
                                 {savingHokMonths && defaultHokMonths === 36 ? t('saving') : t('threeYears')}
                             </button>
+                            {(campaign?.donationType === 'monthly' || campaign?.donation_type === 'monthly') && (
+                                <button
+                                    className={`${styles.optionButton} ${isUnlimited ? styles.active : ''} ${savingHokMonths ? styles.disabled : ''}`}
+                                    onClick={handleUnlimitedClick}
+                                    disabled={savingHokMonths}
+                                >
+                                    {savingHokMonths && isUnlimited ? t('saving') : t('noLimit')}
+                                </button>
+                            )}
                             <div className={`${styles.customOption} ${isCustom ? styles.active : ''}`}>
                                 <button
                                     className={`${styles.optionButton} ${styles.customButton} ${savingHokMonths ? styles.disabled : ''}`}

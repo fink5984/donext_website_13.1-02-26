@@ -254,10 +254,10 @@ class DonorsStore {
   async fetchAssignableDonors() {
     this.loadingAssignableDonors = true;
     try {
-        // Use empty filters to get ALL campaign donors, regardless of current search/filters
-        const url = this.buildDonorsUrl({ noLimit: true, overrideFilters: {} });
+        // Use current filters (e.g. synagogue) but no pagination limit
+        const url = this.buildDonorsUrl({ noLimit: true });
         console.log('🏛️ fetchAssignableDonors URL:', url);
-        console.log('🏛️ Current filters (ignored for assignable):', JSON.stringify(this.filters));
+        console.log('🏛️ Current filters:', JSON.stringify(this.filters));
         const res = await fetchWithAuth(url);
         const data = await res.json();
         const mappedDonors = (data.data || []).map(d => this.mapDonorFromApi(d));

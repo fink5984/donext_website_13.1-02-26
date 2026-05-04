@@ -144,8 +144,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         customAmount: donation ? (donation.monthlyAmount ? donation.monthlyAmount.toString() : '') : '',
         numberOfPayments: donation
             ? donation.numberOfPayments
-            : (campaign?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1)),
-        isUnlimited: donation ? donation.isUnlimited : defaultIsUnlimited,
+            : (campaign?.defaultHokMonths === 0 ? null : (campaign?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1))),
+        isUnlimited: donation ? donation.isUnlimited : (isMonthlyCampaign && campaign?.defaultHokMonths === 0),
         paymentMethod: donation ? mapPaymentMethodForDisplay(donation.paymentMethod) || null : null,
         hasPaymentMethod: donation ? donation.hasPaymentMethod : false,
         note: donation ? donation.note || '' : '',
@@ -211,8 +211,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         setFormData({
             selectedAmount: null,
             customAmount: '',
-            numberOfPayments: (campaign?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1)),
-            isUnlimited: defaultIsUnlimited,
+            numberOfPayments: (campaign?.defaultHokMonths === 0 ? null : (campaign?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1))),
+            isUnlimited: (isMonthlyCampaign && campaign?.defaultHokMonths === 0),
             hasPaymentMethod: false,
 
             paymentMethod: null,

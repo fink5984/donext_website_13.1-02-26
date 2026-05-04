@@ -33,6 +33,48 @@ export async function exportToPdf({ columns, data, fileName }) {
     await exportSinglePdf({ columns, data, fileName });
 }
 
+/**
+ * ייצוא PDF דרך שרת - עברית תקינה, מהיר, לא חוסם UI
+ */
+export async function exportServerPdf({ columns, data, fileName, currencySymbol = '₪' }) {
+    if (!data || data.length === 0) {
+        alert('אין נתונים לייצוא');
+        return;
+    }
+
+    const loadingEl = document.createElement('div');
+    loadingEl.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px 40px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;direction:rtl;font-family:Arial,sans-serif;text-align:center;`;
+    loadingEl.innerHTML = `יוצר PDF...<br><span style="font-size:13px;color:#666">אנא המתן</span>`;
+    document.body.appendChild(loadingEl);
+
+    try {
+        const fetchWithAuth = (await import('@/app/utils/fetchWithAuth')).default;
+        const response = await fetchWithAuth('/api/donors/export-pdf-server', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows: data, columns, fileName, currencySymbol })
+        });
+
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('❌ [Server PDF] שגיאה:', error);
+        alert('שגיאה ביצירת ה-PDF. מנסה בשיטה חלופית...');
+        await exportSinglePdf({ columns, data, fileName });
+    } finally {
+        if (document.body.contains(loadingEl)) document.body.removeChild(loadingEl);
+    }
+}
+
 // פונקציה פנימית לייצוא PDF בודד - גרסה מהירה עם jspdf-autotable
 async function exportSinglePdf({ columns, data, fileName }) {
     try {

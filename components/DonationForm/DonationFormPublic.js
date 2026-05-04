@@ -95,7 +95,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     
                     // Set default payments based on campaign settings (defaultHokMonths) or campaign type
                     const isMonthlyCampaign = campaignData?.donationType === 'monthly';
-                    const defaultMonths = campaignData?.defaultHokMonths || 12;
+                    const isDefaultUnlimited = isMonthlyCampaign && campaignData?.defaultHokMonths === 0;
+                    const defaultMonths = campaignData?.defaultHokMonths ?? 12;
                     
                     // Check if initialAmount matches any of the donation ranks
                     const ranks = publicStatsData.data?.ranks || [];
@@ -109,7 +110,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     
                     setFormData(prev => ({
                         ...prev,
-                        numberOfPayments: isMonthlyCampaign ? defaultMonths : 1,
+                        numberOfPayments: isMonthlyCampaign ? (isDefaultUnlimited ? null : defaultMonths) : 1,
+                        isUnlimited: isDefaultUnlimited,
                         selectedAmount: matchedAmount
                     }));
                     
@@ -157,8 +159,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     }, [isOpen, campaignId, initialFundraiserId, initialAmount]);
 
     const isMonthlyCampaign = campaign?.donationType === 'monthly';
-    const defaultNumberOfPayments = isMonthlyCampaign ? (campaign?.defaultHokMonths || 12) : 1;
-    const defaultIsUnlimited = false;
+    const isDefaultUnlimitedCampaign = isMonthlyCampaign && campaign?.defaultHokMonths === 0;
+    const defaultNumberOfPayments = isMonthlyCampaign && !isDefaultUnlimitedCampaign ? (campaign?.defaultHokMonths ?? 12) : 1;
+    const defaultIsUnlimited = isDefaultUnlimitedCampaign;
 
     const handleAmountSelect = (amount) => {
         setFormData(prev => ({
@@ -377,8 +380,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                 setFormData({
                     selectedAmount: null,
                     customAmount: '',
-                    numberOfPayments: isMonthlyCampaign ? (campaign?.defaultHokMonths || 12) : 1,
-                    isUnlimited: false,
+                    numberOfPayments: isMonthlyCampaign ? (isDefaultUnlimitedCampaign ? null : (campaign?.defaultHokMonths ?? 12)) : 1,
+                    isUnlimited: isDefaultUnlimitedCampaign,
                     paymentMethod: null,
                     note: '',
                     isAnonymous: false

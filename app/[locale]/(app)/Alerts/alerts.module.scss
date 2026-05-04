@@ -479,6 +479,27 @@
             }
         }
 
+        .donorsListLoading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            width: 100%;
+
+            .spinner {
+                width: 36px;
+                height: 36px;
+                border: 3px solid var(--Bg-Button-disable);
+                border-top-color: var(--Text-Default);
+                border-radius: 50%;
+                animation: spinnerRotate 0.7s linear infinite;
+            }
+        }
+
+        @keyframes spinnerRotate {
+            to { transform: rotate(360deg); }
+        }
+
         .assignedDonors {
             display: flex;
             flex-direction: column;

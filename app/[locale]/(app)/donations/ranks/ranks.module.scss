@@ -567,6 +567,7 @@
                             transition: all 0.3s ease;
                             width: 100px;
                             height: 40px;
+                            white-space: nowrap;
 
                             &:hover:not(.active) {
                                 border: 1px solid var(--Border-Default, #6E99EC);

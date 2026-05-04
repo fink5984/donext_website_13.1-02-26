@@ -382,7 +382,7 @@ export async function GET(request, { params }) {
                     donationType: campaign.donationType,
                     currency: campaign.currency,
                     questionnaireType: campaign.questionnaireType,
-                    defaultHokMonths: campaign.defaultHokMonths || 12,
+                    defaultHokMonths: campaign.defaultHokMonths ?? 12,
                     paymentMethods: campaign.paymentMethods || {},
                     creditCardProvider: campaign.creditCardProvider || null
                 },

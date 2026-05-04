@@ -45,7 +45,7 @@ import { StoreContext } from "@/stores/StoreContext";
 import { useContext } from "react";
 import { formStore } from "@/app/stores/formStore";
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
-import { exportToPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
+import { exportServerPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
 import { Table } from '@/app/components/Table/Table';
 import { FormattedCurrency, useCurrencySymbol } from '@/app/components/CurrencySymbol';
 import { usePageTitle } from '@/app/hooks/usePageTitle';
@@ -501,7 +501,7 @@ export default observer(function DonorsPage() {
             ];
             const fileName = campaign?.name ? `DoNext - ${t('campaign')} ${campaign.name} - ${t('donors')}` : `DoNext - ${t('donors')}`;
             if (dialogType === "pdf") {
-                await exportToPdf({ columns: pdfColumns, data: processedData, fileName });
+                await exportServerPdf({ columns: pdfColumns, data: processedData, fileName, currencySymbol });
             } else if (dialogType === "csv") {
                 exportToCsv({ columns: csvAndPrintColumns, data: processedData, fileName });
             } else if (dialogType === "print") {

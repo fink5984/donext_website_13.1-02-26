@@ -53,6 +53,9 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
     const [loadingStates, setLoadingStates] = useState({});
     const originalFiltersRef = useRef(null);
     const allDonorsRef = useRef([]); // Store all donors (unfiltered) for assigned donors section
+    const isInitialLoadRef = useRef(true); // Track whether it's the first load vs a filter reload
+    const [openSynagogue, setOpenSynagogue] = useState(false);
+    const [openSort, setOpenSort] = useState(false);
 
     const donors = store.donorsStore.assignableDonors; // Use the new dedicated state
     const fundraisers = store.fundraisersStore.fundraisers;
@@ -105,6 +108,8 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
     // This effect handles data fetching and state reset when the modal opens
     useEffect(() => {
         if (open) {
+            // Reset initial load flag each time dialog opens
+            isInitialLoadRef.current = true;
             // Save original filters - deep copy
             originalFiltersRef.current = JSON.parse(JSON.stringify(store.donorsStore.filters));
             
@@ -119,6 +124,7 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                 // Save all donors (unfiltered) for assigned donors section
                 allDonorsRef.current = [...store.donorsStore.assignableDonors];
                 store.donorsStore.fetchSynagogues();
+                isInitialLoadRef.current = false;
             };
 
             loadData();
@@ -385,7 +391,7 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                         <div className={`${styles.modalMatchingContent} ${styles.modalContent}`}>
 
                             {/* Initial loading state only */}
-                            {((store.donorsStore.loadingAssignableDonors || store.fundraisersStore.loadingFundraisers) || !currentFundraiser) ? (
+                            {((isInitialLoadRef.current && store.donorsStore.loadingAssignableDonors) || store.fundraisersStore.loadingFundraisers || !currentFundraiser) ? (
                                 <div className={styles.loadingState}>
                                     <div>{t('loadingData')}</div>
                                 </div>
@@ -442,24 +448,29 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                                                     value={store.donorsStore.filters.synagogue || 'all'}
                                                     onValueChange={(value) => handleSynagogueChange(value)}
                                                     disabled={store.donorsStore.loadingSynagogues}
+                                                    open={openSynagogue}
+                                                    onOpenChange={(o) => { setOpenSynagogue(o); if (o) setOpenSort(false); }}
                                                 >
                                                     <SelectTrigger className="selectTrigger selectTriggerSynagogue">
                                                         <SelectValue placeholder={t('selectSynagogue')} />
                                                     </SelectTrigger>
                                                     <SelectContent className="selectGroup selectGroupSynagogue">
                                                         <SelectGroup>
-                                                            <SelectItem key={"all"} value="all">{t('all')}</SelectItem>
+                                                            <SelectItem className="selectItem" key={"all"} value="all">{t('all')}</SelectItem>
                                                             {store.donorsStore.synagogues.map((synagogue) => (
-                                                                <SelectItem key={synagogue} value={synagogue}>{synagogue}</SelectItem>
+                                                                <SelectItem className="selectItem" key={synagogue} value={synagogue}>{synagogue}</SelectItem>
                                                             ))}
-                                                            <SelectItem key={"no-synagogue"} value={"no-synagogue"}>{t('noSynagogue')}</SelectItem>
+                                                            <SelectItem className="selectItem" key={"no-synagogue"} value={"no-synagogue"}>{t('noSynagogue')}</SelectItem>
                                                         </SelectGroup>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
 
                                             <div className={`${styles.sortWrapper} small-button-1`}>
-                                                <Select value={sortOrder} onValueChange={handleSortChange}>
+                                                <Select value={sortOrder} onValueChange={handleSortChange}
+                                                    open={openSort}
+                                                    onOpenChange={(o) => { setOpenSort(o); if (o) setOpenSynagogue(false); }}
+                                                >
                                                     <SelectTrigger className="selectTrigger selectTriggerDonors">
                                                         <SelectValue className="small-button-1">{getDisplayText(sortOrder)}</SelectValue>
                                                     </SelectTrigger>
@@ -476,6 +487,11 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                                         </div>
                                     </div>
                                     <div className={`${styles.assignedPeopleWrapper}`}>
+                                        {store.donorsStore.loadingAssignableDonors ? (
+                                            <div className={styles.donorsListLoading}>
+                                                <div className={styles.spinner} />
+                                            </div>
+                                        ) : (
                                         <div className={styles.peopleGrid}>
                                             {sortOrder === 'assigned' || sortOrder === 'unassigned' ? (
                                                 <>
@@ -504,6 +520,7 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                                                 ))
                                             )}
                                         </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className={styles.assignedBottom}>

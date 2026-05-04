@@ -19,7 +19,7 @@ const PaymentFrequency = ({
     
     // Check if there's a custom default ("other")
     const defaultHokMonths = campaign?.defaultHokMonths;
-    const hasCustomDefault = defaultHokMonths && ![12, 24, 36].includes(defaultHokMonths);
+    const hasCustomDefault = defaultHokMonths > 0 && ![12, 24, 36].includes(defaultHokMonths);
 
     const handleMonthsChange = (newMonths) => {
         if (newMonths >= 1) {

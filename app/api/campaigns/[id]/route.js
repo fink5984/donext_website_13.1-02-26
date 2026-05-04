@@ -105,7 +105,7 @@ export async function PUT(request, { params }) {
             updateData.questionnaireStyleId = data.questionnaireStyleId ?? data.questionnaire_style_id ?? null;
         }
         if (Object.prototype.hasOwnProperty.call(data, 'defaultHokMonths')) {
-            updateData.defaultHokMonths = data.defaultHokMonths ? parseInt(data.defaultHokMonths) : null;
+            updateData.defaultHokMonths = (data.defaultHokMonths !== null && data.defaultHokMonths !== undefined && data.defaultHokMonths !== '') ? parseInt(data.defaultHokMonths) : null;
         }
 
         const updatedCampaign = await prisma.campaign.update({

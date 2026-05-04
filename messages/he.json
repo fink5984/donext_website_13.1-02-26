@@ -1370,6 +1370,7 @@
     "oneYear": "שנה",
     "twoYears": "שנתיים",
     "threeYears": "3 שנים",
+    "noLimit": "ללא הגבלה",
     "other": "אחר",
     "months": "חודשים",
     "saving": "שומר..."
@@ -1576,7 +1577,7 @@
     "showReceipt": "הצג קבלה",
     "paymentMethod": "אמצעי תשלום",
     "payments": "תשלומים",
-    "unlimited": "ללא מגבלה",
+    "unlimited": "ללא הגבלה",
     "showNotes": "הצג הערות",
     "paymentMethods": {
       "CASH": "מזומן",
@@ -1638,7 +1639,7 @@
     "otherAmount": "סכום אחר",
     "forHowLong": "לכמה זמן?",
     "howManyPayments": "בכמה תשלומים?",
-    "unlimited": "ללא מגבלה",
+    "unlimited": "ללא הגבלה",
     "oneTimePayment": "תרומה חד פעמית",
     "year": "שנה",
     "twoYears": "שנתיים",
