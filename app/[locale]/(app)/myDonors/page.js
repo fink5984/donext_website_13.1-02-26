@@ -13,6 +13,7 @@ import DonationForm from "@/components/DonationForm/DonationForm";
 import { usePageTitle } from '@/app/hooks/usePageTitle';
 import AddEdit from '../AddEdit/AddEdit';
 import { formStore } from "@/app/stores/formStore";
+import Excel from '../Excel/Excel';
 
 export default observer(function MyDonorsPage() {
     const t = useTranslations('myDonors');
@@ -24,6 +25,7 @@ export default observer(function MyDonorsPage() {
     // משתמשים ישירות בסטור הריאקטיבי
     const [isDonationFormOpen, setIsDonationFormOpen] = useState(false);
     const [selectedDonor, setSelectedDonor] = useState(null);
+    const [isExcelOpen, setIsExcelOpen] = useState(false);
     const fundraiser = store.fundraisersStore.currentFundraiser;
     const campaign = store.campaign;
 
@@ -135,6 +137,10 @@ export default observer(function MyDonorsPage() {
         formStore.openAddForm('donor');
     }, []);
 
+    const handleOpenExcel = useCallback(() => {
+        setIsExcelOpen(true);
+    }, []);
+
     const handleFormSubmit = async (formData) => {
         // בקמפיין גיוס המונים - שייך אוטומטית למתרים הנוכחי
         const dataWithFundraiser = {
@@ -171,6 +177,17 @@ export default observer(function MyDonorsPage() {
                 onClose={() => formStore.closeForm()}
                 onSubmit={handleFormSubmit}
             />}
+            {isExcelOpen && isCrowdfunding && <Excel
+                open={isExcelOpen}
+                mode="donors"
+                fundraiserId={fundraiserId}
+                onClose={async () => {
+                    setIsExcelOpen(false);
+                    store.donorsStore.clearCache();
+                    await store.donorsStore.fetchDonors({ noLimit: true, forceRefresh: true });
+                    await store.donorsStore.fetchDonorsSummary();
+                }}
+            />}
             {isDonationFormOpen && (
                 <DonationForm
                     donor={selectedDonor}
@@ -204,6 +221,7 @@ export default observer(function MyDonorsPage() {
                         campaign={campaign}
                         isCrowdfunding={isCrowdfunding}
                         onAddDonor={handleOpenAddForm}
+                        onImportExcel={isCrowdfunding ? handleOpenExcel : undefined}
                     />
                     <TotalProgressBar expected={totalExpected} actual={totalActual} />
                 </div>

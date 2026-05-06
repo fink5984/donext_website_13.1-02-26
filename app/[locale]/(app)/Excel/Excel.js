@@ -18,7 +18,7 @@ import { useAppContext } from "@/app/components/AppContext";
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import { useTranslations } from 'next-intl';
 
-export default function Excel({ open, onClose, setDonors, mode = 'donors' }) {
+export default function Excel({ open, onClose, setDonors, mode = 'donors', fundraiserId }) {
     const { clientId, campaignId, stores } = useAppContext();
     const router = useRouter();
     const t = useTranslations('admin.excelUpload');
@@ -251,7 +251,7 @@ export default function Excel({ open, onClose, setDonors, mode = 'donors' }) {
                                             const donorsRes = await fetchWithAuth('/api/donors', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ campaignId, personIds: newPeopleIds }),
+                                                body: JSON.stringify({ campaignId, personIds: newPeopleIds, ...(fundraiserId ? { fundraiserId } : {}) }),
                                             });
 
                                             const donorsData = await donorsRes.json();
@@ -338,7 +338,7 @@ export default function Excel({ open, onClose, setDonors, mode = 'donors' }) {
 
                                             setIsOpen(false);
                                             if (onClose) onClose();
-                                            router.push('/donors');
+                                            if (!fundraiserId) router.push('/donors');
                                             } // close else (donor mode)
                                         } catch (e) {
                                             console.error('Error during import process:', e);

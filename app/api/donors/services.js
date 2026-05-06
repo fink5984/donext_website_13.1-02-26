@@ -596,6 +596,18 @@ async function createDonors(data) {
     const numericCampaignId = Number(campaignId);
     const numericPersonIds = personIds.map(Number);
 
+    // תיקון: ודא שכל ה-persons שמשויכים לקמפיין הזה מקבלים clientId נכון
+    const campaign = await prisma.campaign.findUnique({
+        where: { id: numericCampaignId },
+        select: { clientId: true }
+    });
+    if (campaign?.clientId) {
+        await prisma.person.updateMany({
+            where: { id: { in: numericPersonIds }, clientId: null },
+            data: { clientId: campaign.clientId }
+        });
+    }
+
     // שליפת תורמים קיימים — כולל לא פעילים
     const existingDonors = await prisma.donor.findMany({
         where: {

@@ -29,6 +29,19 @@ export async function POST(request, { params }) {
             );
         }
 
+        // Fetch campaign to get clientId
+        const campaign = await prisma.campaign.findUnique({
+            where: { id: parseInt(campaignId) },
+            select: { clientId: true }
+        });
+
+        if (!campaign) {
+            return NextResponse.json(
+                { success: false, error: 'Campaign not found' },
+                { status: 404 }
+            );
+        }
+
         let donorRecord;
 
         // If we have an existing donor ID from phone search, use it
@@ -53,26 +66,38 @@ export async function POST(request, { params }) {
                 });
             }
         } else {
-            // Create or find person first
-            let personRecord = await prisma.person.findFirst({
-                where: {
-                    firstName: donor.firstName,
-                    lastName: donor.lastName || '',
-                    OR: [
-                        { email: donor.email },
-                        { mainMobile: donor.phone }
-                    ].filter(Boolean)
-                }
-            });
+            // Create or find person first — only match by email/phone if provided
+            const matchConditions = [];
+            if (donor.email) matchConditions.push({ email: donor.email });
+            if (donor.phone) matchConditions.push({ mainMobile: donor.phone });
+
+            let personRecord = null;
+            if (matchConditions.length > 0) {
+                personRecord = await prisma.person.findFirst({
+                    where: {
+                        clientId: campaign.clientId,
+                        firstName: donor.firstName,
+                        lastName: donor.lastName || '',
+                        OR: matchConditions
+                    }
+                });
+            }
 
             if (!personRecord) {
                 personRecord = await prisma.person.create({
                     data: {
+                        clientId: campaign.clientId,
                         firstName: donor.firstName,
                         lastName: donor.lastName || '',
                         email: donor.email || null,
                         mainMobile: donor.phone || null
                     }
+                });
+            } else if (!personRecord.clientId) {
+                // תיקון: person קיים ללא clientId — נעדכן
+                personRecord = await prisma.person.update({
+                    where: { id: personRecord.id },
+                    data: { clientId: campaign.clientId }
                 });
             }
 

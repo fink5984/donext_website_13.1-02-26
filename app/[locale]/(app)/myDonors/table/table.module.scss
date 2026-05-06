@@ -307,51 +307,100 @@
             .tableRow,
             .tableHeader {
                 display: grid;
-                grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 26px 100fr 36px;
+                grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 60px 120fr 120fr 36px 20px 64px 100fr 36px;
                 padding-left: 23px !important;
                 
                 &.noInvitation {
-                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 26px 100fr 36px;
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 120fr 120fr 36px 20px 64px 100fr 36px;
                 }
 
                 &.noCommitment {
-                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 60px 120fr 120fr 36px 100fr 36px;
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 60px 120fr 120fr 36px 64px 100fr 36px;
                 }
 
                 &.noInvitation.noCommitment {
-                    grid-template-columns: 16px 24px 260fr 284fr 200fr 120fr 120fr 120fr 36px 100fr 36px;
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 120fr 120fr 36px 64px 100fr 36px;
+                }
+
+                &.withComparison {
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 60px 120fr 120fr 120fr 36px 20px 64px 100fr 36px;
+                }
+
+                &.withComparison.noInvitation {
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 120fr 120fr 120fr 36px 20px 64px 100fr 36px;
+                }
+
+                &.withComparison.noCommitment {
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 60px 120fr 120fr 120fr 36px 64px 100fr 36px;
+                }
+
+                &.withComparison.noInvitation.noCommitment {
+                    grid-template-columns: 16px 24px 260fr 210fr 150fr 120fr 120fr 120fr 120fr 36px 64px 100fr 36px;
                 }
 
                 @media (max-width: 1200px) {
-                    grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 24px 80fr 36px;
+                    grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 50px 100fr 100fr 36px 18px 56px 80fr 36px;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 24px 80fr 36px;
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 100fr 100fr 36px 18px 56px 80fr 36px;
                     }
 
                     &.noCommitment {
-                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 50px 100fr 100fr 36px 80fr 36px;
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 50px 100fr 100fr 36px 56px 80fr 36px;
                     }
 
                     &.noInvitation.noCommitment {
-                        grid-template-columns: 16px 24px 200fr 200fr 160fr 100fr 100fr 100fr 36px 80fr 36px;
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 100fr 100fr 36px 56px 80fr 36px;
+                    }
+
+                    &.withComparison {
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 50px 100fr 100fr 100fr 36px 18px 56px 80fr 36px;
+                    }
+
+                    &.withComparison.noInvitation {
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 100fr 100fr 100fr 36px 18px 56px 80fr 36px;
+                    }
+
+                    &.withComparison.noCommitment {
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 50px 100fr 100fr 100fr 36px 56px 80fr 36px;
+                    }
+
+                    &.withComparison.noInvitation.noCommitment {
+                        grid-template-columns: 16px 24px 200fr 150fr 120fr 100fr 100fr 100fr 100fr 36px 56px 80fr 36px;
                     }
                 }
 
                 @media (max-width: 1024px) {
-                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 22px 70fr 36px;
+                    grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 16px 20px 70fr 36px;
                     font-size: 12px;
                     
                     &.noInvitation {
-                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 22px 70fr 36px;
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 16px 20px 70fr 36px;
                     }
 
                     &.noCommitment {
-                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 50px 70fr 36px;
                     }
 
                     &.noInvitation.noCommitment {
-                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 70fr 36px;
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 36px 50px 70fr 36px;
+                    }
+
+                    &.withComparison {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 90fr 36px 16px 20px 70fr 36px;
+                    }
+
+                    &.withComparison.noInvitation {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 90fr 36px 16px 20px 70fr 36px;
+
+                    }
+
+                    &.withComparison.noCommitment {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 90fr 36px 50px 70fr 36px;
+                    }
+
+                    &.withComparison.noInvitation.noCommitment {
+                        grid-template-columns: 16px 24px 180fr 160fr 120fr 90fr 90fr 90fr 36px 50px 70fr 36px;
                     }
                 }
 
@@ -450,13 +499,14 @@
                         justify-content: center;
                     }
                 }
+
             }
 
             .tableBody {
                 display: flex;
                 flex-direction: column;
                 gap: var(--row-gap, var(--Spacing-Spacing-4));
-                direction: inherit;
+                direction: ltr;
                 border-bottom: 1px solid var(--Gray-Blue-60, #F6F9FC);
 
                 @media (max-width: 768px) {
@@ -480,6 +530,7 @@
                 .rowExpandWrapper {
                     display: flex;
                     flex-direction: column;
+                    direction: rtl;
                 }
 
                 .tableRow {
@@ -581,6 +632,46 @@
                         svg {
                             width: 16px;
                             height: 16px;
+                        }
+                    }
+
+                    .notesColumnCell {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        justify-self: center;
+                        height: 100%;
+
+                        .notesCell {
+                            display: flex;
+                            align-items: center;
+                            cursor: pointer;
+                        }
+
+                        .notesIcon {
+                            position: relative;
+                            display: flex;
+                            align-items: center;
+
+                            .unreadDot {
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 50%;
+                                background: var(--Brand-Primary-blue, #0C4AD5);
+                                position: absolute;
+                                top: -2px;
+                                right: -2px;
+                            }
+
+                            .overdueDot {
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 50%;
+                                background: var(--Alert-red, #FF4040);
+                                position: absolute;
+                                top: -2px;
+                                right: -2px;
+                            }
                         }
                     }
 

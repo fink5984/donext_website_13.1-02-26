@@ -112,6 +112,24 @@ export async function POST(request) {
             });
             const existingEmailMap = new Map(existingPeople.map(p => [p.email, p]));
 
+            // 1b. Batch check existing people by phone (for those not matched by email)
+            const phones = people
+                .filter(p => {
+                    const cleanEmail = typeof p.email === 'string' ? p.email.trim() : p.email;
+                    return !existingEmailMap.get(cleanEmail);
+                })
+                .map(p => (p.phone || p.mainMobile) != null ? String(p.phone || p.mainMobile).trim() : null)
+                .filter(Boolean);
+            const existingByPhone = phones.length > 0 ? await tx.person.findMany({
+                where: {
+                    mainMobile: { in: phones },
+                    clientId: parseInt(clientId),
+                    active: { not: false }
+                },
+                include: { city: true, street: true, country: true }
+            }) : [];
+            const existingPhoneMap = new Map(existingByPhone.map(p => [p.mainMobile, p]));
+
             // 2. Batch get/create cities
             const cityNames = [...new Set(people.filter(p => p.city).map(p => typeof p.city === 'string' ? p.city.trim() : p.city))];
             const existingCities = await tx.city.findMany({
@@ -284,7 +302,8 @@ export async function POST(request) {
             // First, separate existing people from new people
             for (const person of people) {
                 const cleanEmail = typeof person.email === 'string' ? person.email.trim() : person.email;
-                const existingPerson = existingEmailMap.get(cleanEmail);
+                const cleanPhone = (person.phone || person.mainMobile) != null ? String(person.phone || person.mainMobile).trim() : null;
+                const existingPerson = existingEmailMap.get(cleanEmail) || (cleanPhone ? existingPhoneMap.get(cleanPhone) : null);
                 if (existingPerson) {
                     newPeopleIds.push(existingPerson.id);
                     importedPeople.push(existingPerson);
@@ -316,13 +335,14 @@ export async function POST(request) {
             
             for (const person of people) {
                 const cleanEmail = typeof person.email === 'string' ? person.email.trim() : person.email;
+                const cleanPhone = (person.phone || person.mainMobile) != null ? String(person.phone || person.mainMobile).trim() : null;
                 const cleanCity = typeof person.city === 'string' ? person.city.trim() : person.city;
                 const cleanStreet = typeof person.street === 'string' ? person.street.trim() : person.street;
                 const cleanCountry = typeof person.country === 'string' ? person.country.trim() : person.country;
                 const cleanState = typeof person.state === 'string' ? person.state.trim() : person.state;
                 const cleanZipCode = person.zipCode != null ? String(person.zipCode).trim() : null;
 
-                const existingPerson = existingEmailMap.get(cleanEmail);
+                const existingPerson = existingEmailMap.get(cleanEmail) || (cleanPhone ? existingPhoneMap.get(cleanPhone) : null);
                 if (!existingPerson) {
                     // Get IDs from maps
                     const city = cityMap.get(cleanCity);
@@ -571,6 +591,24 @@ async function processSingleBatch(clientId, people, importId) {
         }) : [];
         const existingEmailMap = new Map(existingPeople.map(p => [p.email, p]));
 
+        // 1b. Batch check existing people by phone (for those not matched by email)
+        const phones = people
+            .filter(p => {
+                const cleanEmail = typeof p.email === 'string' ? p.email.trim() : p.email;
+                return !existingEmailMap.get(cleanEmail);
+            })
+            .map(p => (p.phone || p.mainMobile) != null ? String(p.phone || p.mainMobile).trim() : null)
+            .filter(Boolean);
+        const existingByPhone = phones.length > 0 ? await tx.person.findMany({
+            where: {
+                mainMobile: { in: phones },
+                clientId: parseInt(clientId),
+                active: { not: false }
+            },
+            select: { id: true, email: true, mainMobile: true }
+        }) : [];
+        const existingPhoneMap = new Map(existingByPhone.map(p => [p.mainMobile, p]));
+
         // 2. Pre-create all reference data in parallel
         const [cityMap, countryMap] = await Promise.all([
             createCitiesMap(tx, people),
@@ -583,7 +621,8 @@ async function processSingleBatch(clientId, people, importId) {
         // 3. Separate existing from new people
         for (const person of people) {
             const cleanEmail = typeof person.email === 'string' ? person.email.trim() : person.email;
-            const existingPerson = existingEmailMap.get(cleanEmail);
+            const cleanPhone = (person.phone || person.mainMobile) != null ? String(person.phone || person.mainMobile).trim() : null;
+            const existingPerson = existingEmailMap.get(cleanEmail) || (cleanPhone ? existingPhoneMap.get(cleanPhone) : null);
             if (existingPerson) {
                 newPeopleIds.push(existingPerson.id);
                 importedPeople.push({ id: existingPerson.id });
@@ -615,7 +654,8 @@ async function processSingleBatch(clientId, people, importId) {
         
         const newPeople = people.filter(person => {
             const cleanEmail = typeof person.email === 'string' ? person.email.trim() : person.email;
-            return !existingEmailMap.get(cleanEmail);
+            const cleanPhone = (person.phone || person.mainMobile) != null ? String(person.phone || person.mainMobile).trim() : null;
+            return !existingEmailMap.get(cleanEmail) && !(cleanPhone && existingPhoneMap.get(cleanPhone));
         });
         
         for (const person of newPeople) {

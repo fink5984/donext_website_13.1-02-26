@@ -223,7 +223,7 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
         });
     });
 
-    const [currentProblem, setCurrentProblem] = useState(campaignId ? 'campaignDuplicates' : 'accountDuplicates'); // מתחילים מבדיקת כפילויות מתאימה
+    const [currentProblem, setCurrentProblem] = useState('campaignDuplicates'); // מתחילים תמיד מבדיקת כפילויות קמפיין/חשבון
 
     const [filteredProblemOrder, setFilteredProblemOrder] = useState([]);
 
@@ -321,11 +321,11 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
         checkCampaignDuplicates();
     }, [campaignId]); // נקרא רק פעם אחת בטעינה
 
-    // בדיקת כפילויות מול החשבון (כשאין קמפיין)
+    // בדיקת כפילויות מול החשבון (אנשי קשר קיימים)
     useEffect(() => {
         const checkAccountDuplicates = async () => {
-            // רק כשאין קמפיין (דף אנשי קשר) ויש clientId
-            if (campaignId || !clientId || processedRows.length === 0) {
+            // מריצים תמיד כשיש clientId - גם אם יש campaignId
+            if (!clientId || processedRows.length === 0) {
                 setIsLoadingAccountDuplicates(false);
                 return;
             }
@@ -407,14 +407,18 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
             const handledDups = Object.keys(campaignDuplicateDecisions).length;
             
             if (totalDups === 0 || handledDups >= totalDups) {
-                // עבור לבעיה הראשונה מהקובץ
-                const firstFileProblem = initialProblemOrder[0];
-                if (firstFileProblem) {
-                    setCurrentProblem(firstFileProblem);
+                // עבור לבדיקת כפילויות חשבון תחילה (אנשי קשר קיימים)
+                if (!isLoadingAccountDuplicates) {
+                    const firstFileProblem = initialProblemOrder[0];
+                    if (firstFileProblem) {
+                        setCurrentProblem(firstFileProblem);
+                    }
+                } else {
+                    setCurrentProblem('accountDuplicates');
                 }
             }
         }
-    }, [currentProblem, isLoadingCampaignDuplicates, campaignDuplicates, campaignDuplicateDecisions, initialProblemOrder]);
+    }, [currentProblem, isLoadingCampaignDuplicates, campaignDuplicates, campaignDuplicateDecisions, isLoadingAccountDuplicates, initialProblemOrder]);
 
     // מעבר אוטומטי לבעיה הבאה כאשר כפילויות החשבון טופלו
     useEffect(() => {

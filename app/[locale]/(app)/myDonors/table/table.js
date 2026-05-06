@@ -21,6 +21,7 @@ import Check from "@/app/icons/check.svg";
 import Edit from "@/app/icons/edit.svg";
 import DropDown from "@/app/icons/dropDownSmall.svg";
 import CommitmentIcon from "@/app/icons/commitment.svg";
+import Note from "@/app/icons/note.svg";
 import AddEdit from '../../AddEdit/AddEdit';
 import DonorDonationsExpand from './DonorDonationsExpand';
 import NewDonor from "@/app/icons/newDonor.svg";
@@ -30,10 +31,11 @@ import { exportToPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
 import { useCurrencySymbol } from '@/app/components/CurrencySymbol';
 import { useTranslations, useLocale } from 'next-intl';
 
-export default function Table({ donors, searchTerm, onSearch, filters, setFilters, campaign, isCrowdfunding, onAddDonor }) {
+export default function Table({ donors, searchTerm, onSearch, filters, setFilters, campaign, isCrowdfunding, onAddDonor, onImportExcel }) {
     const t = useTranslations('myDonors');
     const locale = useLocale();
     const showInvitationColumn = campaign?.showInvitationColumn || false;
+    const hasComparisonCampaign = !!campaign?.comparison_campaign_id;
     const hasCommitments = useMemo(() => {
         return donors?.some(d => d.commitmentTotal > 0) || false;
     }, [donors]);
@@ -59,7 +61,15 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
         { label: t('actualDonation'), key: "actualDonation", sortable: true },
     ];
 
-    const activeColumns = showInvitationColumn ? columnsWithInvitation : columns;
+    const activeColumns = useMemo(() => {
+        const base = showInvitationColumn ? columnsWithInvitation : columns;
+        if (!hasComparisonCampaign) return base;
+        const insertBefore = 'expectedDonation';
+        const idx = base.findIndex(c => c.key === insertBefore);
+        const result = [...base];
+        result.splice(idx, 0, { label: t('previousDonation'), key: 'previousDonation', sortable: true });
+        return result;
+    }, [showInvitationColumn, hasComparisonCampaign]);
     
     const [sortConfig, setSortConfig] = useState({
         key: null,
@@ -115,6 +125,23 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
     const handleOpenEditForm = (donor) => {
         setEditingDonor(donor);
         setIsEditFormOpen(true);
+    };
+
+    const hasDonorOverdueNotes = (donorNotes) => {
+        if (!donorNotes || donorNotes.length === 0) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return donorNotes.some(n => {
+            if (!n.note || !n.followUpDate || n.noteCompleted) return false;
+            const followUp = new Date(n.followUpDate);
+            followUp.setHours(0, 0, 0, 0);
+            return followUp < today;
+        });
+    };
+
+    const hasDonorActiveNotes = (donorNotes) => {
+        if (!donorNotes || donorNotes.length === 0) return false;
+        return donorNotes.some(n => n.note && n.followUpDate && !n.noteCompleted);
     };
     
     const handleCloseEditForm = async () => {
@@ -342,6 +369,12 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                     aValue = Number(a.commitmentTotal) || 0;
                     bValue = Number(b.commitmentTotal) || 0;
                     return (aValue - bValue) * direction;
+
+                case 'donorNotes':
+                    // מיון: יש הערות (1) לפני אין הערות (0)
+                    const aHasNotes = ((a.donorNotes && a.donorNotes.some(n => n.note)) || (a.donations && a.donations.some(d => d.note))) ? 1 : 0;
+                    const bHasNotes = ((b.donorNotes && b.donorNotes.some(n => n.note)) || (b.donations && b.donations.some(d => d.note))) ? 1 : 0;
+                    return (aHasNotes - bHasNotes) * direction;
                     
                 default:
                     return 0;
@@ -444,6 +477,11 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                                 }
                                             }}>{t('exportExcel')}</button>
                                         </li>
+                                        {isCrowdfunding && onImportExcel && (
+                                            <li>
+                                                <button onClick={onImportExcel}>{t('importDonorsExcel')}</button>
+                                            </li>
+                                        )}
                                     </ul>
                                 </div>
                             </div>
@@ -469,7 +507,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                     >
                         {displayedViewMode === 'table' && (
                             <div className={styles.table}>
-                                <div className={`${styles.tableHeader} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-4`}>
+                                <div className={`${styles.tableHeader} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} ${hasComparisonCampaign ? styles.withComparison : ''} table-4`}>
                                     <div className={styles.checkbox}>
                                         <input
                                             type="checkbox"
@@ -505,6 +543,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                             <span className={column.key === 'name' ? styles.donorName : ''}>{column.label}</span>
                                         </div>
                                     ))}
+                                    <div></div>   {/* edit button column spacer */}
                                     {hasCommitments && (
                                         <div className={`${styles.headerCell} ${styles.commitmentHeaderCell}`}>
                                             <div className={styles.sortButtons}>
@@ -523,8 +562,24 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                             </div>
                                         </div>
                                     )}
-                                    <div></div>
-                                    <div></div>
+                                    <div className={`${styles.headerCell} ${styles.commitmentHeaderCell}`}>
+                                        <div className={styles.sortButtons}>
+                                            <button
+                                                onClick={() => handleLocalSort('donorNotes', 'desc')}
+                                                className={`${styles.sortButton} ${sortConfig.key === 'donorNotes' && sortConfig.direction === 'desc' ? styles.active : ''}`}
+                                            >
+                                                <Up />
+                                            </button>
+                                            <button
+                                                onClick={() => handleLocalSort('donorNotes', 'asc')}
+                                                className={`${styles.sortButton} ${sortConfig.key === 'donorNotes' && sortConfig.direction === 'asc' ? styles.active : ''}`}
+                                            >
+                                                <Down />
+                                            </button>
+                                        </div>
+                                        <span>{t('notes')}</span>
+                                    </div>
+                                    <div></div>   {/* coins spacer */}
                                     <div></div>   {/* expand arrow header spacer */}
                                 </div>
                                 <div
@@ -541,7 +596,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                         {/* Desktop table row + expand wrapper */}
                                         <div className={styles.rowExpandWrapper}>
                                             {/* Desktop table row */}
-                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} table-3 ${styles.desktopRow} ${expandedDonors[donor.id] ? styles.expanded : ''}`}>
+                                            <div className={`${styles.tableRow} ${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} ${hasComparisonCampaign ? styles.withComparison : ''} table-3 ${styles.desktopRow} ${expandedDonors[donor.id] ? styles.expanded : ''}`}>
                                                 <div className={styles.checkbox}>
                                                     <input
                                                         type="checkbox"
@@ -583,6 +638,12 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                                     />
                                                 </div>
                                             )}
+                                            {hasComparisonCampaign && (
+                                                <span className={`${styles.cell} ${styles.center}`}>
+                                                    {donor.previous_amount ? Number(donor.previous_amount).toLocaleString('he-IL', { maximumFractionDigits: 0 }) : '—'}
+                                                    {donor.previous_amount ? <span className="tooltip-2"><CurrencySymbol /></span> : null}
+                                                </span>
+                                            )}
                                             <span className={`${styles.cell} ${styles.center}`}>
                                                 {Number(donor.expectedDonation || 0).toLocaleString('he-IL', { maximumFractionDigits: 0 })}
                                                 <span className="tooltip-2"><CurrencySymbol /></span>
@@ -607,6 +668,38 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                                     )}
                                                 </div>
                                             )}
+                                            <div className={styles.notesColumnCell}>
+                                                    {((donor.donorNotes && donor.donorNotes.some(n => n.note)) ||
+                                                      (donor.donations && donor.donations.some(d => d.note))) && (
+                                                        <div
+                                                            className={styles.notesCell}
+                                                            onClick={() => handleOpenEditForm(donor)}
+                                                        >
+                                                            <div className={styles.notesIcon}>
+                                                                <IconTooltip
+                                                                    up={true}
+                                                                    icon={<>
+                                                                        <Note />
+                                                                        {hasDonorOverdueNotes(donor.donorNotes) ? (
+                                                                            <div className={styles.overdueDot}></div>
+                                                                        ) : hasDonorActiveNotes(donor.donorNotes) ? (
+                                                                            <div className={styles.unreadDot}></div>
+                                                                        ) : null}
+                                                                    </>}
+                                                                    text={[
+                                                                        ...(donor.donorNotes || []).filter(n => n.note).map(n => {
+                                                                            let text = n.note;
+                                                                            if (n.followUpDate) text += `\nתאריך לטיפול - ${new Date(n.followUpDate).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US')}`;
+                                                                            if (n.noteCompleted) text += ` ✓`;
+                                                                            return text;
+                                                                        }),
+                                                                        ...(donor.donations || []).filter(d => d.note).map(d => d.note)
+                                                                    ].join(' | ')}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                            </div>
                                             <button className={styles.coins} onClick={() => handleOpenDonationForm(donor)}>
                                                 <IconTooltip icon={<Coins />} text={t('addDonation')} />
                                             </button>

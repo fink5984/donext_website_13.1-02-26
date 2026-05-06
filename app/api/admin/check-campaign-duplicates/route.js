@@ -38,7 +38,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'טוקן לא תקין' }, { status: 401 }); 
         }
         
-        const isAdminOrManager = payload.role === 'admin' || payload.role === 'manager' || payload.roles?.includes('admin') || payload.roles?.includes('manager');
+        const isAdminOrManager = payload.role === 'admin' || payload.role === 'manager' || payload.role === 'fundraiser' || payload.roles?.includes('admin') || payload.roles?.includes('manager') || payload.roles?.includes('fundraiser');
         if (!isAdminOrManager) return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 });
 
         const body = await request.json();
