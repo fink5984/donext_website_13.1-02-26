@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import fetchWithAuth from '@/app/utils/fetchWithAuth';
 
 /* ── assets ── */
 const A = '/campaigns/179';
@@ -395,6 +394,13 @@ export default function Campaign179DonationScreenRank() {
   const processingRef = useRef(false);
   const prevAmountsRef = useRef(new Map());
 
+  // Celebration overlay (any new donor entering / upgrading a rank)
+  const [celebState, setCelebState] = useState(null); // { donor, rank, frameImg, titleImg, textColor } | null
+  const celebQueueRef = useRef([]);
+  const celebProcessingRef = useRef(false);
+  const lastRankByDonorRef = useRef(null); // null = not initialized, then Map<donorId, rankId>
+  const celebCanvasRef = useRef(null);
+
   const pusherRef = useRef(null);
   const channelRef = useRef(null);
 
@@ -404,11 +410,11 @@ export default function Campaign179DonationScreenRank() {
     (async () => {
       try {
         const [sRes, dRes, cRes, rRes, syRes] = await Promise.all([
-          fetchWithAuth(`/api/campaigns/${CAMPAIGN_ID}/screen-settings`, { cache: 'no-store' }),
-          fetchWithAuth(`/api/fundraising/donors?campaignId=${CAMPAIGN_ID}&includeInactive=true&includeUnapproved=true&useMonthlyOnly=true&limit=2000`, { cache: 'no-store' }),
-          fetchWithAuth(`/api/campaigns/${CAMPAIGN_ID}`, { cache: 'no-store' }),
-          fetchWithAuth(`/api/ranks?campaignId=${CAMPAIGN_ID}`, { cache: 'no-store' }),
-          fetchWithAuth(`/api/donors/synagogues?campaignId=${CAMPAIGN_ID}`, { cache: 'no-store' }),
+          fetch(`/api/campaigns/${CAMPAIGN_ID}/screen-settings`, { cache: 'no-store' }),
+          fetch(`/api/fundraising/donors?campaignId=${CAMPAIGN_ID}&includeInactive=true&includeUnapproved=true&useMonthlyOnly=true&limit=2000`, { cache: 'no-store' }),
+          fetch(`/api/campaigns/${CAMPAIGN_ID}`, { cache: 'no-store' }),
+          fetch(`/api/ranks?campaignId=${CAMPAIGN_ID}`, { cache: 'no-store' }),
+          fetch(`/api/donors/synagogues?campaignId=${CAMPAIGN_ID}`, { cache: 'no-store' }),
         ]);
         if (!alive) return;
         const [sJ, dJ, cJ, rJ, syJ] = await Promise.all([
@@ -438,7 +444,7 @@ export default function Campaign179DonationScreenRank() {
     let dead = false;
     const id = setInterval(async () => {
       try {
-        const r = await fetchWithAuth(`/api/campaigns/${CAMPAIGN_ID}/screen-settings`);
+        const r = await fetch(`/api/campaigns/${CAMPAIGN_ID}/screen-settings`);
         if (!r.ok || dead) return;
         const next = await r.json();
         setSettings(p => { try { if (JSON.stringify(p) === JSON.stringify(next)) return p; } catch (_) {} return { ...(p || {}), ...next }; });
@@ -453,7 +459,7 @@ export default function Campaign179DonationScreenRank() {
     const id = setInterval(async () => {
       try {
         const thr = Number(amountBigRef.current || 0);
-        const r = await fetchWithAuth(`/api/fundraising/donors?campaignId=${CAMPAIGN_ID}&includeInactive=true&includeUnapproved=true&useMonthlyOnly=true&limit=2000`);
+        const r = await fetch(`/api/fundraising/donors?campaignId=${CAMPAIGN_ID}&includeInactive=true&includeUnapproved=true&useMonthlyOnly=true&limit=2000`);
         const data = r.ok ? await r.json() : {};
         const list = Array.isArray(data?.data) ? data.data : [];
         if (thr > 0) {
@@ -534,6 +540,115 @@ export default function Campaign179DonationScreenRank() {
       }
     } finally { processingRef.current = false; }
   }
+
+  /* ── celebration queue (3-second pop-up + confetti) ── */
+  function enqueueCeleb(item) {
+    if (!item?.donor || !item?.rank) return;
+    celebQueueRef.current.push(item);
+    runCelebQueue();
+  }
+  async function runCelebQueue() {
+    if (celebProcessingRef.current) return;
+    celebProcessingRef.current = true;
+    try {
+      while (celebQueueRef.current.length > 0) {
+        const item = celebQueueRef.current.shift();
+        setCelebState(item);
+        await wait(3000);
+        setCelebState(null);
+        await wait(250); // small pause between bursts
+      }
+    } finally { celebProcessingRef.current = false; }
+  }
+
+  /* ── detect new rank assignments / upgrades and trigger celebrations ── */
+  useEffect(() => {
+    if (!ranks.length) return;
+    const sorted = [...ranks].sort((a, b) => Number(a.amount) - Number(b.amount));
+    const nextMap = new Map();
+    donors.forEach(d => {
+      const av = Number(d.amount ?? 0);
+      const r = getRankForAmount(av, sorted);
+      nextMap.set(d.id, r?.id ?? null);
+    });
+
+    // First pass after donors+ranks load — record state but don't celebrate
+    if (lastRankByDonorRef.current === null) {
+      lastRankByDonorRef.current = nextMap;
+      return;
+    }
+
+    donors.forEach(d => {
+      const av = Number(d.amount ?? 0);
+      const r = getRankForAmount(av, sorted);
+      const newRankId = r?.id ?? null;
+      const prevRankId = lastRankByDonorRef.current.get(d.id);
+      // Trigger when a donor enters a rank (new or upgrade) — i.e. rank id changes to a non-null value
+      if (newRankId !== null && newRankId !== prevRankId) {
+        const rankKey = Object.keys(RANK_MAP).find(k => r.name?.includes(k.split(' ')[0]));
+        const idx = sorted.findIndex(x => x.id === r.id);
+        const asset = rankKey ? RANK_MAP[rankKey] : (FRAME_BY_IDX[idx] || FRAME_BY_IDX[0]);
+        enqueueCeleb({
+          donor: d,
+          rank: r,
+          frameImg: asset.frame,
+          titleImg: asset.title,
+          textColor: asset.textColor || '#2a1a4e',
+        });
+      }
+    });
+
+    lastRankByDonorRef.current = nextMap;
+    // We intentionally don't list `ranks` in deps — sorted is derived inside.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [donors, ranks]);
+
+  /* ── confetti burst while celebration is visible ── */
+  useEffect(() => {
+    if (!celebState) return;
+    let alive = true;
+    let interval;
+    let myConfetti;
+    (async () => {
+      try {
+        const mod = await import('canvas-confetti');
+        if (!alive || !celebCanvasRef.current) return;
+        const confetti = mod.default;
+        myConfetti = confetti.create(celebCanvasRef.current, { resize: true, useWorker: false });
+        const fire = () => {
+          if (!myConfetti) return;
+          // Two angled bursts from bottom-left and bottom-right
+          myConfetti({
+            particleCount: 80,
+            spread: 70,
+            startVelocity: 50,
+            origin: { x: 0.15, y: 0.85 },
+            angle: 60,
+            colors: ['#f5d78e', '#a07838', '#c8a96e', '#3a1a6e', '#fff'],
+            scalar: 1.4,
+            ticks: 200,
+          });
+          myConfetti({
+            particleCount: 80,
+            spread: 70,
+            startVelocity: 50,
+            origin: { x: 0.85, y: 0.85 },
+            angle: 120,
+            colors: ['#f5d78e', '#a07838', '#c8a96e', '#3a1a6e', '#fff'],
+            scalar: 1.4,
+            ticks: 200,
+          });
+        };
+        fire();
+        interval = setInterval(fire, 700);
+      } catch (_) {}
+    })();
+    return () => {
+      alive = false;
+      if (interval) clearInterval(interval);
+      try { myConfetti?.reset?.(); } catch (_) {}
+    };
+  }, [celebState]);
 
   /* ── derived ── */
   const totalAmount = useMemo(() => donors.reduce((s, d) => s + Number(d.amount ?? d.actualDonation ?? 0), 0), [donors]);
@@ -714,8 +829,68 @@ export default function Campaign179DonationScreenRank() {
         @keyframes c179Out { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.7)} }
         .c179-in  { animation: c179In  0.6s ease-out forwards; }
         .c179-out { animation: c179Out 0.4s ease-in  forwards; }
+
+        @keyframes c179CelebFade {
+          0%   { opacity: 0; }
+          12%  { opacity: 1; }
+          88%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes c179CelebPop {
+          0%   { transform: scale(0.4) translateY(40px); opacity: 0; }
+          25%  { transform: scale(1.08) translateY(-6px); opacity: 1; }
+          40%  { transform: scale(1) translateY(0); opacity: 1; }
+          85%  { transform: scale(1) translateY(0); opacity: 1; }
+          100% { transform: scale(0.85) translateY(-10px); opacity: 0; }
+        }
+        .c179-celeb     { animation: c179CelebFade 3s ease-out forwards; }
+        .c179-celeb-pop { animation: c179CelebPop  3s cubic-bezier(.16,.84,.32,1) forwards; }
+
         .a11y-trigger, .a11y-menu { display: none !important; }
       `}</style>
+
+      {/* ═══════ NEW-DONOR CELEBRATION (3s confetti pop) ═══════ */}
+      {celebState && (() => {
+        const d = celebState.donor;
+        const name = [d.first_name || d.firstName, d.last_name || d.lastName].filter(Boolean).join(' ');
+        return (
+          <div className="c179-celeb"
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9998,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'rgba(20,8,40,0.55)',
+              backdropFilter: 'blur(2px)',
+              pointerEvents: 'none',
+            }}
+          >
+            {/* Confetti canvas */}
+            <canvas ref={celebCanvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} />
+
+            {/* Centerpiece — rank title + large donor pill */}
+            <div className="c179-celeb-pop" style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2vh' }}>
+              {celebState.titleImg && (
+                <img src={celebState.titleImg} alt={celebState.rank?.name || ''}
+                  style={{ height: 'clamp(80px,18vh,260px)', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.55))' }}
+                />
+              )}
+              <div style={{ position: 'relative', width: 'min(70vw, 900px)' }}>
+                <img src={celebState.frameImg} alt="" style={{ width: '100%', display: 'block', filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.55))' }} />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: celebState.textColor, fontSize: 'clamp(28px,4.5vw,80px)', fontWeight: 900,
+                  fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
+                  padding: '0 6%',
+                }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
+                    {d.isAnonymous ? 'בעילום שם' : (name || 'תורם אנונימי')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ═══════ BIG DONATION OVERLAY ═══════ */}
       {overlayStage !== 'hidden' && overlayDonor && (

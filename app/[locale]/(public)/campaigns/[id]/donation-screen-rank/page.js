@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import fetchWithAuth from '@/app/utils/fetchWithAuth';
 
 /* ─── helpers ─── */
 function fmt(value, currency) {
@@ -228,10 +227,10 @@ export default function DonationScreenRankPage() {
 		(async () => {
 			try {
 				const [sRes, dRes, cRes, rRes] = await Promise.all([
-					fetchWithAuth(`/api/campaigns/${campaignId}/screen-settings`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=2000`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/campaigns/${campaignId}`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/ranks?campaignId=${campaignId}`, { cache: 'no-store' }),
+					fetch(`/api/campaigns/${campaignId}/screen-settings`, { cache: 'no-store' }),
+					fetch(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=2000`, { cache: 'no-store' }),
+					fetch(`/api/campaigns/${campaignId}`, { cache: 'no-store' }),
+					fetch(`/api/ranks?campaignId=${campaignId}`, { cache: 'no-store' }),
 				]);
 				if (!alive) return;
 				const [sJ, dJ, cJ, rJ] = await Promise.all([sRes?.json?.(), dRes?.json?.(), cRes?.ok ? cRes.json() : null, rRes?.ok ? rRes.json() : null]);
@@ -255,7 +254,7 @@ export default function DonationScreenRankPage() {
 		let dead = false;
 		const id = setInterval(async () => {
 			try {
-				const r = await fetchWithAuth(`/api/campaigns/${campaignId}/screen-settings`);
+				const r = await fetch(`/api/campaigns/${campaignId}/screen-settings`);
 				if (!r.ok || dead) return;
 				const next = await r.json();
 				setSettings(p => { try { if (JSON.stringify(p || {}) === JSON.stringify(next || {})) return p; } catch (_) {} return { ...(p || {}), ...next }; });
@@ -271,7 +270,7 @@ export default function DonationScreenRankPage() {
 		const id = setInterval(async () => {
 			try {
 				const thr = Number(amountBigRef.current || 0);
-				const r = await fetchWithAuth(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=2000`);
+				const r = await fetch(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=2000`);
 				const data = r.ok ? await r.json() : { data: [] };
 				const list = Array.isArray(data?.data) ? data.data : [];
 				if (thr > 0) {

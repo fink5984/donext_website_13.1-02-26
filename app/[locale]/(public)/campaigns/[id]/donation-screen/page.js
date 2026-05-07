@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import fetchWithAuth from '@/app/utils/fetchWithAuth';
 
 function formatCurrency(value) {
 	if (value === null || value === undefined) return '';
@@ -107,11 +106,11 @@ export default function DonationScreenPage() {
 		async function load() {
 			try {
 				const [sRes, dRes, sumRes, cRes, rRes] = await Promise.all([
-					fetchWithAuth(`/api/campaigns/${campaignId}/screen-settings`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=1000`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/fundraising/donors/summary?campaignId=${campaignId}`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/campaigns/${campaignId}`, { cache: 'no-store' }),
-					fetchWithAuth(`/api/ranks?campaignId=${campaignId}`, { cache: 'no-store' })
+					fetch(`/api/campaigns/${campaignId}/screen-settings`, { cache: 'no-store' }),
+					fetch(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=1000`, { cache: 'no-store' }),
+					fetch(`/api/fundraising/donors/summary?campaignId=${campaignId}`, { cache: 'no-store' }),
+					fetch(`/api/campaigns/${campaignId}`, { cache: 'no-store' }),
+					fetch(`/api/ranks?campaignId=${campaignId}`, { cache: 'no-store' })
 				]);
 				const sJson = await sRes?.json?.();
 				const dJson = await dRes?.json?.();
@@ -155,7 +154,7 @@ export default function DonationScreenPage() {
 		let cancelled = false;
 		async function pollSettings() {
 			try {
-				const res = await fetchWithAuth(`/api/campaigns/${campaignId}/screen-settings`);
+				const res = await fetch(`/api/campaigns/${campaignId}/screen-settings`);
 				if (!res.ok) return;
 				const next = await res.json();
 				if (cancelled) return;
@@ -300,7 +299,7 @@ export default function DonationScreenPage() {
 			try {
 				const currentThreshold = Number(amountBigScreenRef.current || 0);
 				if (!currentThreshold) return; // skip if no threshold
-				const res = await fetchWithAuth(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=1000`);
+				const res = await fetch(`/api/fundraising/donors?campaignId=${campaignId}&includeInactive=true&limit=1000`);
 				const data = res.ok ? await res.json() : { data: [] };
 				const list = Array.isArray(data?.data) ? data.data : [];
 				const nextMap = new Map();

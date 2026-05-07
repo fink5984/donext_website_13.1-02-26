@@ -57,6 +57,32 @@ export async function middleware(request) {
       return NextResponse.next();
     }
 
+    // GET-only endpoints נדרשים על ידי מסכי תצוגה ציבוריים (donation-screen / donation-screen-rank)
+    if (request.method === 'GET') {
+      const url = new URL(request.url);
+      const qsCampaignId = url.searchParams.get('campaignId');
+
+      // /api/campaigns/{id} ו-/api/campaigns/{id}/screen-settings
+      if (
+        pathname.match(/^\/api\/campaigns\/\d+$/) ||
+        pathname.match(/^\/api\/campaigns\/\d+\/screen-settings$/)
+      ) {
+        return NextResponse.next();
+      }
+
+      // endpoints שמקבלים campaignId כ-query param
+      if (qsCampaignId) {
+        if (
+          pathname === '/api/ranks' ||
+          pathname === '/api/fundraising/donors' ||
+          pathname === '/api/fundraising/donors/summary' ||
+          pathname === '/api/donors/synagogues'
+        ) {
+          return NextResponse.next();
+        }
+      }
+    }
+
     // רשימת endpoints שצריכים authentication אבל לא צריכים campaignId
     const endpointsWithoutCampaignId = [
       '/api/clients',
