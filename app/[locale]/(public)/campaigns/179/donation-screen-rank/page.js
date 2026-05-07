@@ -59,6 +59,16 @@ function getRankForAmount(amount, sortedRanks) {
   return null;
 }
 
+// Returns the effective amount for display/ranking: monthly amount × 12 when donor
+// has at least 12 payments, unlimited payments, or numberOfPayments is null.
+function getEffectiveAmount(d) {
+  const base = Number(d.amount ?? d.actualDonation ?? d.monthly_amount ?? 0);
+  const np = d.numberOfPayments;
+  const unlimited = d.isUnlimited === true || np === null || np === undefined;
+  const qualifies = unlimited || Number(np) >= 12;
+  return qualifies ? base * 12 : base;
+}
+
 function useAnim(target, ms = 700) {
   const [v, setV] = useState(0);
   const fromRef = useRef(0);
@@ -259,7 +269,7 @@ function ShtiebelPanel({ donors, allShtieblach, settings }) {
     });
     // Layer donor totals on top
     donors.forEach(d => {
-      const amt = Number(d.amount ?? 0);
+      const amt = getEffectiveAmount(d);
       const key = d.synagogue ?? d.shtiebel_name ?? d.shtiebelName ?? d.community_name ?? d.communityName ?? null;
       if (!key) return;
       if (!map[key]) map[key] = { name: key, total: 0 };
@@ -465,7 +475,7 @@ export default function Campaign179DonationScreenRank() {
         if (thr > 0) {
           const nextMap = new Map();
           list.forEach(d => {
-            const av = Number(d.amount ?? d.actualDonation ?? d.monthly_amount ?? 0);
+            const av = getEffectiveAmount(d);
             nextMap.set(d.id, av);
             const prev = prevAmountsRef.current.get(d.id);
             if (av >= thr && prev !== av) enqueue(d);
@@ -498,11 +508,11 @@ export default function Campaign179DonationScreenRank() {
         channelRef.current.bind('DonationScreen', (e) => {
           try {
             const d = e?.donor || e || {};
-            const av = Number(d.amount ?? d.actualDonation ?? d.monthly_amount ?? d.total_amount ?? 0);
+            const av = getEffectiveAmount(d);
             const thr = Number(amountBigRef.current || 0);
             if (thr && av >= thr && !(e?.skip?.skip)) {
               const ex = donorsRef.current.find(x => x.id === d.id);
-              if (!ex || Number(ex?.amount ?? ex?.actualDonation ?? 0) !== av) enqueue(d);
+              if (!ex || getEffectiveAmount(ex) !== av) enqueue(d);
             }
             setDonors(prev => { const i = prev.findIndex(x => x.id === d.id); if (i === -1) return [...prev, d]; const n = [...prev]; n[i] = d; return n; });
           } catch (_) {}
@@ -543,7 +553,7 @@ export default function Campaign179DonationScreenRank() {
 
   /* ── celebration queue (3-second pop-up + confetti) ── */
   function enqueueCeleb(item) {
-    if (!item?.donor || !item?.rank) return;
+    if (!item?.donor) return;
     celebQueueRef.current.push(item);
     runCelebQueue();
   }
@@ -554,7 +564,7 @@ export default function Campaign179DonationScreenRank() {
       while (celebQueueRef.current.length > 0) {
         const item = celebQueueRef.current.shift();
         setCelebState(item);
-        await wait(3000);
+        await wait(5000);
         setCelebState(null);
         await wait(250); // small pause between bursts
       }
@@ -569,7 +579,7 @@ export default function Campaign179DonationScreenRank() {
     donors.forEach(d => {
       const av = Number(d.amount ?? 0);
       const r = getRankForAmount(av, sorted);
-      nextMap.set(d.id, r?.id ?? null);
+      nextMap.set(d.id, { rankId: r?.id ?? null, amount: av });
     });
 
     // First pass after donors+ranks load — record state but don't celebrate
@@ -582,7 +592,9 @@ export default function Campaign179DonationScreenRank() {
       const av = Number(d.amount ?? 0);
       const r = getRankForAmount(av, sorted);
       const newRankId = r?.id ?? null;
-      const prevRankId = lastRankByDonorRef.current.get(d.id);
+      const prevEntry = lastRankByDonorRef.current.get(d.id);
+      const prevRankId = prevEntry?.rankId ?? null;
+      const prevAmount = prevEntry?.amount ?? 0;
       // Trigger when a donor enters a rank (new or upgrade) — i.e. rank id changes to a non-null value
       if (newRankId !== null && newRankId !== prevRankId) {
         const rankKey = Object.keys(RANK_MAP).find(k => r.name?.includes(k.split(' ')[0]));
@@ -594,6 +606,16 @@ export default function Campaign179DonationScreenRank() {
           frameImg: asset.frame,
           titleImg: asset.title,
           textColor: asset.textColor || '#2a1a4e',
+        });
+      }
+      // Trigger for donors below the lowest rank when amount moves from 0 → positive
+      if (newRankId === null && av > 0 && prevAmount === 0) {
+        enqueueCeleb({
+          donor: d,
+          rank: null,
+          frameImg: FRAME_BY_IDX[0].frame,
+          titleImg: null,
+          textColor: FRAME_BY_IDX[0].textColor,
         });
       }
     });
@@ -651,9 +673,9 @@ export default function Campaign179DonationScreenRank() {
   }, [celebState]);
 
   /* ── derived ── */
-  const totalAmount = useMemo(() => donors.reduce((s, d) => s + Number(d.amount ?? d.actualDonation ?? 0), 0), [donors]);
-  const targetAmount = Number(campaign?.targetAmount ?? campaign?.target_amount ?? settings?.goal ?? 0);
-  const participants = donors.filter(d => Number(d.amount ?? d.actualDonation ?? 0) > 0).length;
+  const totalAmount = useMemo(() => donors.reduce((s, d) => s + getEffectiveAmount(d), 0), [donors]);
+  const targetAmount = Number(campaign?.targetAmount ?? campaign?.target_amount ?? settings?.goal ?? 0) * 12;
+  const participants = donors.filter(d => getEffectiveAmount(d) > 0).length;
   const pct = targetAmount > 0 ? Math.min(100, Math.floor((totalAmount / targetAmount) * 100)) : 0;
   const remaining = Math.max(0, targetAmount - totalAmount);
 
@@ -832,19 +854,19 @@ export default function Campaign179DonationScreenRank() {
 
         @keyframes c179CelebFade {
           0%   { opacity: 0; }
-          12%  { opacity: 1; }
-          88%  { opacity: 1; }
+          8%   { opacity: 1; }
+          92%  { opacity: 1; }
           100% { opacity: 0; }
         }
         @keyframes c179CelebPop {
           0%   { transform: scale(0.4) translateY(40px); opacity: 0; }
-          25%  { transform: scale(1.08) translateY(-6px); opacity: 1; }
-          40%  { transform: scale(1) translateY(0); opacity: 1; }
+          15%  { transform: scale(1.08) translateY(-6px); opacity: 1; }
+          24%  { transform: scale(1) translateY(0); opacity: 1; }
           85%  { transform: scale(1) translateY(0); opacity: 1; }
           100% { transform: scale(0.85) translateY(-10px); opacity: 0; }
         }
-        .c179-celeb     { animation: c179CelebFade 3s ease-out forwards; }
-        .c179-celeb-pop { animation: c179CelebPop  3s cubic-bezier(.16,.84,.32,1) forwards; }
+        .c179-celeb     { animation: c179CelebFade 5s ease-out forwards; }
+        .c179-celeb-pop { animation: c179CelebPop  5s cubic-bezier(.16,.84,.32,1) forwards; }
 
         .a11y-trigger, .a11y-menu { display: none !important; }
       `}</style>
@@ -906,7 +928,7 @@ export default function Campaign179DonationScreenRank() {
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(16px,3vw,50px)', maxWidth: '85%' }}>
             {/* Rank title image if available */}
             {(() => {
-              const av = Number(overlayDonor.amount ?? overlayDonor.actualDonation ?? 0);
+              const av = getEffectiveAmount(overlayDonor);
               const r = getRankForAmount(av, sortedRanks);
               const k = r ? Object.keys(RANK_MAP).find(k => r.name?.includes(k.split(' ')[0])) : null;
               const img = k ? RANK_MAP[k].title : null;
@@ -919,7 +941,7 @@ export default function Campaign179DonationScreenRank() {
 
             {(settings?.bsShowAmount ?? true) && (
               <div style={{ fontSize: settings?.bsAmountFontSize || 'clamp(44px,9vw,150px)', fontWeight: 'bold', color: settings?.bsAmountColor || '#f5ead2', WebkitTextStroke: '0.2vw #8a6030', textShadow: '0 6px 20px rgba(0,0,0,0.6)' }}>
-                {fmt(Number(overlayDonor.amount ?? overlayDonor.actualDonation ?? overlayDonor.monthly_amount ?? 0))}
+                {fmt(getEffectiveAmount(overlayDonor))}
               </div>
             )}
           </div>

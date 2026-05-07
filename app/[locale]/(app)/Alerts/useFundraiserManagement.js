@@ -10,6 +10,8 @@ export function useFundraiserManagement(open) {
     const [isLoading, setIsLoading] = useState(true);
     // Store all fundraisers locally (not affected by main page's search filter)
     const [allFundraisers, setAllFundraisers] = useState([]);
+    // Track fundraisers added in the current session (for sending emails only to new ones)
+    const [newlyAddedFundraisers, setNewlyAddedFundraisers] = useState([]);
 
     const refreshFundraisersAndPeople = useCallback(async (isFirst = false) => {
         if (isFirst) setIsLoading(true);
@@ -73,6 +75,7 @@ export function useFundraiserManagement(open) {
 
     useEffect(() => {
         if (open) {
+            setNewlyAddedFundraisers([]);
             refreshFundraisersAndPeople(true);
         }
     }, [open, refreshFundraisersAndPeople]);
@@ -83,11 +86,14 @@ export function useFundraiserManagement(open) {
             const isCurrentlyFundraiser = allFundraisers.some(f => f.person_id === person.person_id);
             if (isCurrentlyFundraiser) {
                 await removeFundraiser(person);
+                // Remove from newly added if it was added and then removed in same session
+                setNewlyAddedFundraisers(prev => prev.filter(f => f.person_id !== person.person_id));
             } else {
                 const result = await store.fundraisersStore.addFundraiser(person.person_id);
                 // Update local allFundraisers state by adding the new fundraiser
                 if (result.success && result.data) {
                     setAllFundraisers(prev => [result.data, ...prev]);
+                    setNewlyAddedFundraisers(prev => [result.data, ...prev]);
                 }
             }
             // Get the latest fundraiser person IDs from local state
@@ -161,6 +167,7 @@ export function useFundraiserManagement(open) {
         isDeleteDialogOpen,
         selectedDeleteFundraiser,
         fundraisers: allFundraisers,
+        newlyAddedFundraisers,
         handleFundraiserToggle,
         handleConfirmDelete,
         setDeleteDialogOpen,

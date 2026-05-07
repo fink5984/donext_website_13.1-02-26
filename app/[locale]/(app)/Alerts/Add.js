@@ -25,6 +25,7 @@ const Add = observer(({ open, onClose, addNew }) => {
         isDeleteDialogOpen,
         selectedDeleteFundraiser,
         fundraisers,
+        newlyAddedFundraisers,
         handleFundraiserToggle,
         handleConfirmDelete,
         setDeleteDialogOpen,
@@ -181,7 +182,7 @@ const Add = observer(({ open, onClose, addNew }) => {
                 </AlertDialogPortal>
             </AlertDialog>
             {isFeedbackOpen && <Feedback
-                fundRaisers={fundraisers}
+                fundRaisers={newlyAddedFundraisers}
                 max={max}
                 min={min}
                 isOpen={isFeedbackOpen}
