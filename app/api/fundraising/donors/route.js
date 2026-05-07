@@ -122,7 +122,7 @@ export async function GET(request) {
         const donors = await prisma.donor.findMany({
             where,
             include: {
-                person: { include: { city: true, street: true } },
+                person: { select: { firstName: true, lastName: true, titleBefore: true, mainMobile: true, phoneLandline: true, email: true, synagogue: true, houseNumber: true, city: { select: { name: true } }, street: { select: { name: true } } } },
                 campaign: true,
                 fundraiser: { include: { person: true } },
                 donations: {
@@ -292,6 +292,7 @@ function mapDonorToFrontend(donor, opts = {}) {
         traffic_light_color: donor.trafficLightColor,
         first_name: donor.person?.firstName,
         last_name: donor.person?.lastName,
+        title_before: donor.person?.titleBefore,
         main_mobile: donor.person?.mainMobile,
         phone_landline: donor.person?.phoneLandline,
         email: donor.person?.email,

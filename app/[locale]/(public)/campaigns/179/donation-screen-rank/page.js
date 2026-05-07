@@ -1,6 +1,46 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
+
+/* ── FitText: shrinks text only if it overflows its container ── */
+function FitText({ text, fontSize, style, minSize = 7 }) {
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
+
+  const fit = useCallback(() => {
+    const wrap = wrapRef.current;
+    const el = textRef.current;
+    if (!wrap || !el || wrap.offsetWidth === 0) return;
+    // Reset to declared size
+    el.style.fontSize = typeof fontSize === 'number' ? fontSize + 'px' : fontSize;
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    // el.offsetWidth = actual text width (inline-block); wrap.offsetWidth = available space
+    while (el.offsetWidth > wrap.offsetWidth && size > minSize) {
+      size -= 0.5;
+      el.style.fontSize = size + 'px';
+    }
+  }, [text, fontSize, minSize]);
+
+  useLayoutEffect(fit, [fit]);
+  useEffect(fit, [fit]);
+
+  // Re-fit when the container gains its real width (e.g. after overlay image loads)
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [fit]);
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%', overflow: 'hidden', textAlign: 'center' }}>
+      <span ref={textRef} style={{ ...style, fontSize, whiteSpace: 'nowrap', display: 'inline-block' }}>
+        {text}
+      </span>
+    </div>
+  );
+}
 
 /* ── assets ── */
 const A = '/campaigns/179';
@@ -25,16 +65,16 @@ const ASSET = {
 const RANK_MAP = {
   'שושבין לתורה':  { title: `${A}/rank-shushvin.png`, frame: `${A}/frame-white.png`,  textColor: '#3a1a6e' },
   'שושבין':         { title: `${A}/rank-shushvin.png`, frame: `${A}/frame-white.png`,  textColor: '#3a1a6e' },
-  'חתן תורה':     { title: `${A}/rank-chatan.png`,   frame: `${A}/frame-silver.png`, textColor: '#2a1a4e' },
-  'חתן':            { title: `${A}/rank-chatan.png`,   frame: `${A}/frame-silver.png`, textColor: '#2a1a4e' },
-  'מחולל המהפכה': { title: `${A}/rank-mecholel.png`, frame: `${A}/frame-gold.png`,   textColor: '#2a0a00' },
-  'מחולל':          { title: `${A}/rank-mecholel.png`, frame: `${A}/frame-gold.png`,   textColor: '#2a0a00' },
+  'חתן תורה':     { title: `${A}/rank-chatan.png`,   frame: `${A}/frame-silver.png`, textColor: '#3a1a6e' },
+  'חתן':            { title: `${A}/rank-chatan.png`,   frame: `${A}/frame-silver.png`, textColor: '#3a1a6e' },
+  'מחולל המהפכה': { title: `${A}/rank-mecholel.png`, frame: `${A}/frame-gold.png`,   textColor: '#3a1a6e' },
+  'מחולל':          { title: `${A}/rank-mecholel.png`, frame: `${A}/frame-gold.png`,   textColor: '#3a1a6e' },
 };
 // Fallback by sorted index (lowest→white, mid→silver, highest→gold)
 const FRAME_BY_IDX = [
   { frame: `${A}/frame-white.png`,  title: null, textColor: '#3a1a6e' },
-  { frame: `${A}/frame-silver.png`, title: null, textColor: '#2a1a4e' },
-  { frame: `${A}/frame-gold.png`,   title: null, textColor: '#2a0a00' },
+  { frame: `${A}/frame-silver.png`, title: null, textColor: '#3a1a6e' },
+  { frame: `${A}/frame-gold.png`,   title: null, textColor: '#3a1a6e' },
 ];
 
 /* ── helpers ── */
@@ -47,6 +87,16 @@ function fmt(v) {
     if (!isFinite(n)) return '';
     return `₪ ${new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(n)}`;
   } catch (_) { return String(v); }
+}
+
+function getFullName(d) {
+  if (d.isAnonymous) return { title: '', name: 'בעילום שם' };
+  const title = (d.titleBefore || d.title_before || '').trim();
+  const name = [
+    d.first_name || d.firstName || '',
+    d.last_name || d.lastName || '',
+  ].map(s => s.trim()).filter(Boolean).join(' ') || 'תורם אנונימי';
+  return { title, name };
 }
 
 function getRankForAmount(amount, sortedRanks) {
@@ -136,7 +186,7 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
   const frameImg = rankAsset.frame;
   const textColor = rankAsset.textColor || '#2a1a4e';
 
-  const nameFontSize = settings?.fontSizeNameFront || 'clamp(14px,1.6vw,28px)';
+  const nameFontSize = settings?.fontSizeNameFront || 'clamp(11px,1.25vw,22px)';
 
   // Title sizing: ~14vh tall; half (~7vh) sits above parchment, half overlaps the top
   const TITLE_HEIGHT = 'clamp(80px,14vh,200px)';
@@ -205,19 +255,24 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
           {/* First copy — measured for loop length via setRef */}
           <div ref={setRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8vh' }}>
             {donors.map((d) => {
-              const name = [d.first_name || d.firstName, d.last_name || d.lastName].filter(Boolean).join(' ');
+              const effAmt = getEffectiveAmount(d);
+              const { title: dTitle, name: dName } = getFullName(d);
               return (
                 <div key={`a-${d.id}`} style={{ position: 'relative', width: '78%' }}>
                   <img src={frameImg} alt="" style={{ width: '100%', display: 'block' }} />
                   <div style={{
                     position: 'absolute', inset: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: textColor, fontSize: nameFontSize, fontWeight: 800,
-                    fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
-                    padding: '0 8%',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    color: textColor,
+                    fontFamily: "var(--font-ping)",
+                    padding: '0 14%',
+                    gap: 0,
+                    lineHeight: 1.1,
                   }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
-                      {d.isAnonymous ? 'בעילום שם' : (name || 'תורם אנונימי')}
+                    {dTitle ? <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center', fontSize: `calc(${nameFontSize} * 0.7)`, fontWeight: 400, opacity: 0.85, marginBottom: '-0.25em' }}>{dTitle}</span> : null}
+                    <FitText text={dName} fontSize={`calc(${nameFontSize} * 1.25)`} style={{ textAlign: 'center', fontWeight: 800 }} />
+                    <span style={{ fontSize: `calc(${nameFontSize} * 0.62)`, fontWeight: 600, direction: 'ltr', opacity: 0.8, lineHeight: 1, marginTop: '0.25em' }}>
+                      {fmt(effAmt)}
                     </span>
                   </div>
                 </div>
@@ -232,19 +287,24 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
           {needsLoop && donors.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8vh', paddingTop: '0.8vh' }}>
               {donors.map((d) => {
-                const name = [d.first_name || d.firstName, d.last_name || d.lastName].filter(Boolean).join(' ');
+                const effAmt = getEffectiveAmount(d);
+                const { title: dTitle, name: dName } = getFullName(d);
                 return (
                   <div key={`b-${d.id}`} style={{ position: 'relative', width: '78%' }}>
                     <img src={frameImg} alt="" style={{ width: '100%', display: 'block' }} />
                     <div style={{
                       position: 'absolute', inset: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: textColor, fontSize: nameFontSize, fontWeight: 800,
-                      fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
-                      padding: '0 8%',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      color: textColor,
+                      fontFamily: "var(--font-ping)",
+                      padding: '0 14%',
+                      gap: 0,
+                      lineHeight: 1.1,
                     }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
-                        {d.isAnonymous ? 'בעילום שם' : (name || 'תורם אנונימי')}
+                      {dTitle ? <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center', fontSize: `calc(${nameFontSize} * 0.7)`, fontWeight: 400, opacity: 0.85, marginBottom: '-0.25em' }}>{dTitle}</span> : null}
+                      <FitText text={dName} fontSize={`calc(${nameFontSize} * 1.25)`} style={{ textAlign: 'center', fontWeight: 800 }} />
+                      <span style={{ fontSize: `calc(${nameFontSize} * 0.62)`, fontWeight: 600, direction: 'ltr', opacity: 0.8, lineHeight: 1, marginTop: '0.25em' }}>
+                        {fmt(effAmt)}
                       </span>
                     </div>
                   </div>
@@ -335,7 +395,7 @@ function ShtiebelPanel({ donors, allShtieblach, settings }) {
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center',
           fontSize, fontWeight: 700, color: '#2a1a4e',
-          fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
+          fontFamily: "var(--font-ping)",
         }}>
           {/* Right half (RTL first) — synagogue name, centered, with safe gap from center circle */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingInline: `calc(${circleSize} * 0.6) 0.5vw` }}>
@@ -711,7 +771,7 @@ export default function Campaign179DonationScreenRank() {
       backgroundImage: `url("${ASSET.bgSky}")`,
       backgroundSize: '100% 100%',
       display: 'flex', flexDirection: 'column',
-      fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
+      fontFamily: "var(--font-ping)",
       direction: 'rtl',
       overflow: 'hidden',
       height: '100vh',
@@ -874,7 +934,6 @@ export default function Campaign179DonationScreenRank() {
       {/* ═══════ NEW-DONOR CELEBRATION (3s confetti pop) ═══════ */}
       {celebState && (() => {
         const d = celebState.donor;
-        const name = [d.first_name || d.firstName, d.last_name || d.lastName].filter(Boolean).join(' ');
         return (
           <div className="c179-celeb"
             style={{
@@ -899,14 +958,19 @@ export default function Campaign179DonationScreenRank() {
                 <img src={celebState.frameImg} alt="" style={{ width: '100%', display: 'block', filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.55))' }} />
                 <div style={{
                   position: 'absolute', inset: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: celebState.textColor, fontSize: 'clamp(28px,4.5vw,80px)', fontWeight: 900,
-                  fontFamily: "'Frank Ruhl Libre','Heebo','David',serif",
-                  padding: '0 6%',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  color: celebState.textColor,
+                  fontFamily: "var(--font-ping)",
+                  padding: '0 16%',
+                  gap: 0,
+                  lineHeight: 1.15,
+                  overflow: 'hidden',
                 }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center' }}>
-                    {d.isAnonymous ? 'בעילום שם' : (name || 'תורם אנונימי')}
-                  </span>
+                  {(() => { const { title: ct, name: cn } = getFullName(d); return (<>
+                    {ct ? <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textAlign: 'center', fontSize: 'clamp(18px,2.8vw,52px)', fontWeight: 400, opacity: 0.85, marginBottom: '-0.25em' }}>{ct}</span> : null}
+                    <FitText text={cn} fontSize="clamp(28px,4.5vw,80px)" style={{ fontWeight: 900 }} />
+                    <span style={{ fontSize: 'clamp(18px,2.8vw,52px)', fontWeight: 700, direction: 'ltr', opacity: 0.85 }}>{fmt(getEffectiveAmount(d))}</span>
+                  </>); })()}
                 </div>
               </div>
             </div>
@@ -935,9 +999,10 @@ export default function Campaign179DonationScreenRank() {
               return img ? <img src={img} alt="" style={{ height: 'clamp(60px,12vh,160px)', marginBottom: '2vh', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }} /> : null;
             })()}
 
-            <div style={{ fontSize: settings?.bsNameFontSize || 'clamp(36px,7vw,120px)', fontWeight: 'bold', color: settings?.bsNameColor || '#f5ead2', WebkitTextStroke: '0.15vw #8a6030', textAlign: 'center', lineHeight: 1.1, textShadow: '0 4px 16px rgba(0,0,0,0.6)', marginBottom: '2vh' }}>
-              {overlayDonor.isAnonymous ? 'בעילום שם' : ([overlayDonor.first_name || overlayDonor.firstName, overlayDonor.last_name || overlayDonor.lastName].filter(Boolean).join(' ') || 'תורם אנונימי')}
-            </div>
+            {(() => { const { title: ot, name: on } = getFullName(overlayDonor); return (<>
+              {ot ? <div style={{ fontSize: settings?.bsNameFontSize || 'clamp(24px,4.5vw,80px)', fontWeight: 400, color: settings?.bsNameColor || '#f5ead2', WebkitTextStroke: '0.05vw #8a6030', textAlign: 'center', lineHeight: 1.1, textShadow: '0 4px 16px rgba(0,0,0,0.6)', opacity: 0.85, marginBottom: '-0.3em' }}>{ot}</div> : null}
+              <div style={{ fontSize: settings?.bsNameFontSize || 'clamp(36px,7vw,120px)', fontWeight: 'bold', color: settings?.bsNameColor || '#f5ead2', WebkitTextStroke: '0.15vw #8a6030', textAlign: 'center', lineHeight: 1.1, textShadow: '0 4px 16px rgba(0,0,0,0.6)', marginBottom: '2vh' }}>{on}</div>
+            </>); })()}
 
             {(settings?.bsShowAmount ?? true) && (
               <div style={{ fontSize: settings?.bsAmountFontSize || 'clamp(44px,9vw,150px)', fontWeight: 'bold', color: settings?.bsAmountColor || '#f5ead2', WebkitTextStroke: '0.2vw #8a6030', textShadow: '0 6px 20px rgba(0,0,0,0.6)' }}>
