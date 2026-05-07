@@ -5,8 +5,12 @@ import { getCampaignId } from '@/lib/auth';
 
 export async function GET(request) {
     try {
-        // קבלת campaignId אוטומטית מה-middleware
-        const campaignId = getCampaignId(request);
+        // קבלת campaignId מה-header (authenticated) או מה-query string (public screens)
+        let campaignId = getCampaignId(request);
+        if (!campaignId || isNaN(campaignId)) {
+            const { searchParams } = new URL(request.url);
+            campaignId = parseInt(searchParams.get('campaignId'));
+        }
 
         // שליפת כל בתי הכנסת הייחודיים
         const result = await prisma.person.findMany({
