@@ -574,9 +574,9 @@ async function createFundraiser({ personId, activeDonor, campaignId }) {
 
     let existingUser = null;
     if (hasEmail) {
-        // בדיקה אם כבר קיים משתמש עם המייל הזה
-        existingUser = await prisma.user.findUnique({
-            where: { email: person.email }
+        // בדיקה אם כבר קיים משתמש עם המייל הזה (case-insensitive)
+        existingUser = await prisma.user.findFirst({
+            where: { email: { equals: person.email, mode: 'insensitive' } }
         });
     }
 
@@ -668,12 +668,12 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
     });
     const existingDonorPersonIds = new Set(existingDonors.map(d => d.personId));
 
-    // שליפת משתמשים קיימים לפי מיילים בקריאה אחת
-    const emails = people.filter(p => p.email?.trim()).map(p => p.email.trim());
+    // שליפת משתמשים קיימים לפי מיילים בקריאה אחת (case-insensitive)
+    const emails = people.filter(p => p.email?.trim()).map(p => p.email.trim().toLowerCase());
     const existingUsers = emails.length > 0 ? await prisma.user.findMany({
-        where: { email: { in: emails } }
+        where: { email: { in: emails, mode: 'insensitive' } }
     }) : [];
-    const userByEmail = new Map(existingUsers.map(u => [u.email, u]));
+    const userByEmail = new Map(existingUsers.map(u => [u.email.toLowerCase(), u]));
 
     let createdCount = 0;
     let skippedCount = 0;
@@ -705,7 +705,7 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
             continue;
         }
 
-        const existingUser = hasEmail ? userByEmail.get(person.email) : null;
+        const existingUser = hasEmail ? userByEmail.get(person.email.toLowerCase()) : null;
 
         newFundraiserData.push({
             personId: pid,

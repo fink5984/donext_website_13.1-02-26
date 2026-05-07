@@ -44,10 +44,36 @@ export async function PUT(request, { params }) {
         if (active !== undefined) updateData.active = active;
         if (status !== undefined) updateData.status = status;
 
+        // שמור את המייל הישן לפני העדכון
+        const oldPerson = email !== undefined ? await prisma.person.findUnique({
+            where: { id: personId },
+            select: { email: true }
+        }) : null;
+
         const updated = await prisma.person.update({
             where: { id: personId },
             data: updateData,
         });
+
+        // סנכרון מייל ב-User אם המייל השתנה (למתרים מקושר)
+        if (email !== undefined && oldPerson && email !== oldPerson.email) {
+            const fundraiserWithUser = await prisma.fundraiser.findFirst({
+                where: { personId, deleted_at: null },
+                select: { userId: true }
+            });
+            if (fundraiserWithUser?.userId) {
+                // בדוק שהמייל החדש לא שייך כבר למשתמש אחר
+                const conflictUser = email ? await prisma.user.findFirst({
+                    where: { email: { equals: email, mode: 'insensitive' } }
+                }) : null;
+                if (!conflictUser || conflictUser.id === fundraiserWithUser.userId) {
+                    await prisma.user.update({
+                        where: { id: fundraiserWithUser.userId },
+                        data: { email: email || undefined }
+                    });
+                }
+            }
+        }
 
         // עדכון שם אנגלי
         if (englishName) {
