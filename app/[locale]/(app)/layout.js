@@ -437,6 +437,11 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
                     target: '_blank'
                 },
                 {
+                    label: t('donationScreenRankView'),
+                    href: campaignId ? `/${locale}/campaigns/${campaignId}/donation-screen-rank` : `/${locale}/notFound`,
+                    target: '_blank'
+                },
+                {
                     label: t('approveDonations'),
                     href: campaignId ? `/${locale}/campaigns/${campaignId}/approve-donations` : `/${locale}/notFound`
                 },

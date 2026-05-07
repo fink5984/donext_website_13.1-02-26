@@ -10,6 +10,8 @@ export async function GET(request) {
         const fundraiserId = searchParams.get('fundraiserId');
         const idsOnly = searchParams.get('idsOnly');
         const includeInactive = searchParams.get('includeInactive');
+        const includeUnapproved = searchParams.get('includeUnapproved') === 'true';
+        const useMonthlyOnly = searchParams.get('useMonthlyOnly') === 'true';
 
         if (idsOnly && campaignId) {
             const donors = await prisma.donor.findMany({
@@ -112,7 +114,11 @@ export async function GET(request) {
             ...(includeInactive !== 'true' && { active: true })
         };
 
-        // שליפה עיקרית עם פגינציה, כולל רק תרומות מאושרות
+        // Donations filter — by default only approved; opt-in to include unapproved via query param
+        const donationsWhere = includeUnapproved
+            ? { deleted_at: null }
+            : { donateApproval: true, deleted_at: null };
+
         const donors = await prisma.donor.findMany({
             where,
             include: {
@@ -120,7 +126,7 @@ export async function GET(request) {
                 campaign: true,
                 fundraiser: { include: { person: true } },
                 donations: {
-                    where: { donateApproval: true, deleted_at: null },
+                    where: donationsWhere,
                     select: {
                         monthlyAmount: true,
                         numberOfPayments: true,
@@ -174,7 +180,7 @@ export async function GET(request) {
         }
 
         return NextResponse.json({
-            data: donorsWithIsFundraiser.map(mapDonorToFrontend),
+            data: donorsWithIsFundraiser.map(d => mapDonorToFrontend(d, { useMonthlyOnly })),
             total: totalAfterFilters
         });
     } catch (error) {
@@ -261,15 +267,19 @@ export async function POST(request) {
     }
 }
 
-function mapDonorToFrontend(donor) {
-    const actualDonationAmount = donor.donations?.filter(d => d.donateApproval === true).reduce((sum, donation) => {
-        if (donation.isUnlimited) {
+function mapDonorToFrontend(donor, opts = {}) {
+    const { useMonthlyOnly = false } = opts;
+    // donations are already pre-filtered by the include's where clause (approved-only by default,
+    // or all-non-deleted when includeUnapproved=true was passed).
+    // For monthly campaigns (useMonthlyOnly=true) we sum just the monthly amount,
+    // ignoring numberOfPayments — every donor is judged by their monthly commitment.
+    const actualDonationAmount = donor.donations?.reduce((sum, donation) => {
+        if (useMonthlyOnly || donation.isUnlimited) {
             return sum + (Number(donation.monthlyAmount) || 0);
-        } else {
-            const monthlyAmount = Number(donation.monthlyAmount) || 0;
-            const numberOfPayments = Number(donation.numberOfPayments) || 0;
-            return sum + (monthlyAmount * numberOfPayments);
         }
+        const monthlyAmount = Number(donation.monthlyAmount) || 0;
+        const numberOfPayments = Number(donation.numberOfPayments) || 0;
+        return sum + (monthlyAmount * numberOfPayments);
     }, 0) || 0;
 
     return {
@@ -285,6 +295,7 @@ function mapDonorToFrontend(donor) {
         main_mobile: donor.person?.mainMobile,
         phone_landline: donor.person?.phoneLandline,
         email: donor.person?.email,
+        synagogue: donor.person?.synagogue,
         houseNumber: donor.person?.houseNumber,
         street_name: donor.person?.street?.name,
         city_name: donor.person?.city?.name,

@@ -96,3 +96,6 @@ phpunit.result.cache
 .idea/
 
 .vercel
+
+*.psd
+*.psd

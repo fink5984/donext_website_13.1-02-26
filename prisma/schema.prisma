@@ -538,6 +538,8 @@ model CampaignScreenSetting {
   mosadWebhook3                 Int?                       @map("mosad_webhook3")
   skipDonationApproved          Boolean?                   @map("skip_donation_approved")
   supervisorApproval            Boolean?                   @map("supervisor_approval")
+  displayShtiebel               Boolean?                   @map("display_shtiebel")
+  fontSizeShtiebel              Int?                       @map("font_size_shtiebel")
   created_at                    DateTime?                  @default(now()) @db.Timestamp(6)
   updated_at                    DateTime?                  @default(now()) @updatedAt @db.Timestamp(6)
   goal                          Decimal?                   @map("goal")

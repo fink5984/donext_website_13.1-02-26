@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npx prisma *)",
       "Bash(xargs grep *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\projects 0925\\\\donext_website_13.1_new\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

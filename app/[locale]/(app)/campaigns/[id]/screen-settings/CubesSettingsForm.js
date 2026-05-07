@@ -186,7 +186,7 @@ export default function CubesSettingsForm({ settings, onUpdate, onSave, saving }
               onChange={(e) => handleInputChange('displayShtiebel', e.target.checked)}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-sm font-medium">הצג שטיבל</span>
+            <span className="text-sm font-medium">הצג פאנל בתי כנסת (מסך דרגות)</span>
           </label>
 
           <label className="flex items-center justify-end space-x-2 space-x-reverse">

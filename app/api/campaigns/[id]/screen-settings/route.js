@@ -116,6 +116,8 @@ const allowedKeys = new Set([
   'skipDonationApproved',
   'supervisorApproval',
   'lowDonationDisplay',
+  'displayShtiebel',
+  'fontSizeShtiebel',
 ]);
 
 function sanitizePayload(body) {
@@ -147,6 +149,7 @@ function sanitizePayload(body) {
       case 'showDonorFundRaiser':
       case 'skipDonationApproved':
       case 'supervisorApproval':
+      case 'displayShtiebel':
         result[key] = coerceBoolean(value);
         break;
       // ints
@@ -176,6 +179,7 @@ function sanitizePayload(body) {
       case 'mosadWebhook1':
       case 'mosadWebhook2':
       case 'mosadWebhook3':
+      case 'fontSizeShtiebel':
         result[key] = coerceInt(value);
         break;
       // decimals
