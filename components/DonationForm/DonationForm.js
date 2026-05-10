@@ -95,11 +95,20 @@ const showDoneXTErrorNotification = (message, title = 'External system error') =
 };
 
 const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mode = 'add', scrollToNotes = false }) => {
+    console.log('=== DonationForm RENDER ===');
+    console.log('Props - donor:', donor);
+    console.log('Props - donor.isAnonymous:', donor?.isAnonymous);
+    console.log('Props - isOpen:', isOpen);
+    console.log('Props - mode:', mode);
+    
     const t = useTranslations('donationForm');
     const { campaign, stores } = useAppContext();
     const { ranksStore } = stores;
 
     const [selectedDonor, setSelectedDonor] = useState(donor);
+    const [isAnonymous, setIsAnonymous] = useState(donor?.isAnonymous || false);
+    
+    console.log('State - isAnonymous:', isAnonymous);
     const [noteCompleted, setNoteCompleted] = useState(donation?.noteCompleted || false);
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
@@ -238,7 +247,18 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     // עדכון התורם הנבחר כאשר donor prop משתנה
     useEffect(() => {
         setSelectedDonor(donor);
+        setIsAnonymous(donor?.isAnonymous || false);
     }, [donor]);
+
+    // וודא שisAnonymous מתעדכן כשפותחים את הטופס במצב עריכה
+    useEffect(() => {
+        if (isOpen && donor) {
+            console.log('DonationForm useEffect [isOpen, donor] - donor:', donor);
+            console.log('DonationForm useEffect [isOpen, donor] - donor.isAnonymous:', donor?.isAnonymous);
+            console.log('DonationForm useEffect [isOpen, donor] - setting isAnonymous to:', donor?.isAnonymous || false);
+            setIsAnonymous(donor?.isAnonymous || false);
+        }
+    }, [isOpen, donor]);
 
     // עדכון פרטי הטופס כאשר donation prop משתנה
     useEffect(() => {
@@ -286,6 +306,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
 
     const handleDonorChange = (newDonor) => {
         setSelectedDonor(newDonor);
+        // Update isAnonymous to match the newly selected donor's current setting
+        setIsAnonymous(newDonor?.isAnonymous || false);
     };
 
     const fetchStripeKeys = async () => {
@@ -655,6 +677,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     hasPaymentMethod: donation.hasPaymentMethod,
                     note: donation.note,
                     followUpDate: donation.followUpDate,
+                    isAnonymous: isAnonymous,
                     mode: 'edit'
                 })
             });
@@ -662,6 +685,12 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
             if (response.ok) {
                 // Update stores
                 try {
+                    // עדכון ישיר של isAnonymous בסטור לפני fetchDonations
+                    const donorInStore = stores?.donorsStore?.donors?.find(d => d.id === selectedDonor.id);
+                    if (donorInStore && isAnonymous !== undefined) {
+                        donorInStore.isAnonymous = isAnonymous;
+                    }
+                    
                     await stores.donationsStore.fetchDonations();
                 } catch (storeError) {
                     console.error('Error updating stores after donor change:', storeError);
@@ -1002,7 +1031,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(donationData)
+                body: JSON.stringify({ ...donationData, isAnonymous })
             });
 
             if (response.ok) {
@@ -1057,8 +1086,13 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                                 newActualAmount = currentActual + totalAmount;
                             }
 
-                            // עדכון actualDonation לתורם
+                            // עדכון actualDonation וisAnonymous לתורם
                             stores.donorsStore.updateDonorActualDonation(selectedDonor.id, newActualAmount);
+                            
+                            // עדכון isAnonymous בסטור
+                            if (donorInStore && isAnonymous !== undefined) {
+                                donorInStore.isAnonymous = isAnonymous;
+                            }
                         }
 
                         // עדכון מהיר של סטור המתרימים (אם התורם משויך למתרים)
@@ -1112,6 +1146,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     <DonorNameHeader
                         donor={selectedDonor}
                         onDonorChange={handleDonorChange}
+                        isAnonymous={isAnonymous}
+                        onAnonymousChange={setIsAnonymous}
                     />
                     
                     {/* Full form - shown in both modes, readOnly in edit mode */}

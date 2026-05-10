@@ -6,7 +6,7 @@ import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import DoNextLoader from '@/app/components/DoNextLoader';
 import { useTranslations, useLocale } from 'next-intl';
 
-const DonorNameHeader = ({ donor, onDonorChange }) => {
+const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange }) => {
     const t = useTranslations('donorNameHeader');
     const locale = useLocale();
     const isRTL = locale === 'he';
@@ -240,6 +240,60 @@ const DonorNameHeader = ({ donor, onDonorChange }) => {
         return styles.selectDonorPlaceholder;
     };
 
+    const anonymousToggle = (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginTop: '8px'
+        }}>
+            <label style={{
+                position: 'relative',
+                display: 'inline-block',
+                width: '44px',
+                height: '22px',
+                cursor: 'pointer',
+                flexShrink: 0
+            }}>
+                <input
+                    type="checkbox"
+                    checked={!!isAnonymous}
+                    onChange={(e) => onAnonymousChange?.(e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                    position: 'absolute',
+                    cursor: 'pointer',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: isAnonymous ? '#6E99EC' : '#cbd5e1',
+                    transition: '0.3s',
+                    borderRadius: '22px'
+                }}>
+                    <span style={{
+                        position: 'absolute',
+                        height: '16px',
+                        width: '16px',
+                        left: isAnonymous ? '25px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.3s',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }} />
+                </span>
+            </label>
+            <span style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: '#6E99EC',
+                cursor: 'pointer',
+                userSelect: 'none'
+            }} onClick={() => onAnonymousChange?.(!isAnonymous)}>
+                {t('showAnonymous')}
+            </span>
+        </div>
+    );
+
     if (isEditing || !donor) {
         return (
             <div className={styles.donorNameHeader}>
@@ -309,6 +363,7 @@ const DonorNameHeader = ({ donor, onDonorChange }) => {
                         </div>
                     )}
                 </div>
+                {anonymousToggle}
             </div>
         );
     }
@@ -322,6 +377,7 @@ const DonorNameHeader = ({ donor, onDonorChange }) => {
                     <EditDonor/>
                 </button>
             </div>
+            {anonymousToggle}
         </div>
     );
 };

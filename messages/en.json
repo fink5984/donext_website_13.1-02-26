@@ -1084,7 +1084,8 @@
     "loading": "Loading...",
     "noResults": "No donors found",
     "minCharsRequired": "Enter at least 2 characters to search",
-    "donorNameLabel": "Donor name"
+    "donorNameLabel": "Donor name",
+    "showAnonymous": "Show as anonymous on public page"
   },
 
   "fundraiserManagement": {

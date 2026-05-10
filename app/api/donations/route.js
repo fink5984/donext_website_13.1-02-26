@@ -380,6 +380,7 @@ export async function GET(request) {
                         expected: true,
                         active: true,
                         trafficLightColor: true,
+                        isAnonymous: true,
                         fundraiser: {
                             select: {
                                 id: true,
@@ -717,7 +718,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, followUpDate, noteAssignee, mode = 'add' } = body;
+        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, followUpDate, noteAssignee, isAnonymous, mode = 'add' } = body;
 
         // זיהוי המשתמש הנוכחי
         const currentUser = getCurrentUserFromRequest(request);
@@ -966,6 +967,15 @@ export async function POST(request) {
             }
         }
 
+        // עדכון isAnonymous על התורם אם נשלח
+        if (isAnonymous !== undefined && donation?.donor) {
+            await prisma.donor.update({
+                where: { id: donation.donor.id },
+                data: { isAnonymous: Boolean(isAnonymous) }
+            });
+            donation.donor.isAnonymous = Boolean(isAnonymous);
+        }
+
         // בדיקה ושליחה ל-Money API
         let doneXTError = null;
         if (donation && donation.donor && donation.donor.campaign) {
@@ -1006,6 +1016,7 @@ export async function POST(request) {
                             last_name: donation.donor.person?.lastName,
                             total_amount: parseFloat(monthlyAmount) * (finalNumberOfPayments || 1),
                             donation_approved: donation.donateApproval || false,
+                            isAnonymous: donation.donor.isAnonymous || false,
                         },
                         skip: { skip: false }
                     }

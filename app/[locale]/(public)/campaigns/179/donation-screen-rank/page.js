@@ -371,7 +371,8 @@ function BottomScrollPanel({ donors, settings }) {
   }, [donors.length]);
 
   const renderPill = (d, prefix) => {
-    const { name: dName } = getFullName(d);
+    const { title: dTitle, name: dName } = getFullName(d);
+    const displayName = dTitle ? `${dTitle} ${dName}` : dName;
     return (
       <div key={`${prefix}-${d.id}`} style={{
         flexShrink: 0,
@@ -392,7 +393,7 @@ function BottomScrollPanel({ donors, settings }) {
           justifyContent: 'center',
           lineHeight: 1,
         }}>
-          <FitText text={dName} fontSize={nameFontSize} style={{ color: '#3a1a6e', fontFamily: 'var(--font-ping)', fontWeight: 800, textAlign: 'center', lineHeight: 1 }} />
+          <FitText text={displayName} fontSize={nameFontSize} style={{ color: '#3a1a6e', fontFamily: 'var(--font-ping)', fontWeight: 800, textAlign: 'center', lineHeight: 1 }} />
         </div>
       </div>
     );
@@ -692,14 +693,29 @@ export default function Campaign179DonationScreenRank() {
         channelRef.current = pusherRef.current.subscribe(ch);
         channelRef.current.bind('DonationScreen', (e) => {
           try {
-            const d = e?.donor || e || {};
+            const rawDonor = e?.donor || e || {};
+            // Map Pusher event format to internal format
+            const d = {
+              id: rawDonor.id,
+              firstName: rawDonor.first_name,
+              lastName: rawDonor.last_name,
+              amount: rawDonor.total_amount,
+              isAnonymous: rawDonor.isAnonymous || false,
+            };
             const av = getEffectiveAmount(d);
             const thr = Number(amountBigRef.current || 0);
             if (thr && av >= thr && !(e?.skip?.skip)) {
               const ex = donorsRef.current.find(x => x.id === d.id);
               if (!ex || getEffectiveAmount(ex) !== av) enqueue(d);
             }
-            setDonors(prev => { const i = prev.findIndex(x => x.id === d.id); if (i === -1) return [...prev, d]; const n = [...prev]; n[i] = d; return n; });
+            setDonors(prev => { 
+              const i = prev.findIndex(x => x.id === d.id); 
+              if (i === -1) return [...prev, d]; 
+              const n = [...prev]; 
+              // Merge with existing data to preserve other fields
+              n[i] = { ...n[i], ...d }; 
+              return n; 
+            });
           } catch (_) {}
         });
         channelRef.current.bind('ScreenSettingsUpdated', (e) => {
@@ -764,7 +780,7 @@ export default function Campaign179DonationScreenRank() {
     donors.forEach(d => {
       const av = Number(d.amount ?? 0);
       const r = getRankForAmount(av, sorted);
-      nextMap.set(d.id, { rankId: r?.id ?? null, amount: av });
+      nextMap.set(d.id, { rankId: r?.id ?? null, amount: av, isAnonymous: Boolean(d.isAnonymous) });
     });
 
     // First pass after donors+ranks load — record state but don't celebrate
@@ -777,9 +793,16 @@ export default function Campaign179DonationScreenRank() {
       const av = Number(d.amount ?? 0);
       const r = getRankForAmount(av, sorted);
       const newRankId = r?.id ?? null;
+      const newIsAnonymous = Boolean(d.isAnonymous);
       const prevEntry = lastRankByDonorRef.current.get(d.id);
       const prevRankId = prevEntry?.rankId ?? null;
       const prevAmount = prevEntry?.amount ?? 0;
+      const prevIsAnonymous = prevEntry?.isAnonymous ?? false;
+      
+      // Don't trigger celebration if only isAnonymous changed (but rank and amount stayed the same)
+      const onlyAnonymousChanged = newRankId === prevRankId && av === prevAmount && newIsAnonymous !== prevIsAnonymous;
+      if (onlyAnonymousChanged) return;
+      
       // Trigger when a donor enters a rank (new or upgrade) — i.e. rank id changes to a non-null value
       if (newRankId !== null && newRankId !== prevRankId) {
         const rankKey = Object.keys(RANK_MAP).find(k => r.name?.includes(k.split(' ')[0]));
@@ -934,7 +957,7 @@ export default function Campaign179DonationScreenRank() {
           <div style={{
             position: 'absolute', left: '34%', right: '46%', top: '2%', height: '26%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#f5ead2', fontSize: 'clamp(9px,1.0vw,17px)', fontWeight: 700, direction: 'ltr',
+            color: '#3a1a6e', fontSize: 'clamp(9px,1.0vw,17px)', fontWeight: 700, direction: 'ltr',
           }}>
             {new Intl.NumberFormat('he-IL').format(participants)}
           </div>

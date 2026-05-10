@@ -1106,7 +1106,8 @@
     "loading": "טוען...",
     "noResults": "לא נמצאו תורמים",
     "minCharsRequired": "הקלד לפחות 2 תווים לחיפוש",
-    "donorNameLabel": "שם התורם"
+    "donorNameLabel": "שם התורם",
+    "showAnonymous": "הצג בעילום שם בדף הציבורי"
   },
 
   "fundraiserManagement": {
