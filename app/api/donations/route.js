@@ -486,6 +486,7 @@ export async function GET(request) {
                             expected: true,
                             active: true,
                             trafficLightColor: true,
+                            isAnonymous: true,
                             fundraiser: {
                                 select: {
                                     id: true,

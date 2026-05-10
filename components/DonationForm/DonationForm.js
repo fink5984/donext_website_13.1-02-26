@@ -95,20 +95,12 @@ const showDoneXTErrorNotification = (message, title = 'External system error') =
 };
 
 const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mode = 'add', scrollToNotes = false }) => {
-    console.log('=== DonationForm RENDER ===');
-    console.log('Props - donor:', donor);
-    console.log('Props - donor.isAnonymous:', donor?.isAnonymous);
-    console.log('Props - isOpen:', isOpen);
-    console.log('Props - mode:', mode);
-    
     const t = useTranslations('donationForm');
     const { campaign, stores } = useAppContext();
     const { ranksStore } = stores;
 
     const [selectedDonor, setSelectedDonor] = useState(donor);
     const [isAnonymous, setIsAnonymous] = useState(donor?.isAnonymous || false);
-    
-    console.log('State - isAnonymous:', isAnonymous);
     const [noteCompleted, setNoteCompleted] = useState(donation?.noteCompleted || false);
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
@@ -249,16 +241,6 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         setSelectedDonor(donor);
         setIsAnonymous(donor?.isAnonymous || false);
     }, [donor]);
-
-    // וודא שisAnonymous מתעדכן כשפותחים את הטופס במצב עריכה
-    useEffect(() => {
-        if (isOpen && donor) {
-            console.log('DonationForm useEffect [isOpen, donor] - donor:', donor);
-            console.log('DonationForm useEffect [isOpen, donor] - donor.isAnonymous:', donor?.isAnonymous);
-            console.log('DonationForm useEffect [isOpen, donor] - setting isAnonymous to:', donor?.isAnonymous || false);
-            setIsAnonymous(donor?.isAnonymous || false);
-        }
-    }, [isOpen, donor]);
 
     // עדכון פרטי הטופס כאשר donation prop משתנה
     useEffect(() => {

@@ -217,8 +217,6 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
 
     const handleOpenEditForm = (donation) => {
         // יצירת אובייקט תורם בפורמט הנכון לטופס
-        console.log('handleOpenEditForm - donation.donor:', donation.donor);
-        console.log('handleOpenEditForm - isAnonymous value:', donation.donor?.isAnonymous);
         const donorForForm = {
             id: donation.donor.id,
             firstName: donation.donor.person?.firstName || '',
@@ -227,7 +225,6 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
             last_name: donation.donor.person?.lastName || '',
             isAnonymous: donation.donor?.isAnonymous || false
         };
-        console.log('handleOpenEditForm - donorForForm:', donorForForm);
         setSelectedDonor(donorForForm);
         setSelectedDonation(donation);
         setIsDonationFormOpen(true);
