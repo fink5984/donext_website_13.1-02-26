@@ -290,6 +290,7 @@ function mapDonorToFrontend(donor, opts = {}) {
         expected: donor.expected,
         active: donor.active,
         traffic_light_color: donor.trafficLightColor,
+        isAnonymous: donor.isAnonymous || false,
         first_name: donor.person?.firstName,
         last_name: donor.person?.lastName,
         title_before: donor.person?.titleBefore,
