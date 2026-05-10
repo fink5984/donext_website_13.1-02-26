@@ -34,8 +34,8 @@ function FitText({ text, fontSize, style, minSize = 7 }) {
   }, [fit]);
 
   return (
-    <div ref={wrapRef} style={{ width: '100%', overflow: 'hidden', textAlign: 'center' }}>
-      <span ref={textRef} style={{ ...style, fontSize, whiteSpace: 'nowrap', display: 'inline-block' }}>
+    <div ref={wrapRef} style={{ width: '100%', overflow: 'hidden', textAlign: 'center', lineHeight: 1 }}>
+      <span ref={textRef} style={{ ...style, fontSize, whiteSpace: 'nowrap', display: 'inline-block', lineHeight: 1, verticalAlign: 'middle' }}>
         {text}
       </span>
     </div>
@@ -59,6 +59,8 @@ const ASSET = {
   progressFull:    `${A}/progress-full.png`,
   remainingFrame:  `${A}/remaining-frame.png`,
   collectedFrame:  `${A}/collected-frame.png`,
+  shufarimFrame:   encodeURI(`${A}/שותפים לתורה.png`),
+  frameDecor:      encodeURI(`${A}/קלף מעוטר ארוך.png`),
 };
 
 // Map rank name → rank title image + donor frame image
@@ -157,7 +159,9 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
     };
     const t = setTimeout(measure, 200);
     window.addEventListener('resize', measure);
-    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+    const ro = new ResizeObserver(measure);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); ro.disconnect(); };
   }, [donors.length]);
 
   /* ── continuous infinite-loop scroll, only when needed ── */
@@ -247,8 +251,8 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
         backgroundPosition: 'top center',
         backgroundRepeat: 'no-repeat',
         overflow: 'hidden',
-        paddingTop: `calc(${TITLE_HALF} + 0.6vh)`,
-        paddingBottom: '4vh',
+        paddingTop: TITLE_HALF,
+        paddingBottom: '0.5vh',
       }}>
         {/* Scrolling donor pills — continuous infinite loop */}
         <div ref={wrapRef} style={{ flex: 1, overflowY: 'hidden', overflowX: 'hidden', padding: '0 0.6vw', width: '100%' }}>
@@ -314,6 +318,127 @@ function RankColumn({ rank, donors, rankIndex, totalRanks, settings }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Bottom horizontal scroll panel (donors below lowest rank) ── */
+function BottomScrollPanel({ donors, settings }) {
+  const trackRef  = useRef(null);
+  const copy1Ref  = useRef(null);  // second in DOM — its offsetWidth = one loop width
+  const rafRef    = useRef(null);
+  const posRef    = useRef(0);     // starts at 0; initialized to copyW on first measured frame
+
+  const nameFontSize = 'clamp(11px,1.2vw,20px)';
+
+  useEffect(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    posRef.current = 0;
+    if (trackRef.current) trackRef.current.style.transform = 'translateX(0)';
+    if (!donors.length) return;
+
+    const SPEED = 0.7;
+    const DELAY = 1000;
+    let startTs = null;
+    let initialized = false;
+
+    const tick = (ts) => {
+      if (!startTs) startTs = ts;
+      const tr = trackRef.current;
+      const cp = copy1Ref.current;
+      if (!tr || !cp) { rafRef.current = requestAnimationFrame(tick); return; }
+      const copyW = cp.offsetWidth;
+      if (!copyW) { rafRef.current = requestAnimationFrame(tick); return; }
+
+      // On first valid frame: position track so copy1 (right in DOM) is visible
+      // DOM order: [copy2][copy1] — translateX(-copyW) hides copy2 (left) and shows copy1 (right)
+      if (!initialized) {
+        posRef.current = copyW;
+        tr.style.transform = `translateX(-${copyW}px)`;
+        initialized = true;
+      }
+
+      if (ts - startTs < DELAY) { rafRef.current = requestAnimationFrame(tick); return; }
+
+      // Decrease pos → track moves RIGHT (left-to-right scroll)
+      posRef.current -= SPEED;
+      if (posRef.current <= 0) posRef.current += copyW;
+      tr.style.transform = `translateX(-${posRef.current}px)`;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [donors.length]);
+
+  const renderPill = (d, prefix) => {
+    const { name: dName } = getFullName(d);
+    return (
+      <div key={`${prefix}-${d.id}`} style={{
+        flexShrink: 0,
+        height: '6vh',
+        width: 'clamp(160px,16vw,280px)',
+        backgroundImage: `url('${ASSET.frameDecor}')`,
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        marginRight: '0.8vw',
+        position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          padding: '0 12% 1.2vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1,
+        }}>
+          <FitText text={dName} fontSize={nameFontSize} style={{ color: '#3a1a6e', fontFamily: 'var(--font-ping)', fontWeight: 800, textAlign: 'center', lineHeight: 1 }} />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ position: 'relative', flexShrink: 0, height: 'clamp(110px,20vh,240px)' }}>
+      {/* Top portion — preserves cartouche at natural aspect ratio */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '75%',
+        backgroundImage: `url('${ASSET.shufarimFrame}')`,
+        backgroundSize: '100% auto',
+        backgroundPosition: 'top center',
+        backgroundRepeat: 'no-repeat',
+      }} />
+      {/* Bottom portion — preserves the torn bottom edge */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
+        backgroundImage: `url('${ASSET.shufarimFrame}')`,
+        backgroundSize: '100% auto',
+        backgroundPosition: 'bottom center',
+        backgroundRepeat: 'no-repeat',
+      }} />
+      {donors.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          left: '2%', right: '2%', top: '60%', bottom: '8%',
+          overflow: 'hidden',
+          display: 'flex', alignItems: 'center',
+          direction: 'ltr',
+        }}>
+          <div ref={trackRef} style={{
+            display: 'flex', flexDirection: 'row', alignItems: 'center',
+            height: '100%', willChange: 'transform',
+          }}>
+            {/* copy2 — LEFT in DOM; enters from left as copy1 exits right */}
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%', flexShrink: 0 }}>
+              {donors.map(d => renderPill(d, 'b'))}
+            </div>
+            {/* copy1 — RIGHT in DOM; initially visible; measured for loop width */}
+            <div ref={copy1Ref} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: '100%', flexShrink: 0 }}>
+              {donors.map(d => renderPill(d, 'a'))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -754,6 +879,15 @@ export default function Campaign179DonationScreenRank() {
       .sort((a, b) => new Date(b.updated_at || b.updatedAt || 0) - new Date(a.updated_at || a.updatedAt || 0))
   })), [sortedRanks, donors]);
 
+  const unrankedDonors = useMemo(() =>
+    donors
+      .filter(d => {
+        const av = Number(d.amount ?? d.actualDonation ?? d.monthly_amount ?? 0);
+        return av > 0 && getRankForAmount(av, sortedRanks) === null;
+      })
+      .sort((a, b) => new Date(b.updated_at || b.updatedAt || 0) - new Date(a.updated_at || a.updatedAt || 0)),
+  [donors, sortedRanks]);
+
   const showShtiebel = Boolean(settings?.displayShtiebel);
   const bgBigDon = settings?.bgBigDonations ? settings.bgBigDonations : '';
 
@@ -793,11 +927,20 @@ export default function Campaign179DonationScreenRank() {
         {/* RIGHT side (first in RTL) — חלבי ובשרי logo (larger; aligned at top) */}
         <img src={ASSET.logo1} alt="logo" style={{ flexShrink: 0, alignSelf: 'flex-start', marginTop: '0.25vh', height: '13.5vh', width: 'auto', maxWidth: '14vw', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }} />
 
-        {/* Collected frame — now on the right (next to logo2) */}
+        {/* Collected sign — donor count in top banner, amount in lower parchment */}
         <div style={{ position: 'relative', flexShrink: 0, height: '11vh' }}>
-          <img src={ASSET.collectedFrame} alt="" style={{ height: '100%', width: 'auto', display: 'block' }} />
+          <img src={`${A}/sign_no_outer_background.png`} alt="" style={{ height: '100%', width: 'auto', display: 'block' }} />
+          {/* Donor count — positioned in the gap between "ע״י" and "תורמים" on the brown banner */}
           <div style={{
-            position: 'absolute', left: '5%', right: '5%', bottom: '5%', height: '55%',
+            position: 'absolute', left: '34%', right: '46%', top: '2%', height: '26%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#f5ead2', fontSize: 'clamp(9px,1.0vw,17px)', fontWeight: 700, direction: 'ltr',
+          }}>
+            {new Intl.NumberFormat('he-IL').format(participants)}
+          </div>
+          {/* Collected amount — in the lower parchment area */}
+          <div style={{
+            position: 'absolute', left: '8%', right: '8%', top: '38%', bottom: '8%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#3a1a6e', fontSize: 'clamp(16px,1.8vw,32px)', fontWeight: 900, direction: 'ltr',
           }}>
@@ -878,29 +1021,39 @@ export default function Campaign179DonationScreenRank() {
           display: 'flex',
           flexDirection: 'row',
           gap: '1vw',
-          padding: '0.5vh 4.5vw 5vh',
+          padding: '0.5vh 4.5vw 4vh',
           overflow: 'hidden',
           alignItems: 'stretch',
         }}>
-          {/* Shtiebel panel — first in DOM = rightmost in RTL */}
+          {/* Shtiebel panel — rightmost in RTL — spans full height (ranks + bottom panel) */}
           {showShtiebel && (
             <ShtiebelPanel donors={donors} allShtieblach={shtieblach} settings={settings} />
           )}
 
-          {[...ranksWithDonors].reverse().map((rank) => (
-            <RankColumn
-              key={rank.id}
-              rank={rank}
-              donors={rank.donors}
-              rankIndex={rank._idx}
-              totalRanks={sortedRanks.length}
-              settings={settings}
-            />
-          ))}
+          {/* Rank columns + BottomScrollPanel stacked in a column */}
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '1vh' }}>
+            {/* 3 rank columns */}
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: '1vw', alignItems: 'stretch' }}>
+              {[...ranksWithDonors].reverse().map((rank) => (
+                <RankColumn
+                  key={rank.id}
+                  rank={rank}
+                  donors={rank.donors}
+                  rankIndex={rank._idx}
+                  totalRanks={sortedRanks.length}
+                  settings={settings}
+                />
+              ))}
+              {ranksWithDonors.length === 0 && (
+                <div style={{ color: 'rgba(240,220,180,0.5)', fontSize: 'clamp(14px,1.5vw,24px)', margin: 'auto' }}>אין דרגות מוגדרות</div>
+              )}
+            </div>
 
-          {ranksWithDonors.length === 0 && (
-            <div style={{ color: 'rgba(240,220,180,0.5)', fontSize: 'clamp(14px,1.5vw,24px)', margin: 'auto' }}>אין דרגות מוגדרות</div>
-          )}
+            {/* שותפים לתורה — below the 3 rank columns */}
+            <div style={{ flexShrink: 0 }}>
+              <BottomScrollPanel donors={unrankedDonors} settings={settings} />
+            </div>
+          </div>
         </div>
 
       </div>
