@@ -787,6 +787,7 @@ export async function POST(request) {
             cityId, streetId, houseNumber, clientId, personId,
             fundraiserId, campaignId, synagogue, invitationSent, arrivalConfirmed, actuallyArrived, notes,
             noteFollowUpDate, noteAssignee,
+            titleBefore, titleAfter,
             englishName
         } = data;
         if (!firstName || !lastName) {
@@ -818,6 +819,8 @@ export async function POST(request) {
                 where: { id: parseInt(personId) },
                 data: {
                     firstName, lastName, phoneLandline: phone, email, mainMobile, synagogue,
+                    ...(titleBefore !== undefined ? { titleBefore } : {}),
+                    ...(titleAfter !== undefined ? { titleAfter } : {}),
                     cityId: cityId ? parseInt(cityId) : null,
                     streetId: streetId ? parseInt(streetId) : null,
                     houseNumber: houseNumber != null ? String(houseNumber).trim() : null,

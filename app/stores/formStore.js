@@ -123,6 +123,8 @@ class FormStore {
                 notes: formData.notes,
                 noteFollowUpDate: formData.noteFollowUpDate || null,
                 noteAssignee: formData.noteAssignee || null,
+                titleBefore: formData.titleBefore,
+                titleAfter: formData.titleAfter,
                 englishName: formData.englishName
             };
             
