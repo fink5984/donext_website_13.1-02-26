@@ -39,6 +39,7 @@ export async function GET(request, { params }) {
             publicScreenRanksBackgroundColor: settings.ranksBackgroundColor || '#b45309',
             isEnabled: settings.isEnabled ?? false,
             showDonationDetails: settings.showDonationDetails ?? true,
+            promoVideoUrl: settings.promoVideoUrl || null,
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -58,7 +59,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl } = body;
 
         // בדיקת קיום הקמפיין
         const existingCampaign = await prisma.campaign.findUnique({
@@ -87,6 +88,7 @@ export async function PUT(request, { params }) {
                 ranksBackgroundColor: publicScreenRanksBackgroundColor || '#b45309',
                 isEnabled: isEnabled ?? false,
                 showDonationDetails: showDonationDetails ?? true,
+                promoVideoUrl: promoVideoUrl || null,
             },
             update: {
                 ranks: publicScreenRanks || [],
@@ -99,6 +101,7 @@ export async function PUT(request, { params }) {
                 ranksBackgroundColor: publicScreenRanksBackgroundColor || '#b45309',
                 isEnabled: isEnabled ?? false,
                 showDonationDetails: showDonationDetails ?? true,
+                promoVideoUrl: promoVideoUrl || null,
             }
         });
 

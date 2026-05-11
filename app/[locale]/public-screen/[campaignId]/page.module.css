@@ -2757,3 +2757,99 @@
         page-break-inside: avoid;
     }
 }
+
+/* Promo Video Overlay */
+.promoVideoOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: promoFadeIn 0.3s ease;
+}
+
+@keyframes promoFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.promoVideoBox {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: min(95vw, 1000px);
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: promoSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes promoSlideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.promoVideoClose {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.promoVideoClose:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.promoVideoThumbnail {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.promoVideoEl {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    background: #000;
+}
+
+.promoVideoPlayBtn {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #000;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.promoVideoPlayBtn:hover {
+    transform: scale(1.08);
+    background: #fff;
+}

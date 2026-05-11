@@ -34,7 +34,8 @@ export default function AdditionalSettingsPage() {
         publicScreenStartDate: '',
         publicScreenEndDate: '',
         isEnabled: false,
-        showDonationDetails: true
+        showDonationDetails: true,
+        promoVideoUrl: ''
     });
 
     // State for copied link notification
@@ -105,7 +106,8 @@ export default function AdditionalSettingsPage() {
                     publicScreenEndDate: data.publicScreenEndDate ? new Date(data.publicScreenEndDate).toISOString().slice(0, 16) : '',
                     publicScreenRanksBackgroundColor: data.publicScreenRanksBackgroundColor || '#b45309',
                     isEnabled: data.isEnabled ?? false,
-                    showDonationDetails: data.showDonationDetails ?? true
+                    showDonationDetails: data.showDonationDetails ?? true,
+                    promoVideoUrl: data.promoVideoUrl || ''
                 });
             }
         } catch (error) {
@@ -756,6 +758,38 @@ export default function AdditionalSettingsPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* סרטון פרסומי */}
+                <div className={styles.settingsSection}>
+                    <h2>🎬 סרטון פרסומי</h2>
+                    <p className={styles.sectionDesc}>הסרטון יוצג כחלון צף למבקרים במסך הציבורי לאחר 5 שניות (פעם אחת בלבד)</p>
+
+                    {formData.promoVideoUrl && (
+                        <div className={styles.videoPreview}>
+                            <video
+                                src={formData.promoVideoUrl}
+                                controls
+                                style={{ width: '100%', maxHeight: '220px', borderRadius: '8px', marginBottom: '10px' }}
+                            />
+                            <button
+                                className={`${styles.iconButton} ${styles.iconButtonDanger}`}
+                                onClick={() => handleInputChange('promoVideoUrl', '')}
+                            >
+                                🗑️ הסר סרטון
+                            </button>
+                        </div>
+                    )}
+
+                    <FileUpload
+                        campaignId={campaignId}
+                        onUploadComplete={(url) => handleInputChange('promoVideoUrl', url)}
+                        accept="video/*"
+                        label={formData.promoVideoUrl ? '🔄 החלף סרטון' : '📤 העלה סרטון'}
+                        endpoint="/api/storage"
+                        prefix="promo-videos"
+                        previousUrl={formData.promoVideoUrl || undefined}
+                    />
                 </div>
 
                 {/* כפתור שמירה */}

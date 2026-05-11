@@ -685,6 +685,7 @@ model PublicScreenSettings {
   ranksBackgroundColor String?   @default("#b45309") @map("ranks_background_color")
   isEnabled            Boolean   @default(false) @map("is_enabled")
   showDonationDetails  Boolean   @default(true) @map("show_donation_details")
+  promoVideoUrl        String?   @map("promo_video_url")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

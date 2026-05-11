@@ -418,6 +418,7 @@ export async function GET(request, { params }) {
                 publicScreenEndDate: publicScreenSettings?.endDate || null,
                 publicScreenRanksBackgroundColor: publicScreenSettings?.ranksBackgroundColor || '#b45309',
                 showDonationDetails: publicScreenSettings?.showDonationDetails ?? true,
+                promoVideoUrl: publicScreenSettings?.promoVideoUrl || null,
                 recentDonations: formattedRecentDonations,
                 topDonors: donorsWithTotals,
                 fundraisers: formattedFundraisers

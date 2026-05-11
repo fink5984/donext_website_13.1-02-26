@@ -48,6 +48,9 @@ export default function PublicCampaignScreen() {
     const [isDonationFormOpen, setIsDonationFormOpen] = useState(false); // For add donation form
     const [selectedDonationFundraiserId, setSelectedDonationFundraiserId] = useState(null); // Fundraiser for donation
     const [initialDonationAmount, setInitialDonationAmount] = useState(null); // Initial amount for donation form
+    const [showPromoVideo, setShowPromoVideo] = useState(false); // Floating promo video overlay
+    const [promoVideoPlaying, setPromoVideoPlaying] = useState(false); // Whether video is playing
+    const promoVideoRef = useRef(null);
     
     // Translations object
     const translations = {
@@ -250,6 +253,15 @@ export default function PublicCampaignScreen() {
         const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
     }, [campaignId]);
+
+    // Show promo video overlay after 5 seconds (once per page load)
+    useEffect(() => {
+        if (!data?.promoVideoUrl) return;
+        const timer = setTimeout(() => {
+            setShowPromoVideo(true);
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, [data?.promoVideoUrl, campaignId]);
 
     // Set default tab to 'about' when showDonationDetails is false
     useEffect(() => {
@@ -907,7 +919,54 @@ export default function PublicCampaignScreen() {
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
             </button>
-            
+
+            {/* Promo Video Overlay */}
+            {showPromoVideo && data?.promoVideoUrl && (
+                <div className={styles.promoVideoOverlay}>
+                    <div className={styles.promoVideoBox}>
+                        <button
+                            className={styles.promoVideoClose}
+                            onClick={() => {
+                                setShowPromoVideo(false);
+                                if (promoVideoRef.current) promoVideoRef.current.pause();
+                            }}
+                            aria-label="סגור סרטון"
+                        >
+                            ✕
+                        </button>
+                        {!promoVideoPlaying ? (
+                            <div className={styles.promoVideoThumbnail}>
+                                <video
+                                    ref={promoVideoRef}
+                                    src={data.promoVideoUrl}
+                                    className={styles.promoVideoEl}
+                                    preload="metadata"
+                                />
+                                <button
+                                    className={styles.promoVideoPlayBtn}
+                                    onClick={() => {
+                                        setPromoVideoPlaying(true);
+                                        setTimeout(() => promoVideoRef.current?.play(), 50);
+                                    }}
+                                    aria-label="הפעל סרטון"
+                                >
+                                    ▶
+                                </button>
+                            </div>
+                        ) : (
+                            <video
+                                ref={promoVideoRef}
+                                src={data.promoVideoUrl}
+                                className={styles.promoVideoEl}
+                                controls
+                                autoPlay
+                                onEnded={() => setPromoVideoPlaying(false)}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Banner Section - replaces Hero when banners exist */}
             {data.publicScreenBanners && data.publicScreenBanners.length > 0 ? (
                 <div className={styles.bannerSection}>

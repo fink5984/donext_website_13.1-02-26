@@ -638,6 +638,17 @@
     border-radius: var(--Border-Radius-sm, 8px);
 }
 
+.sectionDesc {
+    font-size: 13px;
+    color: var(--table-cell, #6E99EC);
+    margin-bottom: 14px;
+    margin-top: -8px;
+}
+
+.videoPreview {
+    margin-bottom: 14px;
+}
+
 .urlSection {
     padding: 14px;
     background-color: var(--Surface-01, #F5F8FF);
