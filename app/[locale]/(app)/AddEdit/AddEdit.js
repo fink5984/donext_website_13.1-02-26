@@ -1250,6 +1250,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                             const formData = {
                               firstName,
                               lastName,
+                              titleBefore: watch("titleBefore"),
+                              titleAfter: watch("titleAfter"),
                               mainMobile,
                               landlinePhone,
                               email,
@@ -1290,6 +1292,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
               const formData = {
                 firstName,
                 lastName,
+                titleBefore: watch("titleBefore"),
+                titleAfter: watch("titleAfter"),
                 mainMobile: formatPhoneNumber(mainMobile),
                 landlinePhone: formatPhoneNumber(landlinePhone),
                 email,
