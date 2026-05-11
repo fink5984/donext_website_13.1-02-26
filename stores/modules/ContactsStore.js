@@ -172,6 +172,10 @@ class ContactsStore {
             if (this.filters.synagogues?.length) {
                 this.filters.synagogues.forEach(v => params.append('synagogues', v));
             }
+            // סינון לפי אנשים ללא בית כנסת
+            if (this.filters.noSynagogue) {
+                params.set('noSynagogue', 'true');
+            }
             // סינון לפי עיר (מרובה)
             if (this.filters.cities?.length) {
                 this.filters.cities.forEach(v => params.append('cities', v));

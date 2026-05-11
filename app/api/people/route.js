@@ -180,6 +180,7 @@ export async function GET(request) {
         const fatherNamesFilter = searchParams.getAll('fatherNames').filter(Boolean);
         const motherNamesFilter = searchParams.getAll('motherNames').filter(Boolean);
         const synagoguesFilter = searchParams.getAll('synagogues').filter(Boolean);
+        const noSynagogueFilter = searchParams.get('noSynagogue') === 'true';
         const citiesFilter = searchParams.getAll('cities').filter(Boolean);
         const titlesBeforeFilter = searchParams.getAll('titlesBefore').filter(Boolean);
         const titlesAfterFilter = searchParams.getAll('titlesAfter').filter(Boolean);
@@ -380,8 +381,19 @@ export async function GET(request) {
             addAndCondition({ motherName: { contains: motherNameFilter, mode: 'insensitive' } });
         }
 
-        // סינון לפי בית כנסת (מרובה או בודד)
-        if (synagoguesFilter.length > 0) {
+        // סינון לפי בית כנסת (מרובה או בודד, ואנשים ללא בית כנסת)
+        if (noSynagogueFilter && synagoguesFilter.length > 0) {
+            // גם ללא בית כנסת וגם בתי כנסת ספציפיים — OR ביניהם
+            addAndCondition({
+                OR: [
+                    { synagogue: null },
+                    { synagogue: '' },
+                    { synagogue: { in: synagoguesFilter, mode: 'insensitive' } },
+                ]
+            });
+        } else if (noSynagogueFilter) {
+            addAndCondition({ OR: [{ synagogue: null }, { synagogue: '' }] });
+        } else if (synagoguesFilter.length > 0) {
             addAndCondition({ synagogue: { in: synagoguesFilter, mode: 'insensitive' } });
         } else if (synagogueFilter) {
             addAndCondition({ synagogue: { contains: synagogueFilter, mode: 'insensitive' } });

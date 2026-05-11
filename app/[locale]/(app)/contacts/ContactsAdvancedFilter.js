@@ -14,11 +14,12 @@ import MultiRangeSlider from "../filter/multiRangeSlider/multiRangeSlider";
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 
 /* ============ Searchable Multi-Select Dropdown ============ */
-function SearchableMultiSelect({ options, selected, onChange, placeholder, label }) {
+function SearchableMultiSelect({ options, selected, onChange, placeholder, label, extraItems = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef(null);
-  const hasValue = selected.length > 0;
+  const extraSelectedCount = extraItems.filter(i => i.checked).length;
+  const hasValue = selected.length > 0 || extraSelectedCount > 0;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -41,11 +42,15 @@ function SearchableMultiSelect({ options, selected, onChange, placeholder, label
     onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
   };
 
-  const displayText = selected.length === 0
+  const totalSelected = selected.length + extraSelectedCount;
+  const displayText = totalSelected === 0
     ? placeholder
-    : selected.length <= 2
-      ? selected.join(', ')
-      : `${selected.length} נבחרו`;
+    : totalSelected <= 2
+      ? [
+          ...extraItems.filter(i => i.checked).map(i => i.label),
+          ...selected,
+        ].slice(0, 2).join(', ')
+      : `${totalSelected} נבחרו`;
 
   return (
     <div className={styles.dropdownWrapper} ref={wrapperRef}>
@@ -79,6 +84,19 @@ function SearchableMultiSelect({ options, selected, onChange, placeholder, label
             />
           </div>
           <div className={styles.dropdownOptions}>
+            {extraItems.map((item, i) => (
+              <div
+                key={`extra-${i}`}
+                className={`${styles.dropdownOption} ${item.checked ? styles.selected : ''}`}
+                onClick={() => item.onChange(!item.checked)}
+              >
+                <input type="checkbox" checked={item.checked} readOnly className={styles.optionCheckbox} />
+                <span>{item.label}</span>
+              </div>
+            ))}
+            {extraItems.length > 0 && filtered.length > 0 && (
+              <div className={styles.extraItemsSeparator} />
+            )}
             {filtered.map((opt, i) => {
               const isSel = selected.includes(opt);
               return (
@@ -172,6 +190,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   const [selectedGroomAt, setSelectedGroomAt] = useState([]);
   const [selectedWifeNames, setSelectedWifeNames] = useState([]);
   const [selectedSynagogues, setSelectedSynagogues] = useState([]);
+  const [noSynagogue, setNoSynagogue] = useState(false);
 
   // Age
   const [ageFrom, setAgeFrom] = useState('');
@@ -308,13 +327,14 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     if (selectedGroomAt.length > 0) filters.groomAt = selectedGroomAt;
     if (selectedWifeNames.length > 0) filters.wifeNames = selectedWifeNames;
     if (selectedSynagogues.length > 0) filters.synagogues = selectedSynagogues;
+    if (noSynagogue) filters.noSynagogue = true;
 
     // Age
     if (ageFrom) filters.ageFrom = parseInt(ageFrom);
     if (ageTo) filters.ageTo = parseInt(ageTo);
 
     return filters;
-  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
+  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo]);
 
   // Apply filters
   const handleApply = () => {
@@ -367,6 +387,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedGroomAt([]);
     setSelectedWifeNames([]);
     setSelectedSynagogues([]);
+    setNoSynagogue(false);
     setAgeFrom('');
     setAgeTo('');
     if (onReset) onReset();
@@ -414,6 +435,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedGroomAt(storeFilters.groomAt || []);
     setSelectedWifeNames(storeFilters.wifeNames || []);
     setSelectedSynagogues(storeFilters.synagogues || []);
+    setNoSynagogue(!!storeFilters.noSynagogue);
     setAgeFrom(storeFilters.ageFrom ? String(storeFilters.ageFrom) : '');
     setAgeTo(storeFilters.ageTo ? String(storeFilters.ageTo) : '');
   }, []);
@@ -484,9 +506,10 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       selectedGroomAt.length +
       selectedWifeNames.length +
       selectedSynagogues.length +
+      (noSynagogue ? 1 : 0) +
       (ageFrom ? 1 : 0) +
       (ageTo ? 1 : 0),
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, ageFrom, ageTo]);
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -903,6 +926,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                     selected={selectedSynagogues}
                     onChange={setSelectedSynagogues}
                     placeholder={t('af_synagoguePlaceholder')}
+                    extraItems={[{ label: 'אנשים ללא בית כנסת', checked: noSynagogue, onChange: setNoSynagogue }]}
                   />
                 </div>
 
