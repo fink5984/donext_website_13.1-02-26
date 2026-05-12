@@ -933,6 +933,7 @@ export default function Campaign179DonationScreenRank() {
       overflow: 'hidden',
       height: '100vh',
       width: '100vw',
+      paddingTop: '2vh',
     }}>
 
       {/* ═══════ HEADER ═══════ */}
