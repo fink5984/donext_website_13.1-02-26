@@ -57,7 +57,8 @@ export async function POST(request) {
 
         const cleanPhone = String(phone || '').replace(/\D/g, '');
         const monthlyAmount = parseFloat(amount);
-        const numberOfPayments = number_of_payments != null && number_of_payments !== '' ? parseInt(number_of_payments, 10) : 1;
+        const isUnlimitedPayment = number_of_payments == null || number_of_payments === '';
+        const numberOfPayments = isUnlimitedPayment ? null : parseInt(number_of_payments, 10);
 
         if (!cleanPhone || cleanPhone === '') {
             return NextResponse.json({ success: false, error: 'phone required' }, { status: 400 });
@@ -155,7 +156,8 @@ export async function POST(request) {
                     where: {id: existingDonation.id},
                     data: {
                         monthlyAmount: existingMonthlyAmount + monthlyAmount,
-                        numberOfPayments: numberOfPayments || existingNumberOfPayments
+                        numberOfPayments: isUnlimitedPayment ? null : (numberOfPayments || existingNumberOfPayments),
+                        isUnlimited: isUnlimitedPayment || existingDonation.isUnlimited
                     }
                 });
             } else {
@@ -163,8 +165,8 @@ export async function POST(request) {
                     data: {
                         donorId: donor.id,
                         monthlyAmount,
-                        numberOfPayments: numberOfPayments || 1,
-                        isUnlimited: numberOfPayments == null,
+                        numberOfPayments: isUnlimitedPayment ? null : numberOfPayments,
+                        isUnlimited: isUnlimitedPayment,
                         hasPaymentMethod: true,
                         moneyDonorId: donor_id
                     }

@@ -284,8 +284,14 @@ const NedarimPlusPayment = forwardRef(({
     let tashlumim = 1;
     let day = ''; // Day is only relevant for HK
 
-    // If only 1 payment, force Ragil - no point in setting up standing order for single payment
-    if (numberOfPayments <= 1) {
+    // Unlimited payments (numberOfPayments is null) → HK with empty Tashlumim per Nedarim Plus docs:
+    // "כשרוצים לחייב ללא הגבלה יש להשאיר ריק"
+    if (numberOfPayments == null) {
+      paymentType = 'HK';
+      totalAmount = amount; // monthly amount
+      tashlumim = ''; // empty = unlimited
+      day = (nedarimConfig?.hkDay || 1).toString();
+    } else if (numberOfPayments <= 1) {
       paymentType = 'Ragil';
       totalAmount = amount;
       tashlumim = 1;
