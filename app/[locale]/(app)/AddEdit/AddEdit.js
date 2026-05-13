@@ -85,7 +85,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
   const fund = formStore.formType === 'fundraiser';
   
   // בדוק אם להציג את קוביית ההזמנות ושדות נוספים
-  const { campaign } = useAppContext();
+  const { campaign, fundraiserId: currentFundraiserId } = useAppContext();
   const showInvitationSection = campaign?.showInvitationColumn || false;
   
   // Check if ANY donor in the campaign has English names (like in donors page)
@@ -1059,6 +1059,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                           campaignId={campaign?.id}
                                           onSelect={(a) => setNoteAssignee(a)}
                                           selectedName={noteAssignee?.name}
+                                          fundraiserId={notesOnly ? currentFundraiserId : null}
                                         />
                                       </div>
                                     )}
@@ -1174,10 +1175,11 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                         )}
                                         {newDonorNoteText.trim() && (
                                           <div className={styles.inlineAssignee}>
-                                            <AssigneePicker
+                                        <AssigneePicker
                                               campaignId={campaign?.id}
                                               onSelect={(a) => setNewDonorNoteAssignee(a)}
                                               selectedName={newDonorNoteAssignee?.name}
+                                              fundraiserId={notesOnly ? currentFundraiserId : null}
                                             />
                                           </div>
                                         )}

@@ -70,7 +70,7 @@ export default function ProtectedRoute({ children, allowedUserTypes = ['manager'
   useEffect(() => {
     if (isLoading) return; // חכה ל-hydration
     if ((userType === 'manager' || userType === 'operator' || isAdmin) && !campaignId && !adminOnly && !adminAndManager) {
-      if (!pathname?.includes('/new')) {
+      if (!pathname?.includes('/new') && !pathname?.includes('/contacts') && !pathname?.includes('/tags')) {
         router.push(`/${locale}/new`);
       }
     }

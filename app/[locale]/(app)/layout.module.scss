@@ -94,6 +94,10 @@
     flex: 1;
     overflow: hidden;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--Surface-01, #f5f7fa);
 }
 
 // Sub-sidebar for contacts page (matches campaign selection sub-sidebar)

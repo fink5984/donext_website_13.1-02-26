@@ -8,6 +8,7 @@ import QuestionnaireStore from "./modules/QuestionnaireStore";
 import OperatorsStore from "./modules/OperatorsStore";
 import OperatorRanksStore from "./modules/OperatorRanksStore";
 import ContactsStore from "./modules/ContactsStore";
+import TagsStore from "./modules/TagsStore";
 import fetchWithAuth from "../app/utils/fetchWithAuth";
 import { formStore } from "../app/stores/formStore";
 
@@ -30,6 +31,7 @@ class RootStore {
         this.operatorsStore = new OperatorsStore(this);
         this.operatorRanksStore = new OperatorRanksStore(this);
         this.contactsStore = new ContactsStore(this);
+        this.tagsStore = new TagsStore(this);
     
     makeAutoObservable(this, {
       donorsStore: false,
@@ -38,7 +40,8 @@ class RootStore {
       questionnaireStore: false,
       operatorsStore: false,
       operatorRanksStore: false,
-      contactsStore: false
+      contactsStore: false,
+      tagsStore: false
     });
 
     // Reaction for fetching data when campaign changes

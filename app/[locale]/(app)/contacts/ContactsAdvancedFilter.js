@@ -151,7 +151,7 @@ const DONATION_SOURCES = ['credit', 'vows', 'phone', 'system', 'landing'];
 const CONTACT_METHODS = ['phone', 'mobile', 'email', 'whatsapp', 'sms'];
 
 const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
-  { isOpen, onClose, onApply, onReset, clientId, totalResults },
+  { isOpen, onClose, onApply, onReset, clientId, totalResults, tags = [] },
   ref
 ) {
   const t = useTranslations('contactsPage');
@@ -191,6 +191,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   const [selectedWifeNames, setSelectedWifeNames] = useState([]);
   const [selectedSynagogues, setSelectedSynagogues] = useState([]);
   const [noSynagogue, setNoSynagogue] = useState(false);
+
+  // Tags
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
 
   // Age
   const [ageFrom, setAgeFrom] = useState('');
@@ -329,12 +332,15 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     if (selectedSynagogues.length > 0) filters.synagogues = selectedSynagogues;
     if (noSynagogue) filters.noSynagogue = true;
 
+    // Tags
+    if (selectedTagIds.length > 0) filters.tagIds = selectedTagIds;
+
     // Age
     if (ageFrom) filters.ageFrom = parseInt(ageFrom);
     if (ageTo) filters.ageTo = parseInt(ageTo);
 
     return filters;
-  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo]);
+  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds]);
 
   // Apply filters
   const handleApply = () => {
@@ -388,6 +394,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedWifeNames([]);
     setSelectedSynagogues([]);
     setNoSynagogue(false);
+    setSelectedTagIds([]);
     setAgeFrom('');
     setAgeTo('');
     if (onReset) onReset();
@@ -436,6 +443,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedWifeNames(storeFilters.wifeNames || []);
     setSelectedSynagogues(storeFilters.synagogues || []);
     setNoSynagogue(!!storeFilters.noSynagogue);
+    setSelectedTagIds(storeFilters.tagIds || []);
     setAgeFrom(storeFilters.ageFrom ? String(storeFilters.ageFrom) : '');
     setAgeTo(storeFilters.ageTo ? String(storeFilters.ageTo) : '');
   }, []);
@@ -508,8 +516,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       selectedSynagogues.length +
       (noSynagogue ? 1 : 0) +
       (ageFrom ? 1 : 0) +
-      (ageTo ? 1 : 0),
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo]);
+      (ageTo ? 1 : 0) +
+      selectedTagIds.length,
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -558,6 +567,33 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
             {/* ==================== PERSONAL DETAILS ==================== */}
             {activeSection === 'personal' && (
               <div className={styles.sectionContent}>
+                {/* Tags */}
+                {tags.length > 0 && (
+                  <div className={styles.filterField}>
+                    <h4 className={styles.sectionHeading}>{t('af_tags')}</h4>
+                    <div className={styles.tagFilterPills}>
+                      {tags.map(tag => {
+                        const isSelected = selectedTagIds.includes(tag.id);
+                        return (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            className={`${styles.tagFilterPill} ${isSelected ? styles.tagFilterPillSelected : ''}`}
+                            style={{ '--tag-color': tag.color || '#ccc' }}
+                            onClick={() => setSelectedTagIds(prev =>
+                              isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                            )}
+                          >
+                            {isSelected && <span className={styles.checkmark}>✓</span>}
+                            <span className={styles.tagFilterDot} style={{ backgroundColor: tag.color || '#ccc' }} />
+                            <span>{tag.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* First Name */}
                 <div className={styles.filterField}>
                   <SearchableMultiSelect

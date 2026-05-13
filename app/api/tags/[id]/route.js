@@ -9,11 +9,12 @@ export async function PUT(request, { params }) {
     try {
         const { id } = await params;
         const body = await request.json();
-        const { name, color } = body;
+        const { name, color, description } = body;
 
         const updateData = {};
         if (name !== undefined) updateData.name = name.trim();
         if (color !== undefined) updateData.color = color;
+        if (description !== undefined) updateData.description = description ? description.trim() : null;
 
         const tag = await prisma.tag.update({
             where: { id: parseInt(id) },

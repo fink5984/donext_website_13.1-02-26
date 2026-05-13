@@ -114,6 +114,9 @@ const ContactsPage = observer(function ContactsPage() {
   const showExcelImport = contactsStore.showExcelImport;
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef(null);
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const tagPickerRef = useRef(null);
+  const [isBulkTagging, setIsBulkTagging] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportMenuRef = useRef(null);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
@@ -371,6 +374,31 @@ const ContactsPage = observer(function ContactsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMoreMenu]);
 
+  // Close tag picker on outside click
+  useEffect(() => {
+    if (!showTagPicker) return;
+    const handleClickOutside = (e) => {
+      if (tagPickerRef.current && !tagPickerRef.current.contains(e.target)) {
+        setShowTagPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagPicker]);
+
+  const handleBulkTag = async (tagId) => {
+    setShowTagPicker(false);
+    setIsBulkTagging(true);
+    try {
+      const personIds = Array.from(contactsStore.selectedContactIds);
+      await contactsStore.bulkTag({ personIds, tagIds: [tagId], action: 'add' });
+    } catch (e) {
+      console.error('Bulk tag error:', e);
+    } finally {
+      setIsBulkTagging(false);
+    }
+  };
+
   // Close export menu on outside click
   useEffect(() => {
     if (!showExportMenu) return;
@@ -494,7 +522,7 @@ const ContactsPage = observer(function ContactsPage() {
       'campaignIds', 'sources', 'source', 'standingOrder', 'expectedMin', 'expectedMax',
       'actualMin', 'actualMax', 'donationAmountType', 'paymentMethods', 'vsExpected', 'isFundraiser', 'rating', 'contactMethod',
       'fatherNames', 'motherNames', 'groomAt', 'wifeNames', 'synagogues',
-      'ageFrom', 'ageTo',
+      'ageFrom', 'ageTo', 'tagIds',
       // legacy single-value keys
       'firstName', 'lastName', 'city', 'street', 'houseNumber', 'fatherName', 'motherName', 'synagogue',
     ];
@@ -914,6 +942,35 @@ const ContactsPage = observer(function ContactsPage() {
                 <span>{t('deleteContacts')}</span>
               </button>
               <div className={styles.selectionDivider} />
+              {/* Tag assignment */}
+              <div className={styles.tagPickerWrapper} ref={tagPickerRef}>
+                <button
+                  className={styles.selectionActionBtn}
+                  onClick={() => setShowTagPicker(prev => !prev)}
+                  disabled={isBulkTagging}
+                >
+                  <span>{isBulkTagging ? '...' : t('assignTag')}</span>
+                </button>
+                {showTagPicker && (
+                  <div className={styles.tagPickerDropdown}>
+                    {contactsStore.tags.length === 0 ? (
+                      <span className={styles.tagPickerEmpty}>{t('noTagsAvailable')}</span>
+                    ) : (
+                      contactsStore.tags.map(tag => (
+                        <button
+                          key={tag.id}
+                          className={styles.tagPickerItem}
+                          onClick={() => handleBulkTag(tag.id)}
+                        >
+                          <span className={styles.tagPickerDot} style={{ backgroundColor: tag.color || '#ccc' }} />
+                          <span>{tag.name}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className={styles.selectionDivider} />
               <div className={styles.moreMenuWrapper} ref={moreMenuRef}>
                 <button className={styles.selectionActionBtn} onClick={() => setShowMoreMenu(prev => !prev)}>
                   <span>{t('moreActions')}</span>
@@ -978,6 +1035,7 @@ const ContactsPage = observer(function ContactsPage() {
         onReset={handleAdvancedFilterReset}
         clientId={clientId}
         totalResults={contactsStore.totalContacts}
+        tags={contactsStore.tags}
       />
 
       {showExcelImport && (

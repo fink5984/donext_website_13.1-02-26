@@ -9,7 +9,7 @@ const PersonSvg = () => (
     </svg>
 );
 
-const AssigneePicker = ({ campaignId, onSelect, selectedName }) => {
+const AssigneePicker = ({ campaignId, onSelect, selectedName, fundraiserId = null }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [members, setMembers] = useState([]);
     const [search, setSearch] = useState('');
@@ -23,7 +23,10 @@ const AssigneePicker = ({ campaignId, onSelect, selectedName }) => {
     useEffect(() => {
         if (isOpen && !fetched && campaignId) {
             setLoading(true);
-            fetchWithAuth(`/api/campaigns/${campaignId}/members`)
+            const url = fundraiserId
+                ? `/api/campaigns/${campaignId}/members?fundraiserId=${fundraiserId}`
+                : `/api/campaigns/${campaignId}/members`;
+            fetchWithAuth(url)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -34,7 +37,7 @@ const AssigneePicker = ({ campaignId, onSelect, selectedName }) => {
                 .catch(() => setFetched(true))
                 .finally(() => setLoading(false));
         }
-    }, [isOpen, fetched, campaignId]);
+    }, [isOpen, fetched, campaignId, fundraiserId]);
 
     // Focus search input when popup opens
     useEffect(() => {

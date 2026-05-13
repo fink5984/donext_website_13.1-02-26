@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import styles from './login.module.scss';
 import Dashboard from "@/app/icons/dashboard.svg";
 import ContactsIcon from "@/app/icons/contacts.svg";
+import SettingsIcon from "@/app/icons/settings.svg";
 import IconTooltip from '@/app/[locale]/components/IconTooltip/IconTooltip';
 
 export function CampaignSelectionSidebar({ onLogout, activeSection, onSectionChange, isAdmin = false, isAdminOrManager = false }) {
@@ -34,6 +35,15 @@ export function CampaignSelectionSidebar({ onLogout, activeSection, onSectionCha
       title: t('contacts'),
       href: `/${locale}/contacts`,
       menu: []
+    }] : []),
+    // Only show settings for admin/manager users
+    ...(isAdminOrManager ? [{
+      id: 'settings',
+      icon: <SettingsIcon />,
+      title: t('settings'),
+      menu: [
+        { label: t('addTags'), href: `/${locale}/tags` }
+      ]
     }] : [])
   ];
 

@@ -720,6 +720,51 @@
   }
 }
 
+/* ==================== TAG FILTER PILLS ==================== */
+
+.tagFilterPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  direction: rtl;
+}
+
+.tagFilterPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 24px;
+  border: 1px solid #C5D7F8;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--Text-able-Text, #1A1A2E);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: #0C4AD5;
+    background: rgba(12, 74, 213, 0.04);
+  }
+
+  &.tagFilterPillSelected {
+    border-color: #0C4AD5;
+    background: rgba(12, 74, 213, 0.06);
+    color: #0C4AD5;
+    font-weight: 600;
+  }
+}
+
+.tagFilterDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* ==================== AGE SELECTOR ==================== */
 
 .ageRow {

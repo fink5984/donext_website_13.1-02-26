@@ -38,7 +38,7 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { clientId, name, color } = body;
+        const { clientId, name, color, description } = body;
 
         if (!clientId || !name) {
             return NextResponse.json(
@@ -52,6 +52,7 @@ export async function POST(request) {
                 clientId: parseInt(clientId),
                 name: name.trim(),
                 color: color || null,
+                description: description ? description.trim() : null,
             },
         });
 

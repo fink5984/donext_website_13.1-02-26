@@ -5,6 +5,9 @@ export async function GET(request, { params }) {
     try {
         const { id } = await params;
         const campaignId = parseInt(id);
+        const { searchParams } = new URL(request.url);
+        const fundraiserIdParam = searchParams.get('fundraiserId');
+        const filterFundraiserId = fundraiserIdParam ? parseInt(fundraiserIdParam) : null;
 
         if (!campaignId) {
             return NextResponse.json({ success: false, error: 'Campaign ID required' }, { status: 400 });
@@ -19,6 +22,7 @@ export async function GET(request, { params }) {
             select: {
                 id: true,
                 userId: true,
+                assignedOperatorId: true,
                 person: {
                     select: {
                         id: true,
@@ -73,6 +77,41 @@ export async function GET(request, { params }) {
                 role: 'manager',
                 roleLabel: 'מנהל'
             });
+        }
+
+        // If filtering for a specific fundraiser — return only manager + that fundraiser + their operator
+        if (filterFundraiserId) {
+            const targetFr = fundraisers.find(fr => fr.id === filterFundraiserId);
+            if (targetFr) {
+                const targetName = targetFr.person
+                    ? `${targetFr.person.firstName || ''} ${targetFr.person.lastName || ''}`.trim()
+                    : (targetFr.user?.name || `מתרים #${targetFr.id}`);
+                members.push({
+                    userId: targetFr.userId,
+                    fundraiserId: targetFr.id,
+                    name: targetName || `מתרים #${targetFr.id}`,
+                    role: 'fundraiser',
+                    roleLabel: 'מתרים'
+                });
+
+                // Add assigned operator if exists
+                if (targetFr.assignedOperatorId) {
+                    const operatorFr = fundraisers.find(fr => fr.id === targetFr.assignedOperatorId);
+                    if (operatorFr) {
+                        const opName = operatorFr.person
+                            ? `${operatorFr.person.firstName || ''} ${operatorFr.person.lastName || ''}`.trim()
+                            : (operatorFr.user?.name || `מפעיל #${operatorFr.id}`);
+                        members.push({
+                            userId: operatorFr.userId,
+                            fundraiserId: operatorFr.id,
+                            name: opName || `מפעיל #${operatorFr.id}`,
+                            role: 'operator',
+                            roleLabel: 'מפעיל'
+                        });
+                    }
+                }
+            }
+            return NextResponse.json({ success: true, data: members });
         }
 
         // Add fundraisers

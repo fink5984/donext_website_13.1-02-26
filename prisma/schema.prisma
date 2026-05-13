@@ -762,14 +762,15 @@ enum custom_field_type_enum {
 // ─── Contacts Hub Models ───────────────────────────────────────
 
 model Tag {
-  id         Int         @id @default(autoincrement())
-  clientId   Int         @map("client_id")
-  name       String
-  color      String?
-  created_at DateTime?   @default(now()) @db.Timestamp(6)
-  updated_at DateTime?   @default(now()) @updatedAt @db.Timestamp(6)
-  client     Client      @relation(fields: [clientId], references: [id])
-  personTags PersonTag[]
+  id          Int         @id @default(autoincrement())
+  clientId    Int         @map("client_id")
+  name        String
+  description String?
+  color       String?
+  created_at  DateTime?   @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?   @default(now()) @updatedAt @db.Timestamp(6)
+  client      Client      @relation(fields: [clientId], references: [id])
+  personTags  PersonTag[]
 
   @@unique([clientId, name])
   @@map("tags")
