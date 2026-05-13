@@ -284,7 +284,7 @@ const FundraisersPage = observer(() => {
                 dataSource = selectedFundraisers.map(id => fundraisers.find(f => f.id === id));
             } else {
                 // שליפת כל המתרימים ללא עימוד לפי מסננים/מיון נוכחיים
-                dataSource = await store.fundraisersStore.fetchAllFundraisersForExport();
+                dataSource = await store.fundraisersStore.fetchFilteredFundraisersForExport();
             }
 
             if (!dataSource || dataSource.filter(Boolean).length === 0) {

@@ -206,11 +206,20 @@ async function fetchDonorsForExport(params) {
     const isSortingByCommitment = params.sorting.sortField === 'commitmentTotal';
     const isSortingByTraffic = params.sorting.sortField === 'traffic' || params.sorting.sortField === 'traffic_light_color';
     const isSortingByDonorNotes = params.sorting.sortField === 'donorNotes';
+    const isSortingByActiveExport = params.sorting.sortField === 'active';
     const isDefaultSortExport = !params.sorting.sortField;
     
     // אם אין מיון מוגדר, השתמש במיון ברירת מחדל לפי שם
     const sortField = params.sorting.sortField || 'name';
     const sortDir = params.sorting.sortDir || 'asc';
+
+    // Helper: כבויים תמיד בסוף (לא רלוונטי כשממיינים לפי active)
+    const pushInactiveToBottomExport = (a, b) => {
+        if (isSortingByActiveExport) return 0;
+        const aActive = a.active !== false ? 0 : 1;
+        const bActive = b.active !== false ? 0 : 1;
+        return aActive - bActive;
+    };
     
     const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes && !isDefaultSortExport
         ? buildOrderByCondition(sortField, sortDir) 
@@ -225,6 +234,8 @@ async function fetchDonorsForExport(params) {
     let sortedDonors = filteredDonors;
     if (isSortingByActual) {
         sortedDonors = [...filteredDonors].sort((a, b) => {
+            const activeOrder = pushInactiveToBottomExport(a, b);
+            if (activeOrder !== 0) return activeOrder;
             const actualA = calculateActualDonation(a);
             const actualB = calculateActualDonation(b);
             return params.sorting.sortDir === 'asc' ? actualA - actualB : actualB - actualA;
@@ -238,6 +249,8 @@ async function fetchDonorsForExport(params) {
             return sum + m * (Number(d.numberOfPayments) || 0);
         }, 0) || 0;
         sortedDonors = [...filteredDonors].sort((a, b) => {
+            const activeOrder = pushInactiveToBottomExport(a, b);
+            if (activeOrder !== 0) return activeOrder;
             const cA = calcCommitment(a);
             const cB = calcCommitment(b);
             return params.sorting.sortDir === 'asc' ? cA - cB : cB - cA;
@@ -245,6 +258,8 @@ async function fetchDonorsForExport(params) {
     } else if (isSortingByTraffic) {
         // מיון לפי צבעי רמזור: green > orange > red > gray
         sortedDonors = [...filteredDonors].sort((a, b) => {
+            const activeOrder = pushInactiveToBottomExport(a, b);
+            if (activeOrder !== 0) return activeOrder;
             const trafficOrder = { green: 1, orange: 2, red: 3, gray: 4 };
             const orderA = trafficOrder[a.trafficLightColor] || 5;
             const orderB = trafficOrder[b.trafficLightColor] || 5;
@@ -256,6 +271,9 @@ async function fetchDonorsForExport(params) {
         today.setHours(0, 0, 0, 0);
         
         sortedDonors = [...filteredDonors].sort((a, b) => {
+            const activeOrder = pushInactiveToBottomExport(a, b);
+            if (activeOrder !== 0) return activeOrder;
+
             const getNotePriority = (donor) => {
                 const notes = donor.donorNotes || [];
                 let oldestOverdueDate = null;
@@ -303,6 +321,9 @@ async function fetchDonorsForExport(params) {
     } else if (isDefaultSortExport) {
         // מיון ברירת מחדל לייצוא: קודם משימות להיום, אח"כ משימות שעבר זמנן, אח"כ לפי שם
         sortedDonors = [...filteredDonors].sort((a, b) => {
+            const activeOrder = pushInactiveToBottomExport(a, b);
+            if (activeOrder !== 0) return activeOrder;
+
             const pA = getDonorNotePriority(a);
             const pB = getDonorNotePriority(b);
             
@@ -381,13 +402,29 @@ async function fetchDonorsWithPagination(params) {
     const isSortingByCommitment = params.sorting.sortField === 'commitmentTotal';
     const isSortingByTraffic = params.sorting.sortField === 'traffic' || params.sorting.sortField === 'traffic_light_color';
     const isSortingByDonorNotes = params.sorting.sortField === 'donorNotes';
+    const isSortingByActive = params.sorting.sortField === 'active';
     // אם אין מיון מוגדר, השתמש במיון ברירת מחדל לפי שם (ב-DB - מהיר)
     const sortField = params.sorting.sortField || 'name';
     const sortDir = params.sorting.sortDir || 'asc';
+
+    // כאשר לא ממיינים לפי עמודת active - מוסיפים active:desc כדי שכבויים ירדו לסוף
+    const buildOrderByWithActiveFirst = (field, dir) => {
+        const base = buildOrderByCondition(field, dir);
+        if (isSortingByActive) return base;
+        return [{ active: { sort: 'desc', nulls: 'last' } }, ...base];
+    };
     
     const orderBy = !isSortingByActual && !isSortingByCommitment && !isSortingByTraffic && !isSortingByDonorNotes
-        ? buildOrderByCondition(sortField, sortDir) 
+        ? buildOrderByWithActiveFirst(sortField, sortDir) 
         : undefined;
+
+    // Helper: כבויים תמיד בסוף (לא רלוונטי כשממיינים לפי active)
+    const pushInactiveToBottom = (a, b) => {
+        if (isSortingByActive) return 0;
+        const aActive = a.active !== false ? 0 : 1;
+        const bActive = b.active !== false ? 0 : 1;
+        return aActive - bActive;
+    };
 
     // אם יש fundraiserId - מתרים מסוים - החזר הכל בלי הגבלה
     const isFundraiserSpecific = params.fundraiserId && params.fundraiserId !== 'null' && params.fundraiserId !== null;
@@ -422,6 +459,10 @@ async function fetchDonorsWithPagination(params) {
 
         // מיון
         const sortedDonors = [...filteredDonors].sort((a, b) => {
+            // כבויים תמיד בסוף (חוץ ממיון לפי active עצמו)
+            const activeOrder = pushInactiveToBottom(a, b);
+            if (activeOrder !== 0) return activeOrder;
+
             if (isSortingByActual) {
                 const actualA = calculateActualDonation(a);
                 const actualB = calculateActualDonation(b);

@@ -714,14 +714,15 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
     // בדיקה אם אין תרומות בכלל בקמפיין (לא בגלל פילטרים)
     const hasNoDonationsInCampaign = donationsStore.totalCount === 0 && !donationsStore.hasActiveFilters && !donationsStore.loading;
 
-    // בדיקה אם יש התחייבויות בקמפיין
-    const hasCommitments = React.useMemo(() => {
-        // אם בטעינה - נשמור על הטאב הנוכחי
-        if (donationsStore.commitmentLoading) return true;
-        return (donationsStore.groupedDonations || []).some(group =>
-            (group.donations || []).some(d => d.paymentMethod === 'COMMITMENT')
-        ) || donationsStore.allCommitmentsGrouped.length > 0;
-    }, [donationsStore.groupedDonations, donationsStore.allCommitmentsGrouped, donationsStore.commitmentLoading]);
+    // בדיקה חד-פעמית בטעינה: האם לקמפיין יש בכלל התחייבויות (ללא פילטרים)
+    React.useEffect(() => {
+        if (campaignId && donationsStore.campaignHasCommitments === null) {
+            donationsStore.checkCampaignHasCommitments(campaignId);
+        }
+    }, [campaignId]);
+
+    // בדיקה אם יש התחייבויות בקמפיין — מסתמכת על הבדיקה הנקייה (ללא פילטר)
+    const hasCommitments = donationsStore.campaignHasCommitments === true || donationsStore.commitmentLoading;
 
     // טעינת התחייבויות כשעוברים לטאב (רק אם לא נטענו עדיין)
     React.useEffect(() => {
@@ -730,12 +731,12 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
         }
     }, [activeTab, campaignId, donationsStore.allCommitmentsGrouped.length, donationsStore.commitmentLoading]);
 
-    // איפוס הטאב אם אין התחייבויות (רק אחרי שהטעינה הסתיימה)
+    // איפוס הטאב אם אין התחייבויות (רק אחרי שהבדיקה הסתיימה ולא בזמן טעינה)
     React.useEffect(() => {
-        if (!hasCommitments && activeTab === 'commitments' && !donationsStore.commitmentLoading) {
+        if (!hasCommitments && activeTab === 'commitments' && !donationsStore.commitmentLoading && donationsStore.campaignHasCommitments !== null) {
             setActiveTab('donations');
         }
-    }, [hasCommitments, activeTab, donationsStore.commitmentLoading]);
+    }, [hasCommitments, activeTab, donationsStore.commitmentLoading, donationsStore.campaignHasCommitments]);
 
     // פילטור תרומות לפי הטאב הפעיל
     const filteredGroupedDonations = React.useMemo(() => {

@@ -89,6 +89,8 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
     const [selectedDonor, setSelectedDonor] = useState(null);
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [editingDonor, setEditingDonor] = useState(null);
+    const [isDonorViewOpen, setIsDonorViewOpen] = useState(false);
+    const [viewingDonor, setViewingDonor] = useState(null);
     const [expandedDonors, setExpandedDonors] = useState({});
     const tableBodyRef = useRef(null);
     const [rowGap, setRowGap] = useState(8);
@@ -125,6 +127,11 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
     const handleOpenEditForm = (donor) => {
         setEditingDonor(donor);
         setIsEditFormOpen(true);
+    };
+
+    const handleOpenDonorView = (donor) => {
+        setViewingDonor(donor);
+        setIsDonorViewOpen(true);
     };
 
     const hasDonorOverdueNotes = (donorNotes) => {
@@ -613,7 +620,15 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                                                 <div className={styles.trafficLight}>
                                                     <Circle className={styles[donor.traffic_light_color] || styles.gray} />
                                                 </div>
-                                                <span className={`${styles.cell} ${styles.donorName} table-1`}>{donor.lastName} {donor.firstName}</span>
+                                                <span className={`${styles.cell} ${styles.donorName} table-1`}>
+                                    <button
+                                        type="button"
+                                        className={styles.donorNameLink}
+                                        onClick={() => handleOpenDonorView(donor)}
+                                    >
+                                        {donor.lastName} {donor.firstName}
+                                    </button>
+                                </span>
                                                 <span className={styles.cell}>{donor.address}</span>
                                             <span className={styles.cell}>{donor.city}</span>
                                             <span className={styles.cell}>{donor.mobile}</span>
@@ -860,6 +875,18 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
                         invitationOnly={true}
                         donorProp={editingDonor}
                         onClose={handleCloseEditForm}
+                    />
+                )}
+                {isDonorViewOpen && viewingDonor && (
+                    <AddEdit
+                        isOpen={isDonorViewOpen}
+                        notesOnly={true}
+                        donorProp={viewingDonor}
+                        onClose={() => {
+                            setIsDonorViewOpen(false);
+                            setViewingDonor(null);
+                            if (typeof onSearch === 'function') onSearch('');
+                        }}
                     />
                 )}
             </div>

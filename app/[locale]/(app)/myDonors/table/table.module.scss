@@ -610,6 +610,27 @@
                             color: var(--Donor-default);
                         }
 
+                        .donorNameLink {
+                            background: none;
+                            border: none;
+                            padding: 2px 4px;
+                            margin: -2px -4px;
+                            color: inherit;
+                            font: inherit;
+                            cursor: pointer;
+                            text-align: inherit;
+                            border-radius: 4px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            display: block;
+                            transition: background-color 0.2s ease;
+
+                            &:hover {
+                                background-color: var(--Gray-Blue-70, #EDF5FD);
+                            }
+                        }
+
                         &.center {
                             justify-content: center;
                         }

@@ -41,6 +41,7 @@ class DonationsStore {
     commitmentCurrentPage = 1;
     commitmentLoading = false;
     _commitmentsCampaignId = null; // לזיהוי שינוי קמפיין
+    campaignHasCommitments = null; // null=לא ידוע, true/false
 
     // קאשינג
     donationsCache = new Map(); // key -> { ts, data, total }
@@ -278,6 +279,9 @@ class DonationsStore {
             hasPaymentMethod: null
         };
         this.loadDonations(campaignId);
+        // נקה התחייבויות שנטענו בעת חיפוש כדי שיטענו מחדש בטאב
+        this.allCommitmentsGrouped = [];
+        this._commitmentsCampaignId = null;
     }
 
     // הוספת תרומה חדשה לסטור המקומי
@@ -627,6 +631,27 @@ class DonationsStore {
             }
         } catch (error) {
             runInAction(() => { this.commitmentLoading = false; });
+        }
+    }
+
+    // בדיקה חד-פעמית ללא פילטרים: האם לקמפיין יש בכלל התחייבויות (לחשיפת הטאב)
+    async checkCampaignHasCommitments(campaignId) {
+        try {
+            const params = new URLSearchParams({
+                paymentMethod: 'COMMITMENT',
+                limit: 1,
+                offset: 0
+            });
+            if (campaignId) params.append('campaignId', campaignId.toString());
+            const response = await fetchWithAuth(`/api/donations?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                runInAction(() => {
+                    this.campaignHasCommitments = (data.data?.total || 0) > 0;
+                });
+            }
+        } catch (error) {
+            // שגיאה — נשאיר null (לא ידוע), הטאב לא יוסתר
         }
     }
 

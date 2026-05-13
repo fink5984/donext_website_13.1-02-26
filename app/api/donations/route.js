@@ -141,7 +141,9 @@ export async function GET(request) {
         }
 
         // בניית תנאי donor מורכב
-        let donorConditions = {};
+        let donorConditions = {
+            active: { not: false } // לא מציגים תרומות של תורמים כבויים
+        };
 
         if (expectedMin || expectedMax) {
             donorConditions.expected = {};

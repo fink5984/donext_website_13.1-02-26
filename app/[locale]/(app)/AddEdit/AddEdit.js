@@ -37,7 +37,7 @@ import { RankForm } from "./RankForm";
 import InvitationProgress from '@/app/components/InvitationProgress/InvitationProgress';
 import { dbStatusToHebrew } from '@/lib/statusMappings';
 
-const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, donorProp = null, hideAddDonation = false }) => {
+const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, notesOnly = false, donorProp = null, hideAddDonation = false }) => {
   // Constants
   const stars = 3;
 
@@ -99,6 +99,11 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
     );
   }, [donorsStore?.donors]);
   
+  // readOnly = כל השדות נעולים (invitationOnly או notesOnly)
+  const isReadOnly = invitationOnly || notesOnly;
+  // תורם להצגה בכותרת (notesOnly משתמש ב-donorProp במקום formStore)
+  const headerDonor = (notesOnly && donorProp) ? donorProp : donor;
+
   // Check if ANY donor in the campaign has country data
   const hasCountryInCampaign = useMemo(() => {
     const donors = donorsStore?.donors || [];
@@ -286,7 +291,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
   }, [donor, fund, activeTab, isFundraiser]);
   
   useEffect(() => {
-    const currentDonor = invitationOnly && donorProp ? donorProp : donor;
+    const currentDonor = (invitationOnly || notesOnly) && donorProp ? donorProp : donor;
     if (currentDonor) {
       const formData = {
         firstName: currentDonor.first_name || "",
@@ -571,15 +576,16 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
 
   // Save a new donor note (for edit mode - additional notes)
   const handleSaveDonorNote = async () => {
-    const currentDonor = invitationOnly && donorProp ? donorProp : donor;
-    if (!currentDonor?.donorId || !newDonorNoteText.trim() || !newDonorNoteFollowUpDate || isSavingDonorNote) return;
+    const currentDonor = (invitationOnly || notesOnly) && donorProp ? donorProp : donor;
+    const resolvedDonorId = currentDonor?.donorId || currentDonor?.id;
+    if (!resolvedDonorId || !newDonorNoteText.trim() || !newDonorNoteFollowUpDate || isSavingDonorNote) return;
     setIsSavingDonorNote(true);
     try {
       const response = await fetchWithAuth('/api/donors/add-note', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          donorId: currentDonor.donorId,
+          donorId: resolvedDonorId,
           note: newDonorNoteText.trim(),
           followUpDate: newDonorNoteFollowUpDate,
           ...(newDonorNoteAssignee?.userId ? { assignedToUserId: newDonorNoteAssignee.userId } : {}),
@@ -632,7 +638,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
     setIsSaving(true);
     try {
       const { campaignId } = stores;
-      const currentDonor = invitationOnly && donorProp ? donorProp : donor;
+      const currentDonor = (invitationOnly || notesOnly) && donorProp ? donorProp : donor;
       const response = await fetchWithAuth(`/api/invitation`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -690,7 +696,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
           ) : (
             <div ref={popupRef} className={styles.dialog}>
               <div className={`${styles.header}`}>
-                {donor &&
+                {headerDonor &&
                   <span className="body-1">
                     {fund ?
                       <span className={styles.fundraiserName}>{t('theFundraiser')}</span>
@@ -700,8 +706,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                   </span>}
 
                 <h1 className={`card-4 ${fund ? styles.fundraiserName : ''}`}>
-                  {donor
-                    ? `${donor.first_name || firstName || ""} ${donor.last_name || lastName || ""}`
+                  {headerDonor
+                    ? `${headerDonor.first_name || headerDonor.firstName || firstName || ""} ${headerDonor.last_name || headerDonor.lastName || lastName || ""}`
                     : (isFundraiser ? t('addNewFundraiser') : t('addNewDonor'))}
                 </h1>
 
@@ -737,7 +743,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                     </button>
                   </div>
                 )}
-                <div className={`${styles.stars} ${(!isFundraiser || invitationOnly) ? styles.hidden : ""}`}>
+                <div className={`${styles.stars} ${(!isFundraiser || invitationOnly || notesOnly) ? styles.hidden : ""}`}>
                   {[...Array(5)].map((_, index) => {
                     const isFilled = index < stars;
                     return (
@@ -768,7 +774,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                 )}
                 <>
                   <div className={styles.formContent}>
-                    {!invitationOnly && (
+                    {!invitationOnly && !notesOnly && (
                       <div className={styles.tabSwitcher}>
                         <button
                           className={`${styles.sectionTitle} ${!isFundraiser || activeTab === "personal" ? `${styles.active} table-1` : "table-2"}`}
@@ -798,20 +804,20 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                     placeholder={t('titleBefore')}
                                     value={watch("titleBefore")}
                                     onChange={(e) => { setValue("titleBefore", e.target.value); }}
-                                    disabled={invitationOnly || isSaving}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 )}
                                 <Input
                                   placeholder={t('firstName')}
                                   value={firstName}
                                   onChange={(e) => { setValue("firstName", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                 />
                                 <Input
                                   placeholder={t('lastName')}
                                   value={lastName}
                                   onChange={(e) => { setValue("lastName", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                 />
                                 {/* Contact autocomplete suggestions (add mode only) */}
                                 {formStore.mode === 'add' && showSuggestions && contactSuggestions.length > 0 && (
@@ -836,7 +842,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                     placeholder={t('titleAfter')}
                                     value={watch("titleAfter")}
                                     onChange={(e) => { setValue("titleAfter", e.target.value); }}
-                                    disabled={invitationOnly || isSaving}
+                                    disabled={isReadOnly || isSaving}
                                   />
                                 )}
                                 <Input
@@ -847,7 +853,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                     setValue("mainMobile", formattedPhone); 
                                   }}
                                   validationError={errors.mainMobile && t('requiredField')}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                 />
                                 <Input
                                   placeholder={t('landlinePhone')}
@@ -856,13 +862,13 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                     const formattedPhone = formatPhoneNumber(e.target.value);
                                     setValue("landlinePhone", formattedPhone); 
                                   }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                 />
                                 <Input
                                   placeholder={isFundraiser ? `${t('email')} *` : t('email')}
                                   value={email}
                                   onChange={(e) => { setValue("email", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                   required={isFundraiser}
                                 />
                               </div>
@@ -878,28 +884,28 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                   placeholder={t('titleBeforeEn')}
                                   value={watch("titleBeforeEn")}
                                   onChange={(e) => { setValue("titleBeforeEn", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                   dir="ltr"
                                 />
                                 <Input
                                   placeholder={t('firstNameEn')}
                                   value={watch("firstNameEn")}
                                   onChange={(e) => { setValue("firstNameEn", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                   dir="ltr"
                                 />
                                 <Input
                                   placeholder={t('lastNameEn')}
                                   value={watch("lastNameEn")}
                                   onChange={(e) => { setValue("lastNameEn", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                   dir="ltr"
                                 />
                                 <Input
                                   placeholder={t('titleAfterEn')}
                                   value={watch("titleAfterEn")}
                                   onChange={(e) => { setValue("titleAfterEn", e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                   dir="ltr"
                                 />
                               </div>
@@ -907,7 +913,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                           )}
                           
                           <div className={styles.formSection}>
-                            <ConcatMethod hasEmail={hasEmail} preferredContact={preferredContact} setPreferredContact={setPreferredContact} disabled={invitationOnly || isSaving} />
+                            <ConcatMethod hasEmail={hasEmail} preferredContact={preferredContact} setPreferredContact={setPreferredContact} disabled={isReadOnly || isSaving} />
                           </div>
                           
                           <div className={styles.formSection}>
@@ -920,7 +926,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                 onChange={e => {
                                   setStreetInput(e.target.value);
                                 }}
-                                disabled={invitationOnly || isSaving}
+                                disabled={isReadOnly || isSaving}
                               />
                               <datalist id="streets-list">
                                 {formStore.streets.map(street => <option key={street.id} value={street.name} />)}
@@ -929,7 +935,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                 placeholder={t('houseNumber')}
                                 value={watch("houseNumber")}
                                 onChange={(e) => { setValue("houseNumber", e.target.value); }}
-                                disabled={invitationOnly || isSaving}
+                                disabled={isReadOnly || isSaving}
                               />
                               <Input
                                 placeholder={t('city')}
@@ -941,7 +947,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                   if (found) setCityId(found.id);
                                   else setCityId(null);
                                 }}
-                                disabled={invitationOnly || isSaving}
+                                disabled={isReadOnly || isSaving}
                               />
                               <datalist id="cities-list">
                                 {formStore.cities.map(city => <option key={city.id} value={city.name} />)}
@@ -951,7 +957,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                   placeholder={t('country')}
                                   value={countryInput}
                                   onChange={(e) => { setCountryInput(e.target.value); }}
-                                  disabled={invitationOnly || isSaving}
+                                  disabled={isReadOnly || isSaving}
                                 />
                               )}
                               <Input
@@ -961,7 +967,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                                 onChange={e => {
                                   setValue("synagogue", e.target.value);
                                 }}
-                                disabled={invitationOnly || isSaving}
+                                disabled={isReadOnly || isSaving}
                               />
                               <datalist id="synagogues-list">
                                 {donorsStore.synagogues.map(synagogue => <option key={synagogue} value={synagogue} />)}
@@ -969,7 +975,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                             </div>
                           </div>
                           
-                          {!invitationOnly && !hideAddDonation && (
+                          {!invitationOnly && !notesOnly && !hideAddDonation && (
                             <SelectFundRaiser
                               fundraiserId={fundraiserId}
                               setValue={setValue}
@@ -993,12 +999,12 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                               />
                             </div>
                           )}
-                          {!invitationOnly && (
+                          {(!invitationOnly || notesOnly) && (
                             <div ref={notesSectionRef} className={styles.notesBox}>
                               <h2 className={`${styles.notesTitle} table-1`}>{t('notes')}</h2>
                               
                               {/* Add mode: NoteInput-style textarea with calendar and assignee */}
-                              {formStore.mode !== 'edit' && (
+                              {formStore.mode !== 'edit' && !notesOnly && (
                                 <>
                                   <div className={`${styles.row} ${notesFocused ? styles.focused : ''} ${notes ? styles.hasValue : ''}`}>
                                     <div className={styles.inputWrapper}>
@@ -1061,7 +1067,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                               )}
 
                               {/* Edit mode: Show existing notes with traffic-light colors + add form */}
-                              {formStore.mode === 'edit' && (
+                              {(formStore.mode === 'edit' || notesOnly) && (
                                 <div className={styles.donorNotesSection}>
                                   {/* Legacy notes field (first note text) */}
                                   {notes && (!donorNotes.length || donorNotes[0]?.note !== notes) && (
@@ -1201,7 +1207,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                               )}
                             </div>
                           )}
-                          {!invitationOnly && <DonationsTable donations={donor?.donations || []} />}
+                          {!invitationOnly && !notesOnly && <DonationsTable donations={donor?.donations || []} />}
                         </form>
                       </div>
                     )}
@@ -1231,7 +1237,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                   </div>
                   <div className={styles.buttons}>
                     <Button
-                      text={isSaving ? t('saving') : (invitationOnly ? t('updateInvitationStatus') : t('saveChanges'))}
+                      text={isSaving ? t('saving') : (invitationOnly ? t('updateInvitationStatus') : notesOnly ? 'סגור' : t('saveChanges'))}
                       loading={isSaving}
                       onClick={async () => {
                         if (invitationOnly) {
@@ -1239,6 +1245,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                           if (result) {
                             onClose();
                           }
+                        } else if (notesOnly) {
+                          onClose();
                         } else {
                           if (!isFormValid()) {
                             const msg = getFirstValidationMessage();
@@ -1271,8 +1279,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
                         }
                       }}
                       type="button"
-                      disabled={invitationOnly ? isSaving : (!isFormValid() || isSaving)}
-                      disabledClick={invitationOnly ? isSaving : (!isFormValid() || isSaving)}
+                      disabled={invitationOnly ? isSaving : notesOnly ? false : (!isFormValid() || isSaving)}
+                      disabledClick={invitationOnly ? isSaving : notesOnly ? false : (!isFormValid() || isSaving)}
                     />
                   </div>
                 </>
@@ -1322,7 +1330,9 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, d
         />}
       {isDonationFormOpen && (
         <DonationForm
-          donor={donorsStore.donors.find(d => d.person_id === donor?.id)}
+          donor={notesOnly && donorProp
+            ? donorsStore.donors.find(d => d.id === donorProp.id || d.person_id === donorProp.id) || donorProp
+            : donorsStore.donors.find(d => d.person_id === donor?.id)}
           isOpen={isDonationFormOpen}
           mode="add"
           onClose={() => setIsDonationFormOpen(false)}

@@ -84,6 +84,31 @@ class FundraisersStore {
     return url;
   }
 
+  // Fetch all fundraisers with current filters but no pagination (for export)
+  async fetchFilteredFundraisersForExport() {
+    if (!this.rootStore.campaignId) return [];
+    // Build URL with current filters but without pagination
+    const url = this.buildFundraisersUrl({ includeAll: true });
+    const res = await fetchWithAuth(url);
+    const data = await res.json();
+    const mapped = (data.data || []).map(f => ({
+      ...f,
+      id: f.fundraiser_id,
+      donorsCount: parseInt(f.donors_count) || 0,
+      expectedSum: parseInt(f.expected_sum) || 0,
+      status_questionnaire: f.status_questionnaire || 'לא נשלח',
+      status_forecast: f.status_forecast || 'לא נשלח',
+      trafficLightCounts: {
+        red: parseInt(f.red_count) || 0,
+        orange: parseInt(f.orange_count) || 0,
+        green: parseInt(f.green_count) || 0,
+        gray: parseInt(f.gray_count) || 0,
+        blue: parseInt(f.blue_count) || 0
+      }
+    }));
+    return mapped;
+  }
+
   // Fetch all fundraisers without pagination for export (ignores filters)
   async fetchAllFundraisersForExport() {
     if (!this.rootStore.campaignId) return [];
