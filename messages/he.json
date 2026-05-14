@@ -1726,6 +1726,7 @@
       "OJC": "OJC Charity Card",
       "NEDARIM_PLUS": "נדרים פלוס",
       "COMMITMENT": "התחייבות",
+      "MERKAZ_HATZEDAKA": "מרכז הצדקה - אשראי",
       "OTHER": "אחר",
       "credit": "אשראי",
       "cash": "מזומן",
@@ -1745,6 +1746,7 @@
       "ojc": "OJC Charity Card",
       "nedarimPlus": "נדרים פלוס",
       "commitment": "התחייבות",
+      "merkazHatzedaka": "מרכז הצדקה - אשראי",
       "other": "אחר"
     },
     "cardHolderName": "שם בעל הכרטיס",

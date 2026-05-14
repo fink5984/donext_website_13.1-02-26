@@ -8,6 +8,7 @@ import PledgerPayment from './PledgerPayment';
 import MatbiaPayment from './MatbiaPayment';
 import OJCPayment from './OJCPayment';
 import NedarimPlusPayment from './NedarimPlusPayment';
+import MerkazHatzedakaPayment from './MerkazHatzedakaPayment';
 import { observer } from 'mobx-react-lite';
 import { useAppContext } from '@/app/components/AppContext';
 import { AlertDialog, AlertDialogContent, AlertDialogPortal, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
@@ -178,6 +179,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     
     // Nedarim Plus ref
     const nedarimPlusPaymentRef = useRef(null);
+    
+    // Merkaz Hatzedaka ref
+    const merkazHatzedakaPaymentRef = useRef(null);
     
     // Context stored when fulfilling a commitment (used by payment callbacks)
     const fulfillmentContextRef = useRef(null);
@@ -759,6 +763,14 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         setIsLoading(false);
                     }
                     return;
+                } else if (actualProvider === 'MERKAZ_HATZEDAKA') {
+                    if (merkazHatzedakaPaymentRef.current) {
+                        const paymentResult = await merkazHatzedakaPaymentRef.current.handlePayment();
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'MERKAZ_HATZEDAKA', transactionId: paymentResult?.transactionId || null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
                 } else if (actualProvider === 'PLEDGER') {
                     if (pledgerPaymentRef.current) {
                         const success = await pledgerPaymentRef.current.handlePayment();
@@ -981,6 +993,35 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     });
                 } catch (error) {
                     console.error('Nedarim Plus payment error:', error);
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                setIsLoading(false);
+                return;
+            }
+        } else if (actualProvider === 'MERKAZ_HATZEDAKA') {
+            // If Merkaz Hatzedaka is selected
+            if (merkazHatzedakaPaymentRef.current) {
+                try {
+                    const paymentResult = await merkazHatzedakaPaymentRef.current.handlePayment();
+                    
+                    await saveDonation({
+                        donorId: selectedDonor.id,
+                        donationId: donation?.id,
+                        monthlyAmount: monthlyAmount,
+                        numberOfPayments: numberOfPayments,
+                        isUnlimited: formData.isUnlimited,
+                        paymentMethod: 'MERKAZ_HATZEDAKA',
+                        note: formData.note || null,
+                        followUpDate: formData.followUpDate || null,
+                        noteAssignee: formData.noteAssignee || null,
+                        hasPaymentMethod: true,
+                        mode: mode,
+                        transactionId: paymentResult?.transactionId || null
+                    });
+                } catch (error) {
+                    console.error('Merkaz Hatzedaka payment error:', error);
                     setIsLoading(false);
                     return;
                 }
@@ -1374,6 +1415,25 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                                 }}
                                 onError={(error) => {
                                     console.error('Nedarim Plus payment error:', error);
+                                }}
+                            />
+                        )}
+
+                        {/* Show Merkaz Hatzedaka payment when MERKAZ_HATZEDAKA is selected */}
+                        {formData.paymentMethod === 'MERKAZ_HATZEDAKA' && (
+                            <MerkazHatzedakaPayment
+                                ref={merkazHatzedakaPaymentRef}
+                                amount={paymentAmount}
+                                campaignId={campaign?.id}
+                                donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
+                                donorEmail={selectedDonor?.email || ''}
+                                donorPhone={selectedDonor?.phone || ''}
+                                numberOfPayments={formData.numberOfPayments}
+                                isMonthlyCampaign={isMonthlyCampaign}
+                                onSuccess={(result) => {
+                                }}
+                                onError={(error) => {
+                                    console.error('Merkaz Hatzedaka payment error:', error);
                                 }}
                             />
                         )}

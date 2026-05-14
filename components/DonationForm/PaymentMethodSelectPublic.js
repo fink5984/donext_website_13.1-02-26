@@ -6,7 +6,7 @@ import styles from './DonationForm.module.scss';
 import { PaymentMethodIcon } from '../../app/components/PaymentMethodIcon';
 
 // Only show these payment methods for public screen
-const PUBLIC_PAYMENT_METHODS = ['credit_card', 'ojc', 'pledger', 'matbia'];
+const PUBLIC_PAYMENT_METHODS = ['credit_card', 'ojc', 'pledger', 'matbia', 'merkaz_hatzedaka'];
 
 export function PaymentMethodSelectPublic({ value, onChange, campaign, children }) {
     const t = useTranslations('donationForm');
@@ -19,6 +19,7 @@ export function PaymentMethodSelectPublic({ value, onChange, campaign, children 
         { value: 'OJC', label: 'OJC', hasIcon: true, settingKey: 'ojc' },
         { value: 'PLEDGER', label: 'Pledger', hasIcon: true, settingKey: 'pledger' },
         { value: 'MATBIA', label: 'Matbia', hasIcon: true, settingKey: 'matbia' },
+        { value: 'MERKAZ_HATZEDAKA', label: 'אמריקן אקספרס/סעיף 46', hasIcon: false, settingKey: 'merkaz_hatzedaka' },
     ];
 
     const allPaymentOptions = getAllPaymentOptions();

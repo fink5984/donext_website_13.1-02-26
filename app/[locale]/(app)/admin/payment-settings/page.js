@@ -41,6 +41,7 @@ const METHOD_ICONS = {
     matbia: GiftIcon,
     ojc: WalletIcon,
     commitment: NoteIcon,
+    merkaz_hatzedaka: WalletIcon,
 };
 
 export default function PaymentSettingsPage() {
@@ -68,6 +69,7 @@ export default function PaymentSettingsPage() {
         { id: 'matbia', name: 'Matbia', description: 'מערכת תשלומים דיגיטלית לעמותות' },
         { id: 'ojc', name: 'OJC Charity Card', description: 'כרטיס צדקה דיגיטלי' },
         { id: 'commitment', name: 'התחייבות', description: 'רישום התחייבות לתרומה עתידית' },
+        { id: 'merkaz_hatzedaka', name: 'מרכז הצדקה', description: 'מערכת תשלומים מרכז הצדקה' },
     ];
 
     const [enabledMethods, setEnabledMethods] = useState({});
@@ -84,6 +86,8 @@ export default function PaymentSettingsPage() {
     const [showOjcModal, setShowOjcModal] = useState(false);
     const [nedarimPlusKeys, setNedarimPlusKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1 });
     const [showNedarimPlusModal, setShowNedarimPlusModal] = useState(false);
+    const [merkazHatzedakaKeys, setMerkazHatzedakaKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, note: '' });
+    const [showMerkazHatzedakaModal, setShowMerkazHatzedakaModal] = useState(false);
     
     // Donary Integration State
     const [donarySettings, setDonarySettings] = useState({
@@ -171,6 +175,17 @@ export default function PaymentSettingsPage() {
                         apiValid: data.nedarim_plus_api_valid || '',
                         paymentType: data.nedarim_plus_payment_type || 'Ragil',
                         hkDay: data.nedarim_plus_hk_day || 1
+                    });
+                }
+                
+                // Load Merkaz Hatzedaka keys if they exist
+                if (data.merkaz_hatzedaka_mosad || data.merkaz_hatzedaka_api_valid) {
+                    setMerkazHatzedakaKeys({
+                        mosad: data.merkaz_hatzedaka_mosad || '',
+                        apiValid: data.merkaz_hatzedaka_api_valid || '',
+                        paymentType: data.merkaz_hatzedaka_payment_type || 'Ragil',
+                        hkDay: data.merkaz_hatzedaka_hk_day || 1,
+                        note: data.merkaz_hatzedaka_note || ''
                     });
                 }
                 
@@ -265,6 +280,17 @@ export default function PaymentSettingsPage() {
             }
         }
         
+        if (methodId === 'merkaz_hatzedaka') {
+            // If enabling Merkaz Hatzedaka, show modal for keys
+            if (!enabledMethods[methodId]) {
+                setShowMerkazHatzedakaModal(true);
+                return;
+            } else {
+                // If disabling, clear keys
+                setMerkazHatzedakaKeys({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, note: '' });
+            }
+        }
+        
         setEnabledMethods(prev => ({
             ...prev,
             [methodId]: !prev[methodId]
@@ -300,6 +326,15 @@ export default function PaymentSettingsPage() {
                 requestBody.nedarim_plus_api_valid = nedarimPlusKeys.apiValid || '';
                 requestBody.nedarim_plus_payment_type = nedarimPlusKeys.paymentType || 'Ragil';
                 requestBody.nedarim_plus_hk_day = nedarimPlusKeys.hkDay || 1;
+            }
+            
+            // Include Merkaz Hatzedaka keys if enabled
+            if (enabledMethods.merkaz_hatzedaka && merkazHatzedakaKeys.mosad) {
+                requestBody.merkaz_hatzedaka_mosad = merkazHatzedakaKeys.mosad || '';
+                requestBody.merkaz_hatzedaka_api_valid = merkazHatzedakaKeys.apiValid || '';
+                requestBody.merkaz_hatzedaka_payment_type = merkazHatzedakaKeys.paymentType || 'Ragil';
+                requestBody.merkaz_hatzedaka_hk_day = merkazHatzedakaKeys.hkDay || 1;
+                requestBody.merkaz_hatzedaka_note = merkazHatzedakaKeys.note || '';
             }
             
             // Include Pledger keys if Pledger is enabled
@@ -634,8 +669,7 @@ export default function PaymentSettingsPage() {
                         }
                         
                         // OJC - תצוגה מיוחדת עם כפתור הגדרות
-                        if (method.id === 'ojc') {
-                            return (
+                        if (method.id === 'ojc') {                            return (
                                 <div key={method.id} className={styles.paymentMethodItem}>
                                     <div className={styles.methodHeader}>
                                         <div className={styles.methodInfo}>
@@ -650,6 +684,42 @@ export default function PaymentSettingsPage() {
                                                 <button
                                                     className={styles.inlineSettingsBtn}
                                                     onClick={() => setShowOjcModal(true)}
+                                                    title="הגדרות"
+                                                >
+                                                    <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
+                                                </button>
+                                            )}
+                                            <label className={styles.switch}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={enabledMethods[method.id] || false}
+                                                    onChange={() => handleToggle(method.id)}
+                                                />
+                                                <span className={styles.slider}></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        
+                        // מרכז הצדקה - תצוגה מיוחדת עם כפתור הגדרות
+                        if (method.id === 'merkaz_hatzedaka') {
+                            return (
+                                <div key={method.id} className={styles.paymentMethodItem}>
+                                    <div className={styles.methodHeader}>
+                                        <div className={styles.methodInfo}>
+                                            {(() => { const Icon = METHOD_ICONS[method.id] || WalletIcon; return <span className={styles.methodIconWrapper}><Icon /></span>; })()}
+                                            <div className={styles.methodDetails}>
+                                                <h3>{method.name}</h3>
+                                                <p>מערכת תשלומים מרכז הצדקה</p>
+                                            </div>
+                                        </div>
+                                        <div className={styles.methodControl}>
+                                            {enabledMethods[method.id] && (
+                                                <button
+                                                    className={styles.inlineSettingsBtn}
+                                                    onClick={() => setShowMerkazHatzedakaModal(true)}
                                                     title="הגדרות"
                                                 >
                                                     <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
@@ -1288,6 +1358,121 @@ export default function PaymentSettingsPage() {
                             <button
                                 className={styles.confirmButton}
                                 onClick={handleDonarySave}
+                            >
+                                שמור
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Merkaz Hatzedaka Modal */}
+            {showMerkazHatzedakaModal && (
+                <div className={styles.modal}>
+                    <div className={styles.modalContent}>
+                        <h3>הגדרת מרכז הצדקה</h3>
+                        <p>כדי להפעיל את מרכז הצדקה, יש להזין את פרטי המוסד:</p>
+                        
+                        <div className={styles.formGroup}>
+                            <label>מזהה מוסד (Mosad):</label>
+                            <input
+                                type="text"
+                                value={merkazHatzedakaKeys.mosad}
+                                onChange={(e) => setMerkazHatzedakaKeys(prev => ({ ...prev, mosad: e.target.value }))}
+                                placeholder="1234567"
+                                className={styles.input}
+                                maxLength={7}
+                            />
+                            <small className={styles.helpText}>
+                                מזהה מוסד במרכז הצדקה (7 ספרות)
+                            </small>
+                        </div>
+                        
+                        <div className={styles.formGroup}>
+                            <label>טקסט אימות (ApiValid):</label>
+                            <input
+                                type="text"
+                                value={merkazHatzedakaKeys.apiValid}
+                                onChange={(e) => setMerkazHatzedakaKeys(prev => ({ ...prev, apiValid: e.target.value }))}
+                                placeholder="הזן את טקסט האימות שקיבלת ממרכז הצדקה"
+                                className={styles.input}
+                                maxLength={10}
+                            />
+                            <small className={styles.helpText}>
+                                טקסט אימות (עד 10 תווים) - ניתן לבקש ממרכז הצדקה
+                            </small>
+                        </div>
+                        
+                        <div className={styles.formGroup}>
+                            <label>סוג תשלום:</label>
+                            <select
+                                value={merkazHatzedakaKeys.paymentType}
+                                onChange={(e) => setMerkazHatzedakaKeys(prev => ({ ...prev, paymentType: e.target.value }))}
+                                className={styles.input}
+                            >
+                                <option value="Ragil">רגיל - תשלומים (סכום כולל מחולק לתשלומים)</option>
+                                <option value="HK">הו"ק - הוראת קבע (חיוב חודשי קבוע)</option>
+                            </select>
+                            <small className={styles.helpText}>
+                                רגיל: חיוב הסכום הכולל וחלוקתו לתשלומים | הו"ק: חיוב חודשי קבוע
+                            </small>
+                        </div>
+                        
+                        {merkazHatzedakaKeys.paymentType === 'HK' && (
+                            <div className={styles.formGroup}>
+                                <label>יום חיוב בחודש:</label>
+                                <select
+                                    value={merkazHatzedakaKeys.hkDay}
+                                    onChange={(e) => setMerkazHatzedakaKeys(prev => ({ ...prev, hkDay: parseInt(e.target.value) }))}
+                                    className={styles.input}
+                                >
+                                    {[...Array(28)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                    ))}
+                                </select>
+                                <small className={styles.helpText}>
+                                    באיזה יום בחודש לחייב את הכרטיס (1-28)
+                                </small>
+                            </div>
+                        )}
+                        
+                        <div className={styles.formGroup}>
+                            <label>הערה כללית:</label>
+                            <input
+                                type="text"
+                                value={merkazHatzedakaKeys.note}
+                                onChange={(e) => setMerkazHatzedakaKeys(prev => ({ ...prev, note: e.target.value }))}
+                                placeholder="הזן הערה קצרה"
+                                className={styles.input}
+                                maxLength={10}
+                            />
+                            <small className={styles.helpText}>
+                                הערה שתצורף לכל תשלום דרך מרכז הצדקה (עד 10 תווים)
+                            </small>
+                        </div>
+                        
+                        <div className={styles.modalActions}>
+                            <button
+                                className={styles.cancelButton}
+                                onClick={() => {
+                                    setShowMerkazHatzedakaModal(false);
+                                    if (!merkazHatzedakaKeys.mosad || !merkazHatzedakaKeys.apiValid || !merkazHatzedakaKeys.note) {
+                                        setEnabledMethods(prev => ({ ...prev, merkaz_hatzedaka: false }));
+                                    }
+                                }}
+                            >
+                                ביטול
+                            </button>
+                            <button
+                                className={styles.confirmButton}
+                                onClick={() => {
+                                    if (merkazHatzedakaKeys.mosad && merkazHatzedakaKeys.apiValid && merkazHatzedakaKeys.note) {
+                                        setEnabledMethods(prev => ({ ...prev, merkaz_hatzedaka: true }));
+                                        setShowMerkazHatzedakaModal(false);
+                                    } else {
+                                        alert('יש למלא את מזהה המוסד, טקסט האימות וההערה הכללית');
+                                    }
+                                }}
                             >
                                 שמור
                             </button>

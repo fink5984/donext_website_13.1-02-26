@@ -40,7 +40,13 @@ export async function GET(request, context) {
                 nedarimPlusMosad: true,
                 nedarimPlusApiValid: true,
                 nedarimPlusPaymentType: true,
-                nedarimPlusHkDay: true
+                nedarimPlusHkDay: true,
+                // Merkaz Hatzedaka settings
+                merkazHatzedakaMosad: true,
+                merkazHatzedakaApiValid: true,
+                merkazHatzedakaPaymentType: true,
+                merkazHatzedakaHkDay: true,
+                merkazHatzedakaNote: true
             }
         });
 
@@ -73,7 +79,13 @@ export async function GET(request, context) {
             nedarim_plus_mosad: campaign.nedarimPlusMosad || null,
             nedarim_plus_api_valid: campaign.nedarimPlusApiValid || false,
             nedarim_plus_payment_type: campaign.nedarimPlusPaymentType || 'Ragil',
-            nedarim_plus_hk_day: campaign.nedarimPlusHkDay || 1
+            nedarim_plus_hk_day: campaign.nedarimPlusHkDay || 1,
+            // Merkaz Hatzedaka settings (public)
+            merkaz_hatzedaka_mosad: campaign.merkazHatzedakaMosad || null,
+            merkaz_hatzedaka_api_valid: campaign.merkazHatzedakaApiValid || null,
+            merkaz_hatzedaka_payment_type: campaign.merkazHatzedakaPaymentType || 'Ragil',
+            merkaz_hatzedaka_hk_day: campaign.merkazHatzedakaHkDay || 1,
+            merkaz_hatzedaka_note: campaign.merkazHatzedakaNote || null
         });
 
     } catch (error) {

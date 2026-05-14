@@ -23,6 +23,7 @@ const paymentMethodMapping = {
     'bevel': ['BEVEL'],
     'pledger': ['PLEDGER'],
     'commitment': ['COMMITMENT'],
+    'merkaz_hatzedaka': ['MERKAZ_HATZEDAKA'],
 };
 
 const getAllPaymentOptions = (t) => [
@@ -43,7 +44,8 @@ const getAllPaymentOptions = (t) => [
     { value: 'PLEDGER', label: t('paymentMethods.pledger'), hasIcon: true, settingKey: 'pledger' },
     { value: 'MATBIA', label: t('paymentMethods.matbia'), hasIcon: true, settingKey: 'matbia' },
     { value: 'OJC', label: t('paymentMethods.ojc'), hasIcon: true, settingKey: 'ojc' },
-    { value: 'COMMITMENT', label: t('paymentMethods.commitment'), hasIcon: true, settingKey: 'commitment' }
+    { value: 'COMMITMENT', label: t('paymentMethods.commitment'), hasIcon: true, settingKey: 'commitment' },
+    { value: 'MERKAZ_HATZEDAKA', label: t('paymentMethods.merkazHatzedaka'), hasIcon: false, settingKey: 'merkaz_hatzedaka' }
 ];
 
 export function PaymentMethodSelect({ value, onChange, children, readOnly, showEditButton, onEditPaymentMethod, isEditingPaymentMethod, excludeCommitment }) {

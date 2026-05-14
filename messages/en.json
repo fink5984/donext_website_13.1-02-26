@@ -1700,6 +1700,7 @@
       "OJC": "OJC Charity Card",
       "NEDARIM_PLUS": "Nedarim Plus",
       "COMMITMENT": "Commitment",
+      "MERKAZ_HATZEDAKA": "Merkaz Hatzedaka - Credit",
       "OTHER": "Other",
       "credit": "Credit Card",
       "cash": "Cash",
@@ -1719,6 +1720,7 @@
       "ojc": "OJC Charity Card",
       "nedarimPlus": "Nedarim Plus",
       "commitment": "Commitment",
+      "merkazHatzedaka": "Merkaz Hatzedaka - Credit",
       "other": "Other"
     },
     "cardHolderName": "Card Holder Name",

@@ -243,6 +243,11 @@ model Campaign {
   nedarimPlusApiValid  String?                @map("nedarim_plus_api_valid")
   nedarimPlusPaymentType String?              @default("Ragil") @map("nedarim_plus_payment_type") // Ragil or HK
   nedarimPlusHkDay     Int?                   @default(1) @map("nedarim_plus_hk_day") // Day of month for HK (1-28)
+  merkazHatzedakaMosad     String?            @map("merkaz_hatzedaka_mosad")
+  merkazHatzedakaApiValid  String?            @map("merkaz_hatzedaka_api_valid")
+  merkazHatzedakaPaymentType String?          @default("Ragil") @map("merkaz_hatzedaka_payment_type")
+  merkazHatzedakaHkDay     Int?               @default(1) @map("merkaz_hatzedaka_hk_day")
+  merkazHatzedakaNote      String?            @map("merkaz_hatzedaka_note")
   showInvitationColumn Boolean?               @default(false) @map("show_invitation_column")
   dailyTasksEmailEnabled Boolean?             @default(false) @map("daily_tasks_email_enabled")
   activeFields         Json?                  @map("active_fields")

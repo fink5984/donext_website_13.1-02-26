@@ -18,6 +18,7 @@ import PledgerPayment from './PledgerPayment';
 import MatbiaPayment from './MatbiaPayment';
 import OJCPayment from './OJCPayment';
 import NedarimPlusPayment from './NedarimPlusPayment';
+import MerkazHatzedakaPayment from './MerkazHatzedakaPayment';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { StripeCardFields } from './StripeCardFields';
@@ -55,6 +56,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const matbiaPaymentRef = useRef(null);
     const ojcPaymentRef = useRef(null);
     const nedarimPlusPaymentRef = useRef(null);
+    const merkazHatzedakaPaymentRef = useRef(null);
     
     // Memoize Stripe promise
     const stripePromise = useMemo(() => {
@@ -480,6 +482,27 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                 setIsLoading(false);
                 return;
             }
+        } else if (actualProvider === 'MERKAZ_HATZEDAKA') {
+            if (merkazHatzedakaPaymentRef.current) {
+                try {
+                    const paymentResult = await merkazHatzedakaPaymentRef.current.handlePayment();
+                    if (paymentResult) {
+                        await saveDonation({
+                            paymentMethod: 'MERKAZ_HATZEDAKA',
+                            hasPaymentMethod: true,
+                            transactionId: paymentResult.transactionId,
+                            authCode: paymentResult.authCode
+                        });
+                    }
+                } catch (error) {
+                    console.error('Merkaz Hatzedaka payment error:', error);
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                setIsLoading(false);
+                return;
+            }
         } else if (formData.paymentMethod === 'PLEDGER') {
             if (pledgerPaymentRef.current) {
                 try {
@@ -781,6 +804,24 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             />
                         </div>
                         
+                        {/* Preload Merkaz Hatzedaka - hidden until selected */}
+                        <div style={{ display: formData.paymentMethod === 'MERKAZ_HATZEDAKA' ? 'block' : 'none' }}>
+                            <MerkazHatzedakaPayment
+                                ref={merkazHatzedakaPaymentRef}
+                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                campaignId={campaignId}
+                                donorName={getDonorFullName()}
+                                donorEmail={selectedDonor?.email || ''}
+                                donorPhone={selectedDonor?.phone || ''}
+                                numberOfPayments={formData.numberOfPayments}
+                                isMonthlyCampaign={isMonthlyCampaign}
+                                onSuccess={() => {}}
+                                onError={(error) => {}}
+                                usePublicApi={true}
+                                preloadedConfig={paymentSettings}
+                            />
+                        </div>
+
                         {bevelError && (
                             <div style={{ 
                                 color: '#721c24', 
