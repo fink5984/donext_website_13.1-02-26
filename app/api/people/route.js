@@ -857,7 +857,8 @@ export async function POST(request) {
                     where: { personId: parseInt(personId), campaignId: parseInt(campaignId) }
                 });
                 if (existingDonor) {
-                    const donorUpdates = { fundraiserId: fundraiserId ? parseInt(fundraiserId) : null };
+                    const newFundraiserId = fundraiserId ? parseInt(fundraiserId) : null;
+                    const donorUpdates = { fundraiserId: newFundraiserId };
                     if (invitationSent !== undefined) donorUpdates.invitationSent = invitationSent;
                     if (arrivalConfirmed !== undefined) donorUpdates.arrivalConfirmed = arrivalConfirmed;
                     if (actuallyArrived !== undefined) donorUpdates.actuallyArrived = actuallyArrived;
@@ -866,6 +867,21 @@ export async function POST(request) {
                         where: { id: existingDonor.id },
                         data: donorUpdates
                     });
+                    // איפוס סטטוס שאלון/צפי של המתרים החדש אם כבר סיים
+                    if (newFundraiserId && newFundraiserId !== existingDonor.fundraiserId) {
+                        const fr = await prisma.fundraiser.findUnique({
+                            where: { id: newFundraiserId },
+                            select: { statusQuestionnaire: true, statusForecast: true }
+                        });
+                        if (fr) {
+                            const resetData = {};
+                            if (fr.statusQuestionnaire === 'SUCCESS') resetData.statusQuestionnaire = 'NOT_SENT';
+                            if (fr.statusForecast === 'SUCCESS') resetData.statusForecast = 'NOT_SENT';
+                            if (Object.keys(resetData).length > 0) {
+                                await prisma.fundraiser.update({ where: { id: newFundraiserId }, data: resetData });
+                            }
+                        }
+                    }
                 } else if (fundraiserId) {
                     await prisma.donor.create({
                         data: {
@@ -878,6 +894,19 @@ export async function POST(request) {
                             notes: notes || null
                         }
                     });
+                    // איפוס סטטוס שאלון/צפי של המתרים אם כבר סיים
+                    const fr = await prisma.fundraiser.findUnique({
+                        where: { id: parseInt(fundraiserId) },
+                        select: { statusQuestionnaire: true, statusForecast: true }
+                    });
+                    if (fr) {
+                        const resetData = {};
+                        if (fr.statusQuestionnaire === 'SUCCESS') resetData.statusQuestionnaire = 'NOT_SENT';
+                        if (fr.statusForecast === 'SUCCESS') resetData.statusForecast = 'NOT_SENT';
+                        if (Object.keys(resetData).length > 0) {
+                            await prisma.fundraiser.update({ where: { id: parseInt(fundraiserId) }, data: resetData });
+                        }
+                    }
                 }
             }
             

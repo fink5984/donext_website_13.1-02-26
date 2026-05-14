@@ -391,6 +391,7 @@ const FundraisersPage = observer(() => {
             ...store.fundraisersStore.filters,
             search: term
         });
+        store.fundraisersStore.debouncedFetchFundraisers();
     };
 
     const resetFilters = () => {

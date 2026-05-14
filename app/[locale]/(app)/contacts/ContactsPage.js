@@ -43,6 +43,7 @@ import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import { AlertDialog, AlertDialogContent, AlertDialogPortal, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
 import Button from '@/app/components/Button';
 import NewDonor from '@/app/icons/newDonor.svg';
+import { getTagColor } from '@/app/utils/tagColors';
 
 // =====================
 // Default column definitions (fallback if not loaded from DB)
@@ -895,7 +896,7 @@ const ContactsPage = observer(function ContactsPage() {
                       <div className={`${styles.contactsCell} ${styles.nameCell}`} onClick={(e) => { e.stopPropagation(); handleOpenEditForm(contact); }}>
                         <span className={`${styles.contactName} ${styles.clickableName}`}>{`${contact.lastName || contact.last_name || ''} ${contact.firstName || contact.first_name || ''}`.trim()}</span>
                       </div>
-                      {activeColumns.map((colId) => renderCell(colId, contact, t, styles))}
+                      {activeColumns.map((colId) => renderCell(colId, contact, t, styles, contactsStore.tags, (tagId) => contactsStore.bulkTag({ personIds: [contact.id], tagIds: [tagId], action: 'remove' })))}
                       <div className={`${styles.contactsCell} ${activeTab === 'needsAttention' ? styles.statusActionCell : ''}`}>
                         {activeTab === 'needsAttention' && contact.status && (
                           <>
@@ -956,13 +957,13 @@ const ContactsPage = observer(function ContactsPage() {
                     {contactsStore.tags.length === 0 ? (
                       <span className={styles.tagPickerEmpty}>{t('noTagsAvailable')}</span>
                     ) : (
-                      contactsStore.tags.map(tag => (
+                      contactsStore.tags.map((tag, tagIdx) => (
                         <button
                           key={tag.id}
                           className={styles.tagPickerItem}
                           onClick={() => handleBulkTag(tag.id)}
                         >
-                          <span className={styles.tagPickerDot} style={{ backgroundColor: tag.color || '#ccc' }} />
+                          <span className={styles.tagPickerDot} style={{ backgroundColor: getTagColor(tagIdx).text }} />
                           <span>{tag.name}</span>
                         </button>
                       ))
@@ -1159,7 +1160,7 @@ function getStatusLabel(status, t) {
 // =====================
 // Cell renderer helper
 // =====================
-function renderCell(colId, contact, t, styles) {
+function renderCell(colId, contact, t, styles, allTags = [], onRemoveTag) {
   switch (colId) {
     case 'city':
       return <div key={colId} className={styles.contactsCell}>{contact.city || contact.city_name || ''}</div>;
@@ -1211,10 +1212,22 @@ function renderCell(colId, contact, t, styles) {
         <div key={colId} className={styles.contactsCell}>
           {contact.tags?.length > 0 ? (
             <div className={styles.campaignTags}>
-              {contact.tags.slice(0, 2).map((tag, i) => (
-                <span key={i} className={styles.campaignTag} style={{ backgroundColor: tag.color || '#e0e0e0' }}>{tag.name || tag}</span>
-              ))}
-              {contact.tags.length > 2 && <span className={styles.campaignMore}>+{contact.tags.length - 2}</span>}
+              {contact.tags.map((tag, i) => {
+                const tagIdx = allTags.findIndex(t => t.id === tag.id);
+                const color = getTagColor(tagIdx >= 0 ? tagIdx : i);
+                return (
+                  <span key={i} className={styles.campaignTag} style={{ backgroundColor: color.bg, color: color.text }}>
+                    <span className={styles.campaignTagLabel}>{tag.name || tag}</span>
+                    {onRemoveTag && (
+                      <button
+                        className={styles.campaignTagRemove}
+                        onClick={(e) => { e.stopPropagation(); onRemoveTag(tag.id); }}
+                        style={{ color: color.text }}
+                      >×</button>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           ) : '-'}
         </div>

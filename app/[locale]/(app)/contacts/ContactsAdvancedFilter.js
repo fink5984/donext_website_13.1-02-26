@@ -12,6 +12,7 @@ import SourceVowsIcon from '@/app/icons/sourceVows.svg';
 import SourceCreditIcon from '@/app/icons/sourceCreditCard.svg';
 import MultiRangeSlider from "../filter/multiRangeSlider/multiRangeSlider";
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
+import { getTagColor } from '@/app/utils/tagColors';
 
 /* ============ Searchable Multi-Select Dropdown ============ */
 function SearchableMultiSelect({ options, selected, onChange, placeholder, label, extraItems = [] }) {
@@ -151,7 +152,7 @@ const DONATION_SOURCES = ['credit', 'vows', 'phone', 'system', 'landing'];
 const CONTACT_METHODS = ['phone', 'mobile', 'email', 'whatsapp', 'sms'];
 
 const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
-  { isOpen, onClose, onApply, onReset, clientId, totalResults, tags = [] },
+  { isOpen, onClose, onApply, onReset, clientId, totalResults, tags = [], hideCampaigns = false },
   ref
 ) {
   const t = useTranslations('contactsPage');
@@ -572,20 +573,20 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                   <div className={styles.filterField}>
                     <h4 className={styles.sectionHeading}>{t('af_tags')}</h4>
                     <div className={styles.tagFilterPills}>
-                      {tags.map(tag => {
+                      {tags.map((tag, tagIdx) => {
                         const isSelected = selectedTagIds.includes(tag.id);
                         return (
                           <button
                             key={tag.id}
                             type="button"
                             className={`${styles.tagFilterPill} ${isSelected ? styles.tagFilterPillSelected : ''}`}
-                            style={{ '--tag-color': tag.color || '#ccc' }}
+                            style={{ '--tag-color': getTagColor(tagIdx).bg }}
                             onClick={() => setSelectedTagIds(prev =>
                               isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
                             )}
                           >
                             {isSelected && <span className={styles.checkmark}>✓</span>}
-                            <span className={styles.tagFilterDot} style={{ backgroundColor: tag.color || '#ccc' }} />
+                            <span className={styles.tagFilterDot} style={{ backgroundColor: getTagColor(tagIdx).text }} />
                             <span>{tag.name}</span>
                           </button>
                         );
@@ -688,6 +689,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
             {activeSection === 'campaigns' && (
               <div className={styles.sectionContent}>
                 {/* Campaign selection */}
+                {!hideCampaigns && (
                 <div className={styles.filterField}>
                   <h4 className={styles.sectionHeading}>{t('af_selectCampaigns')}</h4>
                   <div className={styles.campaignPills}>
@@ -718,6 +720,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Donation Source */}
                 <div className={styles.filterField}>

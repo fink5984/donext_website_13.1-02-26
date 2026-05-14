@@ -244,6 +244,22 @@ export async function POST(request) {
             await prisma.donor.createMany({ data: donorsToCreate, skipDuplicates: true });
             createdCount = newPersonIds.length;
 
+            // איפוס סטטוס שאלון/צפי של המתרים אם כבר סיים ומוקצים לו תורמים חדשים
+            if (fundraiserId) {
+                const fr = await prisma.fundraiser.findUnique({
+                    where: { id: Number(fundraiserId) },
+                    select: { statusQuestionnaire: true, statusForecast: true }
+                });
+                if (fr) {
+                    const resetData = {};
+                    if (fr.statusQuestionnaire === 'SUCCESS') resetData.statusQuestionnaire = 'NOT_SENT';
+                    if (fr.statusForecast === 'SUCCESS') resetData.statusForecast = 'NOT_SENT';
+                    if (Object.keys(resetData).length > 0) {
+                        await prisma.fundraiser.update({ where: { id: Number(fundraiserId) }, data: resetData });
+                    }
+                }
+            }
+
             const newDonors = await prisma.donor.findMany({
                 where: { campaignId: Number(campaignId), personId: { in: newPersonIds } },
                 include: {

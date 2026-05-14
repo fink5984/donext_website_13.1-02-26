@@ -5,6 +5,25 @@ import { getCampaignId } from '@/lib/auth';
 
 const toInt = (v) => (v === null || v === undefined ? null : Number(v));
 const isInt = (n) => Number.isInteger(n);
+
+/**
+ * איפוס סטטוס שאלון/צפי של מתרים כשתורם חדש מוקצה אליו
+ * אם המתרים כבר סיים (SUCCESS), מאפסים אחורה ל-NOT_SENT
+ */
+async function resetFundraiserStatusIfComplete(fundraiserId) {
+    const fr = await prisma.fundraiser.findUnique({
+        where: { id: fundraiserId },
+        select: { statusQuestionnaire: true, statusForecast: true }
+    });
+    if (!fr) return;
+    const resetData = {};
+    if (fr.statusQuestionnaire === 'SUCCESS') resetData.statusQuestionnaire = 'NOT_SENT';
+    if (fr.statusForecast === 'SUCCESS') resetData.statusForecast = 'NOT_SENT';
+    if (Object.keys(resetData).length > 0) {
+        await prisma.fundraiser.update({ where: { id: fundraiserId }, data: resetData });
+    }
+}
+
 function buildResetFields(before, newFundraiserId) {
     const out = {};
     if (isInt(before?.lastForecastByFundraiserId) && newFundraiserId !== before.lastForecastByFundraiserId) {
@@ -86,6 +105,11 @@ export async function POST(request) {
                 select: donorSelectMinimal,
             });
 
+            // 3) אם הוקצה מתרים חדש — איפוס סטטוס שאלון/צפי שלו אם כבר סיים
+            if (newFundraiserId !== null) {
+                await resetFundraiserStatusIfComplete(newFundraiserId);
+            }
+
             return NextResponse.json({
                 success: true,
                 updatedDonor: mapDonorToFrontendMinimal(updated)
@@ -125,6 +149,16 @@ export async function POST(request) {
             });
 
             const updatedDonors = await prisma.$transaction(ops);
+
+            // איפוס סטטוס שאלון/צפי לכל מתרים שקיבל תורם חדש ואם כבר סיים
+            const newFundraiserIds = [...new Set(
+                assignments
+                    .map(a => a.fundraiserId === null ? null : Number(a.fundraiserId))
+                    .filter(id => id !== null && Number.isInteger(id))
+            )];
+            if (newFundraiserIds.length > 0) {
+                await Promise.all(newFundraiserIds.map(fId => resetFundraiserStatusIfComplete(fId)));
+            }
 
             return NextResponse.json({ success: true, updatedDonors: updatedDonors.map(mapDonorToFrontendMinimal) });
         }

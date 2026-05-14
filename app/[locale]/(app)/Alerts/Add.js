@@ -55,11 +55,14 @@ const Add = observer(({ open, onClose, addNew }) => {
         return `${t('sortBy')} ${options[value]}`;
     };
 
-    const filteredPeople = useMemo(() => people.filter(person =>
-        ((person.first_name || '') + ' ' + (person.last_name || ''))
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
-    ), [people, searchTerm]);
+    const filteredPeople = useMemo(() => {
+        const term = searchTerm.toLowerCase();
+        return people.filter(person =>
+            ((person.first_name || '') + ' ' + (person.last_name || '')).toLowerCase().includes(term) ||
+            (person.main_mobile || '').toLowerCase().includes(term) ||
+            (person.phone_landline || '').toLowerCase().includes(term)
+        );
+    }, [people, searchTerm]);
 
     const sortedData = useMemo(() => sortPeople(filteredPeople, sortOrder), [filteredPeople, sortOrder]);
 

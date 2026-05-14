@@ -25,6 +25,7 @@ import Circle from "@/app/icons/circle24.svg"
 import Note from "@/app/icons/note.svg"
 import CommitmentIcon from "@/app/icons/commitment.svg"
 import FilterComponent from '../filter/Filter.js'
+import ContactsAdvancedFilter from '../contacts/ContactsAdvancedFilter';
 import AlertDialogComponent from '../Alerts/AlertPrint';
 import DoNextLoader from '@/app/components/DoNextLoader';
 import IconTooltip from '@/app/components/IconTooltip/IconTooltip';
@@ -137,6 +138,8 @@ export default observer(function DonorsPage() {
     const [selectedDonors, setSelectedDonors] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [openFilter, setOpenFilter] = useState(false);
+    const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+    const advancedFilterRef = useRef(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [dialogType, setDialogType] = useState("");
     const [isFiltered, setIsFiltered] = useState(false);
@@ -263,6 +266,7 @@ export default observer(function DonorsPage() {
 
     // איפוס סינון וחיפוש בעת יציאה מהדף
     useEffect(() => {
+        store.tagsStore.fetchTags();
         return () => {
             setSearchTerm('');
             setIsFiltered(false);
@@ -375,7 +379,36 @@ export default observer(function DonorsPage() {
         if (filterRef.current) {
             filterRef.current.reset();
         }
+        if (advancedFilterRef.current) {
+            advancedFilterRef.current.reset();
+        }
     }, [store.donorsStore]);
+
+    const handleAdvancedFilterApply = useCallback((filters) => {
+        const mapped = {
+            ...(store.donorsStore.filters || {}),
+            city: filters.cities?.[0] || '',
+            firstName: filters.firstNames?.[0] || '',
+            lastName: filters.lastNames?.[0] || '',
+            street: filters.streets?.[0] || '',
+            houseNumber: filters.houseNumbers?.[0] || '',
+            synagogue: filters.synagogues || [],
+            tagIds: filters.tagIds || [],
+            expectedRange: (filters.expectedMin !== undefined || filters.expectedMax !== undefined)
+                ? { min: filters.expectedMin ?? 0, max: filters.expectedMax ?? 1000000 }
+                : (store.donorsStore.filters?.expectedRange || { min: 0, max: 1000000 }),
+            actualRange: (filters.actualMin !== undefined || filters.actualMax !== undefined)
+                ? { min: filters.actualMin ?? 0, max: filters.actualMax ?? 1000000 }
+                : (store.donorsStore.filters?.actualRange || { min: 0, max: 1000000 }),
+        };
+        store.donorsStore.setFilters(mapped);
+        store.donorsStore.setPage(1);
+    }, [store.donorsStore]);
+
+    const handleAdvancedFilterReset = useCallback(() => {
+        resetFilters();
+        if (advancedFilterRef.current) advancedFilterRef.current.hydrateFromStore({});
+    }, [resetFilters]);
 
     const handlePageChange = useCallback((newPage) => {
         store.donorsStore.setPage(newPage);
@@ -1284,6 +1317,17 @@ export default observer(function DonorsPage() {
                 showSynagogueFilter={true}
                 campaignId={campaignId}
             />
+            <ContactsAdvancedFilter
+                ref={advancedFilterRef}
+                isOpen={showAdvancedFilter}
+                onClose={() => setShowAdvancedFilter(false)}
+                onApply={handleAdvancedFilterApply}
+                onReset={handleAdvancedFilterReset}
+                clientId={clientId}
+                totalResults={store.donorsStore.totalDonors}
+                tags={store.tagsStore.tags}
+                hideCampaigns
+            />
             <div className={styles.pageContainer}>
                 {firstLoad ? (
                     <div className={styles.loadingText}>{t('loading')}</div>
@@ -1329,7 +1373,7 @@ export default observer(function DonorsPage() {
                                                 )}
                                                 <Search onSearch={handleSearch} value={store.donorsStore.filters.search || ''} placeholder={t('searchPlaceholder')} />
                                                 <div className={styles.iconButtons}>
-                                                    <button className={styles["icon-button"]} onClick={() => setOpenFilter(true)}>
+                                                    <button className={styles["icon-button"]} onClick={() => setShowAdvancedFilter(true)}>
                                                         <IconTooltip icon={<Filter />} text={t('advancedFilter')} />
                                                     </button>
                                                     <button className={styles["add-button"]} onClick={handleOpenAddForm}>

@@ -20,6 +20,17 @@ function parseRequestParams(searchParams, campaignId) {
         filters[param] = value && typeof value === 'string' ? value.trim() : value;
     })
 
+    // tagIds - JSON array
+    const tagIdsParam = searchParams.get('tagIds');
+    if (tagIdsParam) {
+        try {
+            const parsed = JSON.parse(tagIdsParam);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                filters.tagIds = parsed.map(Number).filter(Boolean);
+            }
+        } catch (_) {}
+    }
+
     // מיון ופגינציה
     const sorting = {
         sortField: searchParams.get('sortField'),
@@ -214,7 +225,8 @@ function buildPersonFilters(filters, personSearchCondition) {
         ...(filters.mobile && { mainMobile: { contains: filters.mobile, mode: 'insensitive' } }),
         ...(filters.phone && { phoneLandline: { contains: filters.phone, mode: 'insensitive' } }),
         ...(filters.email && { email: { contains: filters.email, mode: 'insensitive' } }),
-        ...(synagogueCondition && synagogueCondition)
+        ...(synagogueCondition && synagogueCondition),
+        ...(filters.tagIds?.length > 0 && { personTags: { some: { tagId: { in: filters.tagIds } } } })
     };
 }
 

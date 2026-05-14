@@ -15,6 +15,7 @@ import ConfirmationDialog from '@/app/components/ConfirmationDialog';
 import { usePageTitle } from '@/app/hooks/usePageTitle';
 import Image from 'next/image';
 import auto from '../donations/ranks/auto.png';
+import { getTagColor } from '@/app/utils/tagColors';
 
 const TagsPage = observer(() => {
     const t = useTranslations('tagsPage');
@@ -160,7 +161,7 @@ const TagsPage = observer(() => {
                                 </button>
                                 <div className={styles.tagInfo}>
                                     <div className={styles.rightSide}>
-                                        <div className={styles.tagColorDot}>
+                                        <div className={styles.tagColorDot} style={{ background: getTagColor(tagsStore.tags.length).bg, color: getTagColor(tagsStore.tags.length).text }}>
                                             {newTagData.name ? newTagData.name[0].toUpperCase() : '+'}
                                         </div>
                                         <div className={styles.tagNameCol}>
@@ -211,7 +212,7 @@ const TagsPage = observer(() => {
                             </div>
                         )}
 
-                        {tagsStore.tags.map((tag) => (
+                        {tagsStore.tags.map((tag, tagIdx) => (
                             <div
                                 key={tag.id}
                                 className={`${styles.tableRow} ${editingId === tag.id ? styles.editingRow : ''}`}
@@ -220,7 +221,7 @@ const TagsPage = observer(() => {
                                     <>
                                         <div className={styles.tagInfo}>
                                             <div className={styles.rightSide}>
-                                                <div className={styles.tagColorDot}>
+                                                <div className={styles.tagColorDot} style={{ background: getTagColor(tagIdx).bg, color: getTagColor(tagIdx).text }}>
                                                     {editingData.name ? editingData.name[0].toUpperCase() : '#'}
                                                 </div>
                                                 <div className={styles.tagNameCol}>
@@ -276,7 +277,7 @@ const TagsPage = observer(() => {
                                     <>
                                         <div className={styles.tagInfo}>
                                             <div className={styles.rightSide}>
-                                                <div className={styles.tagColorDot}>
+                                                <div className={styles.tagColorDot} style={{ background: getTagColor(tagIdx).bg, color: getTagColor(tagIdx).text }}>
                                                     {tag.name ? tag.name[0].toUpperCase() : '#'}
                                                 </div>
                                                 <div className={styles.tagNameCol}>
