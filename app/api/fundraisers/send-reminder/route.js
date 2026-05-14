@@ -246,6 +246,14 @@ ${completionPercentage}% מצוות המתרימים כבר מילאו את הש
                 html: emailHtml
             });
 
+            // עדכון סטטוס שאלון ל-RECEIVED (נשלח) — רק אם עדיין NOT_SENT
+            if (fundraiser.statusQuestionnaire === 'NOT_SENT') {
+                await prisma.fundraiser.update({
+                    where: { id: fundraiser.id },
+                    data: { statusQuestionnaire: 'RECEIVED' }
+                });
+            }
+
             console.log(`Reminder sent to ${person.email}`);
 
         } catch (error) {
