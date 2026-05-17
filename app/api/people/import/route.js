@@ -387,6 +387,13 @@ export async function POST(request) {
                         hasExistingHok: person.hasExistingHok,
                         clientSystemId: person.clientSystemId != null ? String(person.clientSystemId).trim() : null,
                         synagogue: person.synagogue != null ? String(person.synagogue).trim() : null,
+                        fatherName: person.fatherName != null ? String(person.fatherName).trim() : null,
+                        motherName: person.motherName != null ? String(person.motherName).trim() : null,
+                        wifeName: person.wifeName != null ? String(person.wifeName).trim() : null,
+                        personalId: person.personalId != null ? String(person.personalId).trim() : null,
+                        aptNumber: person.aptNumber != null ? String(person.aptNumber).trim() : null,
+                        mailingAddress: person.mailingAddress != null ? String(person.mailingAddress).trim() : null,
+                        birthDate: person.birthDate != null ? new Date(person.birthDate) : null,
                         status: person.status || null,
                         ignoreDuplicatePhone: person.ignoreDuplicatePhone || false // דגל זמני — ניקוי לפני שמירה ב-DB
                     };

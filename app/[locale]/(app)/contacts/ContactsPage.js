@@ -53,12 +53,24 @@ const DEFAULT_COLUMN_DEFS = [
   { id: 'address', width: '140px', sortKey: 'address', label: 'colAddress' },
   { id: 'mobile', width: '100px', sortKey: 'mainMobile', label: 'colMobile' },
   { id: 'email', width: '140px', sortKey: 'email', label: 'colEmail' },
+  { id: 'phoneLandline', width: '100px', sortKey: 'phoneLandline', label: 'colPhoneLandline' },
+  { id: 'secondaryMobile', width: '100px', sortKey: 'secondaryMobile', label: 'colSecondaryMobile' },
   { id: 'campaigns', width: '220px', sortKey: 'campaigns', label: 'colCampaigns' },
   { id: 'totalDonations', width: '130px', sortKey: 'totalDonations', label: 'colTotalDonations' },
   { id: 'tags', width: '120px', sortKey: 'tags', label: 'colTags' },
   { id: 'rating', width: '90px', sortKey: 'rating', label: 'colRating' },
   { id: 'synagogue', width: '110px', sortKey: 'synagogue', label: 'colSynagogue' },
   { id: 'fatherName', width: '100px', sortKey: 'fatherName', label: 'colFatherName' },
+  { id: 'motherName', width: '100px', sortKey: 'motherName', label: 'colMotherName' },
+  { id: 'wifeName', width: '100px', sortKey: 'wifeName', label: 'colWifeName' },
+  { id: 'birthDate', width: '100px', sortKey: 'birthDate', label: 'colBirthDate' },
+  { id: 'personalId', width: '100px', sortKey: 'personalId', label: 'colPersonalId' },
+  { id: 'clientSystemId', width: '110px', sortKey: 'clientSystemId', label: 'colClientSystemId' },
+  { id: 'titleBefore', width: '80px', sortKey: 'titleBefore', label: 'colTitleBefore' },
+  { id: 'titleAfter', width: '80px', sortKey: 'titleAfter', label: 'colTitleAfter' },
+  { id: 'aptNumber', width: '80px', sortKey: 'aptNumber', label: 'colAptNumber' },
+  { id: 'zipCode', width: '80px', sortKey: 'zipCode', label: 'colZipCode' },
+  { id: 'mailingAddress', width: '160px', sortKey: 'mailingAddress', label: 'colMailingAddress' },
   { id: 'source', width: '140px', sortKey: 'source', label: 'colSource' },
   { id: 'responsibleFundraiser', width: '150px', sortKey: 'responsibleFundraiser', label: 'colResponsibleFundraiser' },
 ];
@@ -1245,7 +1257,33 @@ function renderCell(colId, contact, t, styles, allTags = [], onRemoveTag) {
     case 'synagogue':
       return <div key={colId} className={styles.contactsCell}>{contact.synagogue || ''}</div>;
     case 'fatherName':
-      return <div key={colId} className={styles.contactsCell}>{contact.fatherName || ''}</div>;
+      return <div key={colId} className={styles.contactsCell}>{contact.fatherName || contact.father_name || ''}</div>;
+    case 'motherName':
+      return <div key={colId} className={styles.contactsCell}>{contact.motherName || contact.mother_name || ''}</div>;
+    case 'wifeName':
+      return <div key={colId} className={styles.contactsCell}>{contact.wifeName || contact.wife_name || ''}</div>;
+    case 'phoneLandline':
+      return <div key={colId} className={styles.contactsCell}>{contact.phoneLandline || contact.phone_landline || ''}</div>;
+    case 'secondaryMobile':
+      return <div key={colId} className={styles.contactsCell}>{contact.secondaryMobile || contact.secondary_mobile || ''}</div>;
+    case 'titleBefore':
+      return <div key={colId} className={styles.contactsCell}>{contact.titleBefore || contact.title_before || ''}</div>;
+    case 'titleAfter':
+      return <div key={colId} className={styles.contactsCell}>{contact.titleAfter || contact.title_after || ''}</div>;
+    case 'personalId':
+      return <div key={colId} className={styles.contactsCell}>{contact.personalId || contact.personal_id || ''}</div>;
+    case 'clientSystemId':
+      return <div key={colId} className={styles.contactsCell}>{contact.clientSystemId || contact.client_system_id || ''}</div>;
+    case 'aptNumber':
+      return <div key={colId} className={styles.contactsCell}>{contact.aptNumber || contact.apt_number || ''}</div>;
+    case 'zipCode':
+      return <div key={colId} className={styles.contactsCell}>{contact.zipCode || contact.zip_code || ''}</div>;
+    case 'mailingAddress':
+      return <div key={colId} className={styles.contactsCell}>{contact.mailingAddress || contact.mailing_address || ''}</div>;
+    case 'birthDate': {
+      const bd = contact.birthDate || contact.birth_date;
+      return <div key={colId} className={styles.contactsCell}>{bd ? new Date(bd).toLocaleDateString('he-IL') : ''}</div>;
+    }
     case 'source':
       return <div key={colId} className={styles.contactsCell}><span className={styles.sourceTag}>{contact.importId ? t('importSource') : t('manualSource')}</span></div>;
     default:

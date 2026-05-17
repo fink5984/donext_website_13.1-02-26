@@ -17,6 +17,7 @@ export async function PUT(request, { params }) {
             cityId, streetId, houseNumber, countryId,
             synagogue, fatherName, motherName, grandfatherName,
             birthDate, rating, notes, active, status,
+            personalId, aptNumber, mailingAddress, wifeName,
             englishName, tagIds, customFields
         } = body;
 
@@ -43,6 +44,10 @@ export async function PUT(request, { params }) {
         if (notes !== undefined) updateData.notes = notes;
         if (active !== undefined) updateData.active = active;
         if (status !== undefined) updateData.status = status;
+        if (personalId !== undefined) updateData.personalId = personalId;
+        if (aptNumber !== undefined) updateData.aptNumber = aptNumber ? String(aptNumber).trim() : null;
+        if (mailingAddress !== undefined) updateData.mailingAddress = mailingAddress;
+        if (wifeName !== undefined) updateData.wifeName = wifeName;
 
         // שמור את המייל הישן לפני העדכון
         const oldPerson = email !== undefined ? await prisma.person.findUnique({

@@ -757,7 +757,7 @@ export default function LandingPage() {
                 <div className={styles.contactIcon}><IconPhone /></div>
                 <div>
                   <div className={styles.contactLabel}>{t('contact.phoneLabel')}</div>
-                  <div className={styles.contactValue} dir="ltr">+972-50-000-0000</div>
+                  <div className={styles.contactValue} dir="ltr">+972525902082</div>
                 </div>
               </div>
               <div className={styles.contactItem}>

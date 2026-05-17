@@ -151,6 +151,10 @@ model Person {
   fatherName      String?              @map("father_name")
   motherName      String?              @map("mother_name")
   grandfatherName String?              @map("grandfather_name")
+  personalId      String?              @map("personal_id")
+  aptNumber       String?              @map("apt_number")
+  mailingAddress  String?              @map("mailing_address")
+  wifeName        String?              @map("wife_name")
   birthDate       DateTime?            @map("birth_date") @db.Date
   rating          Int?                 @map("rating")
   active          Boolean?             @default(true) @map("active")
