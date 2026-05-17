@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, Fragment } from 'react';
 import { AppContext } from '@/app/components/AppContext';
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import styles from './payment-settings.module.scss';
@@ -43,6 +43,60 @@ const METHOD_ICONS = {
     commitment: NoteIcon,
     merkaz_hatzedaka: WalletIcon,
 };
+
+const ACCESS_LEVELS = [
+    { id: 1, label: 'מנהל' },
+    { id: 2, label: 'מפעיל' },
+    { id: 3, label: 'מתרים' },
+    { id: 4, label: 'דף ציבורי' },
+];
+
+const PUBLIC_ACCESSIBLE_METHODS = ['credit_card', 'merkaz_hatzedaka', 'ojc', 'matbia', 'pledger'];
+
+function AccessLevelStepper({ methodId, value, onChange }) {
+    const isPublicAllowed = PUBLIC_ACCESSIBLE_METHODS.includes(methodId);
+
+    const handleStepClick = (levelId) => {
+        if (levelId === 1) return;
+        if (levelId === 4 && !isPublicAllowed) return;
+        const newValue = value === levelId ? levelId - 1 : levelId;
+        onChange(Math.max(1, newValue));
+    };
+
+    return (
+        <div className={styles.accessLevelStepper}>
+            <span className={styles.accessLevelLabel}>גישה:</span>
+            <div className={styles.accessLevelTrack}>
+                {ACCESS_LEVELS.map((level, idx) => {
+                    const isActive = value >= level.id;
+                    const isLocked = level.id === 1;
+                    const isRestricted = level.id === 4 && !isPublicAllowed;
+                    const classNames = [
+                        styles.accessLevelStep,
+                        isActive ? styles.accessLevelStepActive : '',
+                        isLocked ? styles.accessLevelStepLocked : '',
+                        isRestricted ? styles.accessLevelStepRestricted : '',
+                    ].filter(Boolean).join(' ');
+                    return (
+                        <Fragment key={level.id}>
+                            {idx > 0 && (
+                                <div className={[styles.accessLevelConnector, value >= level.id ? styles.accessLevelConnectorActive : ''].filter(Boolean).join(' ')} />
+                            )}
+                            <div
+                                className={classNames}
+                                onClick={() => handleStepClick(level.id)}
+                                title={isRestricted ? 'לא ניתן להפעיל לדף ציבורי' : level.label}
+                            >
+                                <div className={styles.accessLevelDot} />
+                                <span className={styles.accessLevelName}>{level.label}</span>
+                            </div>
+                        </Fragment>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 export default function PaymentSettingsPage() {
     const { campaignId } = useContext(AppContext);
@@ -88,6 +142,7 @@ export default function PaymentSettingsPage() {
     const [showNedarimPlusModal, setShowNedarimPlusModal] = useState(false);
     const [merkazHatzedakaKeys, setMerkazHatzedakaKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, note: '' });
     const [showMerkazHatzedakaModal, setShowMerkazHatzedakaModal] = useState(false);
+    const [methodAccessLevels, setMethodAccessLevels] = useState({});
     
     // Donary Integration State
     const [donarySettings, setDonarySettings] = useState({
@@ -199,6 +254,8 @@ export default function PaymentSettingsPage() {
                     });
                     setDonorCount(data.donor_count || 0);
                 }
+                // Load method access levels
+                setMethodAccessLevels(data.payment_method_access_levels || {});
             }
         } catch (error) {
             console.error('Error fetching payment settings:', error);
@@ -305,7 +362,8 @@ export default function PaymentSettingsPage() {
 
             const requestBody = {
                 payment_methods: enabledMethods,
-                credit_card_provider: creditCardProvider
+                credit_card_provider: creditCardProvider,
+                payment_method_access_levels: methodAccessLevels
             };
             
             // Include Stripe keys if Stripe is the credit card provider
@@ -587,6 +645,13 @@ export default function PaymentSettingsPage() {
                                             </select>
                                         </div>
                                     </div>
+                                    {enabledMethods[method.id] && (
+                                        <AccessLevelStepper
+                                            methodId={method.id}
+                                            value={methodAccessLevels[method.id] || 1}
+                                            onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                        />
+                                    )}
                                 </div>
                             );
                         }
@@ -628,6 +693,13 @@ export default function PaymentSettingsPage() {
                                             </label>
                                         </div>
                                     </div>
+                                    {enabledMethods[method.id] && (
+                                        <AccessLevelStepper
+                                            methodId={method.id}
+                                            value={methodAccessLevels[method.id] || 1}
+                                            onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                        />
+                                    )}
                                 </div>
                             );
                         }
@@ -664,6 +736,13 @@ export default function PaymentSettingsPage() {
                                             </label>
                                         </div>
                                     </div>
+                                    {enabledMethods[method.id] && (
+                                        <AccessLevelStepper
+                                            methodId={method.id}
+                                            value={methodAccessLevels[method.id] || 1}
+                                            onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                        />
+                                    )}
                                 </div>
                             );
                         }
@@ -699,6 +778,13 @@ export default function PaymentSettingsPage() {
                                             </label>
                                         </div>
                                     </div>
+                                    {enabledMethods[method.id] && (
+                                        <AccessLevelStepper
+                                            methodId={method.id}
+                                            value={methodAccessLevels[method.id] || 1}
+                                            onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                        />
+                                    )}
                                 </div>
                             );
                         }
@@ -735,6 +821,13 @@ export default function PaymentSettingsPage() {
                                             </label>
                                         </div>
                                     </div>
+                                    {enabledMethods[method.id] && (
+                                        <AccessLevelStepper
+                                            methodId={method.id}
+                                            value={methodAccessLevels[method.id] || 1}
+                                            onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                        />
+                                    )}
                                 </div>
                             );
                         }
@@ -760,6 +853,13 @@ export default function PaymentSettingsPage() {
                                         </label>
                                     </div>
                                 </div>
+                                {enabledMethods[method.id] && (
+                                    <AccessLevelStepper
+                                        methodId={method.id}
+                                        value={methodAccessLevels[method.id] || 1}
+                                        onChange={(v) => setMethodAccessLevels(prev => ({ ...prev, [method.id]: v }))}
+                                    />
+                                )}
                             </div>
                         );
                     })}

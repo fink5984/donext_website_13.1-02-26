@@ -248,6 +248,7 @@ model Campaign {
   merkazHatzedakaPaymentType String?          @default("Ragil") @map("merkaz_hatzedaka_payment_type")
   merkazHatzedakaHkDay     Int?               @default(1) @map("merkaz_hatzedaka_hk_day")
   merkazHatzedakaNote      String?            @map("merkaz_hatzedaka_note")
+  paymentMethodAccessLevels Json?             @map("payment_method_access_levels")
   showInvitationColumn Boolean?               @default(false) @map("show_invitation_column")
   dailyTasksEmailEnabled Boolean?             @default(false) @map("daily_tasks_email_enabled")
   activeFields         Json?                  @map("active_fields")

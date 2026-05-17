@@ -7,6 +7,7 @@ import { useRef, useState, useEffect, useContext, useMemo } from 'react';
 import Person from '@/app/components/Person';
 import Search from '@/app/components/Search';
 import Link from "@/app/icons/donorLink.svg"
+import SearchIcon from "@/app/icons/search.svg"
 import { observer } from "mobx-react-lite";
 import { StoreContext } from "@/stores/StoreContext";
 import { groupPeopleByLastNameInitial } from '@/lib/utils';
@@ -56,6 +57,11 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
     const isInitialLoadRef = useRef(true); // Track whether it's the first load vs a filter reload
     const [openSynagogue, setOpenSynagogue] = useState(false);
     const [openSort, setOpenSort] = useState(false);
+    const [fundraiserDropdownOpen, setFundraiserDropdownOpen] = useState(false);
+    const [fundraiserDropdownSearch, setFundraiserDropdownSearch] = useState('');
+    const fundraiserDropdownRef = useRef(null);
+    const fundraiserToggleBtnRef = useRef(null);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
     const donors = store.donorsStore.assignableDonors; // Use the new dedicated state
     const fundraisers = store.fundraisersStore.fundraisers;
@@ -163,6 +169,22 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
             }
         });
     }, [open, tableBodyRef.current, donors]);
+
+    // Close fundraiser dropdown when clicking outside
+    useEffect(() => {
+        if (!fundraiserDropdownOpen) return;
+        const handleMouseDown = (event) => {
+            if (
+                fundraiserDropdownRef.current && !fundraiserDropdownRef.current.contains(event.target) &&
+                fundraiserToggleBtnRef.current && !fundraiserToggleBtnRef.current.contains(event.target)
+            ) {
+                setFundraiserDropdownOpen(false);
+                setFundraiserDropdownSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleMouseDown);
+        return () => document.removeEventListener('mousedown', handleMouseDown);
+    }, [fundraiserDropdownOpen]);
 
     // Filter donors by search term - only active donors from selected synagogue
     const getFilteredDonors = () => {
@@ -410,7 +432,62 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
                                         <div className={`${styles.assignedContent} ${getBorderColorClass()}`}>
                                             <div className={styles.assignTitels}>
                                                 <div className='table-2'>{t('selectDonorsFor')}</div>
-                                                <p className='headline-2'>{currentFundraiserName} </p>
+                                                <div className={styles.fundraiserNameWrapper}>
+                                                    <p className='headline-2'>{currentFundraiserName}</p>
+                                                    <button
+                                                        ref={fundraiserToggleBtnRef}
+                                                        className={`${styles.fundraiserDropdownToggle} ${fundraiserDropdownOpen ? styles.fundraiserDropdownToggleOpen : ''}`}
+                                                        onClick={() => {
+                                                            if (!fundraiserDropdownOpen && fundraiserToggleBtnRef.current) {
+                                                                const rect = fundraiserToggleBtnRef.current.getBoundingClientRect();
+                                                                setDropdownPos({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
+                                                            }
+                                                            setFundraiserDropdownOpen(prev => !prev);
+                                                        }}
+                                                        aria-label={t('selectFundraiser')}
+                                                    >
+                                                        <SearchIcon className={styles.dropdownSearchIcon} />
+                                                    </button>
+                                                    {fundraiserDropdownOpen && (
+                                                        <div
+                                                            ref={fundraiserDropdownRef}
+                                                            className="fundraiserDropdownPortal"
+                                                            style={{ top: dropdownPos.top, left: dropdownPos.left }}
+                                                        >
+                                                            <input
+                                                                className="fundraiserDropdownSearch"
+                                                                placeholder={t('searchFundraiser')}
+                                                                value={fundraiserDropdownSearch}
+                                                                onChange={(e) => setFundraiserDropdownSearch(e.target.value)}
+                                                                autoFocus
+                                                            />
+                                                            <div className="fundraiserDropdownList">
+                                                                {fundraisers
+                                                                    .map((f, idx) => ({ f, idx }))
+                                                                    .filter(({ f }) => {
+                                                                        if (!fundraiserDropdownSearch) return true;
+                                                                        const name = `${f.first_name} ${f.last_name}`.toLowerCase();
+                                                                        return name.includes(fundraiserDropdownSearch.toLowerCase());
+                                                                    })
+                                                                    .map(({ f, idx }) => (
+                                                                        <button
+                                                                            key={f.fundraiser_id}
+                                                                            className={`fundraiserDropdownItem${idx === currentFundraiserIndex ? ' fundraiserDropdownItemActive' : ''}`}
+                                                                            onMouseDown={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setCurrentFundraiserIndex(idx);
+                                                                                setFundraiserDropdownOpen(false);
+                                                                                setFundraiserDropdownSearch('');
+                                                                            }}
+                                                                        >
+                                                                            {f.first_name} {f.last_name}
+                                                                        </button>
+                                                                    ))
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className={styles.assignedDonorsButtons}
                                                 ref={tableBodyRef} style={{

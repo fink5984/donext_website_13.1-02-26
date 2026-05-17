@@ -1967,7 +1967,9 @@
       "continueLater": "אמשיך בפעם אחרת",
       "completionSingle": "מתרים 1 מתוך {total} הושלמו",
       "completionPlural": "{completed} מתרימים מתוך {total} הושלמו",
-      "loadingData": "טוען נתונים..."
+      "loadingData": "טוען נתונים...",
+      "searchFundraiser": "חפש מתרים...",
+      "selectFundraiser": "בחר מתרים"
     },
     "feedback": {
       "tooFewExtreme": "בחרת רק {count} מתרימים וזה ממש לא מספיק",

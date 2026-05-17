@@ -956,3 +956,79 @@ input[type="checkbox"] {
     max-width: 100% !important;
   }
 }
+/* Fundraiser picker dropdown portal (rendered in document.body) */
+.fundraiserDropdownPortal {
+  position: fixed;
+  transform: translateX(-50%);
+  min-width: 280px;
+  width: 300px;
+  background: var(--Text-button, #FFF);
+  border: 1px solid var(--Gray-Blue-200, #C8D8F8);
+  border-radius: var(--Border-Radius-m, 12px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  animation: fundraiserDropdownFadeIn 0.15s ease;
+
+  .fundraiserDropdownSearch {
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid var(--Gray-Blue-100, #E8EFFC);
+    outline: none;
+    font-size: 14px;
+    color: var(--Text-Select-Text);
+    background: var(--Surface-01);
+    direction: rtl;
+    border-radius: var(--Border-Radius-m, 12px) var(--Border-Radius-m, 12px) 0 0;
+
+    &::placeholder {
+      color: var(--Gray-Blue-300, #8AADEE);
+    }
+  }
+
+  .fundraiserDropdownList {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    direction: rtl;
+    border-radius: 0 0 var(--Border-Radius-m, 12px) var(--Border-Radius-m, 12px);
+  }
+
+  .fundraiserDropdownItem {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--Text-Select-Text);
+    transition: background 0.1s;
+    text-align: right;
+
+    &:hover {
+      background: var(--Gray-Blue-50, #F5F8FE);
+    }
+
+    &.fundraiserDropdownItemActive {
+      background: var(--Brand-Blue-50, #EEF3FD);
+      font-weight: 600;
+      color: var(--Brand-Blue-900, #103D98);
+    }
+  }
+
+  .fundraiserDropdownEmpty {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--Gray-Blue-300, #8AADEE);
+    text-align: center;
+  }
+}
+
+@keyframes fundraiserDropdownFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

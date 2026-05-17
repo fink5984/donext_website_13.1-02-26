@@ -38,10 +38,12 @@ export function PaymentMethodSelectPublic({ value, onChange, campaign, children 
         try {
             const paymentMethods = campaign?.paymentMethods || {};
             const creditCardProvider = campaign?.creditCardProvider || null;
+            const accessLevels = campaign?.paymentMethodAccessLevels || {};
             
             // Filter payment options based on:
-            // 1. Only show Credit, OJC, PLEDGER, MATBIA
+            // 1. Only show Credit, OJC, PLEDGER, MATBIA, MERKAZ_HATZEDAKA
             // 2. Only show if enabled in campaign settings
+            // 3. Only show if access level >= 4 (דף ציבורי)
             const filteredOptions = allPaymentOptions.filter(option => {
                 // Always include the default "select" option
                 if (option.value === '') return true;
@@ -51,11 +53,15 @@ export function PaymentMethodSelectPublic({ value, onChange, campaign, children 
                 
                 // Handle credit card - show if enabled and has a provider
                 if (option.settingKey === 'credit_card') {
-                    return paymentMethods.credit_card === true && creditCardProvider;
+                    if (!(paymentMethods.credit_card === true && creditCardProvider)) return false;
+                } else {
+                    // Check if this payment method is enabled
+                    if (paymentMethods[option.settingKey] !== true) return false;
                 }
-                
-                // Check if this payment method is enabled
-                return paymentMethods[option.settingKey] === true;
+
+                // Check access level - public screen requires level 4
+                const methodLevel = accessLevels[option.settingKey] || 1;
+                return methodLevel >= 4;
             });
             
             // If no payment methods are enabled, show message

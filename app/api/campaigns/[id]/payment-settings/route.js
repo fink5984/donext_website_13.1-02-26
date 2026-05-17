@@ -48,7 +48,8 @@ export async function GET(request, context) {
                 merkazHatzedakaApiValid: true,
                 merkazHatzedakaPaymentType: true,
                 merkazHatzedakaHkDay: true,
-                merkazHatzedakaNote: true
+                merkazHatzedakaNote: true,
+                paymentMethodAccessLevels: true
             }
         });
 
@@ -93,6 +94,7 @@ export async function GET(request, context) {
             merkaz_hatzedaka_payment_type: campaign.merkazHatzedakaPaymentType || 'Ragil',
             merkaz_hatzedaka_hk_day: campaign.merkazHatzedakaHkDay || 1,
             merkaz_hatzedaka_note: campaign.merkazHatzedakaNote || '',
+            payment_method_access_levels: campaign.paymentMethodAccessLevels || {},
             donor_count: donorCount
         });
 
@@ -112,7 +114,7 @@ export async function PUT(request, context) {
         const headerCampaignId = getCampaignId(request);
         const campaignId = !isNaN(headerCampaignId) ? headerCampaignId : parseInt(id);
         const body = await request.json();
-        const { payment_methods, credit_card_provider, stripe_keys, bevel_public_key, bevel_api_key, bevel_api_pin, pledger_tax_id, pledger_charity_name, pledger_bearer_token, matbia_org_user_handle, matbia_org_tax_id, matbia_org_name, matbia_org_email, ojc_org_id, ojc_api_key, ojc_username, ojc_password, donary_enabled, donary_api_key, donary_org_guid, nedarim_plus_mosad, nedarim_plus_api_valid, nedarim_plus_payment_type, nedarim_plus_hk_day, merkaz_hatzedaka_mosad, merkaz_hatzedaka_api_valid, merkaz_hatzedaka_payment_type, merkaz_hatzedaka_hk_day, merkaz_hatzedaka_note } = body;
+        const { payment_methods, credit_card_provider, stripe_keys, bevel_public_key, bevel_api_key, bevel_api_pin, pledger_tax_id, pledger_charity_name, pledger_bearer_token, matbia_org_user_handle, matbia_org_tax_id, matbia_org_name, matbia_org_email, ojc_org_id, ojc_api_key, ojc_username, ojc_password, donary_enabled, donary_api_key, donary_org_guid, nedarim_plus_mosad, nedarim_plus_api_valid, nedarim_plus_payment_type, nedarim_plus_hk_day, merkaz_hatzedaka_mosad, merkaz_hatzedaka_api_valid, merkaz_hatzedaka_payment_type, merkaz_hatzedaka_hk_day, merkaz_hatzedaka_note, payment_method_access_levels } = body;
         
         if (isNaN(campaignId)) {
             console.log('Invalid campaign ID - header:', headerCampaignId, 'param:', id);
@@ -244,6 +246,10 @@ export async function PUT(request, context) {
             updateData.merkazHatzedakaNote = merkaz_hatzedaka_note;
         }
 
+        if (payment_method_access_levels !== undefined) {
+            updateData.paymentMethodAccessLevels = payment_method_access_levels;
+        }
+
         const updatedCampaign = await prisma.campaign.update({
             where: { id: campaignId },
             data: updateData
@@ -279,7 +285,8 @@ export async function PUT(request, context) {
             merkaz_hatzedaka_api_valid: updatedCampaign.merkazHatzedakaApiValid,
             merkaz_hatzedaka_payment_type: updatedCampaign.merkazHatzedakaPaymentType,
             merkaz_hatzedaka_hk_day: updatedCampaign.merkazHatzedakaHkDay,
-            merkaz_hatzedaka_note: updatedCampaign.merkazHatzedakaNote
+            merkaz_hatzedaka_note: updatedCampaign.merkazHatzedakaNote,
+            payment_method_access_levels: updatedCampaign.paymentMethodAccessLevels || {}
         });
 
     } catch (error) {

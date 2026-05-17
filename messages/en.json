@@ -1940,7 +1940,9 @@
       "continueLater": "Continue later",
       "completionSingle": "1 fundraiser out of {total} completed",
       "completionPlural": "{completed} fundraisers out of {total} completed",
-      "loadingData": "Loading data..."
+      "loadingData": "Loading data...",
+      "searchFundraiser": "Search fundraiser...",
+      "selectFundraiser": "Select fundraiser"
     },
     "feedback": {
       "tooFewExtreme": "You only selected {count} fundraisers and that's really not enough",

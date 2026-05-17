@@ -766,3 +766,96 @@
     }
 }
 
+/* Access Level Stepper */
+.accessLevelStepper {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px 12px;
+    gap: 12px;
+    border-top: 1px solid #EEF3FB;
+    background-color: #F8FAFF;
+    border-radius: 0 0 var(--Border-Radius-sm, 8px) var(--Border-Radius-sm, 8px);
+}
+
+.accessLevelLabel {
+    font-size: 12px;
+    color: #6E99EC;
+    white-space: nowrap;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.accessLevelTrack {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.accessLevelConnector {
+    flex: 1;
+    height: 2px;
+    background-color: #D5E1F5;
+    transition: background-color 0.2s ease;
+
+    &.accessLevelConnectorActive {
+        background-color: #0C4AD5;
+    }
+}
+
+.accessLevelStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+
+    &:hover:not(.accessLevelStepLocked):not(.accessLevelStepRestricted) {
+        background-color: rgba(12, 74, 213, 0.06);
+
+        .accessLevelDot {
+            transform: scale(1.25);
+            box-shadow: 0 0 0 3px rgba(12, 74, 213, 0.12);
+        }
+    }
+}
+
+.accessLevelStepLocked {
+    cursor: default;
+}
+
+.accessLevelStepRestricted {
+    cursor: not-allowed;
+    opacity: 0.35;
+}
+
+.accessLevelDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #D5E1F5;
+    border: 2px solid #D5E1F5;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.accessLevelStep.accessLevelStepActive .accessLevelDot {
+    background-color: #0C4AD5;
+    border-color: #0C4AD5;
+}
+
+.accessLevelName {
+    font-size: 10px;
+    color: #6E99EC;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+    line-height: 1.2;
+}
+
+.accessLevelStep.accessLevelStepActive .accessLevelName {
+    color: #0C4AD5;
+    font-weight: 600;
+}
+

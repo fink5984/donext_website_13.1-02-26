@@ -128,6 +128,10 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             if (paymentData.success && paymentData.stripe_public_key) {
                                 setStripePublicKey(paymentData.stripe_public_key);
                             }
+                            // Merge access levels into campaign so PaymentMethodSelectPublic can filter
+                            if (paymentData.payment_method_access_levels) {
+                                setCampaign(prev => ({ ...prev, paymentMethodAccessLevels: paymentData.payment_method_access_levels }));
+                            }
                         } catch (error) {
                             console.error('Error loading payment settings:', error);
                         }
@@ -140,6 +144,10 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             const paymentRes = await fetch(`/api/campaigns/${campaignId}/payment-settings-public`);
                             const paymentData = await paymentRes.json();
                             setPaymentSettings(paymentData);
+                            // Merge access levels into campaign so PaymentMethodSelectPublic can filter
+                            if (paymentData.payment_method_access_levels) {
+                                setCampaign(prev => ({ ...prev, paymentMethodAccessLevels: paymentData.payment_method_access_levels }));
+                            }
                         } catch (error) {
                             console.error('Error pre-loading payment settings:', error);
                         }

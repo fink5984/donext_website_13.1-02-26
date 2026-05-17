@@ -46,7 +46,8 @@ export async function GET(request, context) {
                 merkazHatzedakaApiValid: true,
                 merkazHatzedakaPaymentType: true,
                 merkazHatzedakaHkDay: true,
-                merkazHatzedakaNote: true
+                merkazHatzedakaNote: true,
+                paymentMethodAccessLevels: true
             }
         });
 
@@ -85,7 +86,8 @@ export async function GET(request, context) {
             merkaz_hatzedaka_api_valid: campaign.merkazHatzedakaApiValid || null,
             merkaz_hatzedaka_payment_type: campaign.merkazHatzedakaPaymentType || 'Ragil',
             merkaz_hatzedaka_hk_day: campaign.merkazHatzedakaHkDay || 1,
-            merkaz_hatzedaka_note: campaign.merkazHatzedakaNote || null
+            merkaz_hatzedaka_note: campaign.merkazHatzedakaNote || null,
+            payment_method_access_levels: campaign.paymentMethodAccessLevels || {}
         });
 
     } catch (error) {

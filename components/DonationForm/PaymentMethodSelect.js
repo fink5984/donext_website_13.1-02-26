@@ -52,11 +52,18 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRTL = locale === 'he';
-    const { campaignId } = useContext(AppContext);
+    const { campaignId, userType } = useContext(AppContext);
     const allPaymentOptions = getAllPaymentOptions(t);
     const [paymentOptions, setPaymentOptions] = useState([allPaymentOptions[0]]); // Start with default option
     const [isLoading, setIsLoading] = useState(true);
     const [creditCardProvider, setCreditCardProvider] = useState(''); // Stores 'stripe' or 'bevel'
+
+    // Map userType to minimum required access level
+    const getUserRequiredLevel = () => {
+        if (userType === 'fundraiser') return 3;
+        if (userType === 'operator') return 2;
+        return 1; // manager/admin
+    };
 
     useEffect(() => {
         if (campaignId) {
@@ -75,6 +82,8 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
                 const data = await response.json();
                 const enabledMethods = data.payment_methods || {};
                 const provider = data.credit_card_provider || ''; // Get the selected provider
+                const accessLevels = data.payment_method_access_levels || {};
+                const userLevel = getUserRequiredLevel();
                 
                 setCreditCardProvider(provider);
                 
@@ -98,7 +107,9 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
                     
                     // Handle credit card - show if enabled
                     if (option.settingKey === 'credit_card') {
-                        return enabledMethods.credit_card === true && provider; // Only show if provider selected
+                        if (!(enabledMethods.credit_card === true && provider)) return false;
+                        const methodLevel = accessLevels['credit_card'] || 1;
+                        return userLevel <= methodLevel;
                     }
                     
                     // Hide stripe, bevel, and nedarim_plus - they're only shown via credit_card
@@ -110,7 +121,11 @@ export function PaymentMethodSelect({ value, onChange, children, readOnly, showE
                     if (!option.settingKey) return true;
                     
                     // Check if this payment method is enabled
-                    return enabledMethods[option.settingKey] === true;
+                    if (enabledMethods[option.settingKey] !== true) return false;
+
+                    // Check access level
+                    const methodLevel = accessLevels[option.settingKey] || 1;
+                    return userLevel <= methodLevel;
                 });
                 
                 setPaymentOptions(filteredOptions);

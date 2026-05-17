@@ -594,6 +594,37 @@
                     p {
                         color: var(--Border-Fundraiser-able);
                     }
+
+                    .fundraiserNameWrapper {
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+
+                        .fundraiserDropdownToggle {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            padding: 4px;
+                            border-radius: 6px;
+                            transition: background 0.15s;
+                            color: var(--Border-Fundraiser-able);
+                            background: transparent;
+                            border: none;
+
+                            &:hover, &.fundraiserDropdownToggleOpen {
+                                background: rgba(12, 74, 213, 0.1);
+                            }
+
+                            .dropdownSearchIcon {
+                                width: 18px;
+                                height: 18px;
+                                color: var(--Border-Fundraiser-able);
+                            }
+                        }
+                    }
                 }
 
                 .assignedDonorsButtons {
