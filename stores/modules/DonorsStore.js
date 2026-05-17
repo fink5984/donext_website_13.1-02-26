@@ -279,37 +279,29 @@ class DonorsStore {
     }
   }
 
+  // Fetch all donors without any filters - used for assigned donors section in DonorAssignment modal
+  async fetchAllDonorsUnfiltered() {
+    try {
+        const url = this.buildDonorsUrl({ noLimit: true, overrideFilters: {} });
+        const res = await fetchWithAuth(url);
+        const data = await res.json();
+        return (data.data || []).map(d => this.mapDonorFromApi(d));
+    } catch (e) {
+        console.error("Failed to fetch all donors unfiltered", e);
+        return [];
+    }
+  }
+
   async fetchDonorsSummary() {
     if (!this.rootStore.campaignId) return;
     
     try {
-      // Build URL with current filters
-      let url = '/api/donors/summary?';
-      const filters = this.filters;
-      
-      // Add filter parameters to summary request
-      if (filters.synagogue) {
-        if (Array.isArray(filters.synagogue) && filters.synagogue.length > 0) {
-          url += `synagogue=${encodeURIComponent(JSON.stringify(filters.synagogue))}&`;
-        } else if (typeof filters.synagogue === 'string' && filters.synagogue) {
-          url += `synagogue=${encodeURIComponent(filters.synagogue)}&`;
-        }
-      }
-      if (filters.trafficScore) url += `trafficLight=${encodeURIComponent(filters.trafficScore)}&`;
-      if (filters.expectedRange) {
-        if (filters.expectedRange.min > 0) url += `expectedMin=${filters.expectedRange.min}&`;
-        if (filters.expectedRange.max < 1000000) url += `expectedMax=${filters.expectedRange.max}&`;
-      }
-      if (filters.firstName) url += `firstName=${encodeURIComponent(filters.firstName)}&`;
-      if (filters.lastName) url += `lastName=${encodeURIComponent(filters.lastName)}&`;
-      if (filters.city) url += `city=${encodeURIComponent(filters.city)}&`;
-      if (filters.fundraiserId) url += `fundraiserId=${encodeURIComponent(filters.fundraiserId)}&`;
-      
-      // Remove trailing & if exists
-      url = url.replace(/&$/, '');
+      // Build URL with all current filters (same as buildDonorsUrl but pointing to summary endpoint)
+      const donorsUrl = this.buildDonorsUrl({ noLimit: true });
+      const url = donorsUrl.replace('/api/donors?', '/api/donors/summary?');
       
       // Build cache key that includes filters
-      const filtersKey = JSON.stringify(filters);
+      const filtersKey = JSON.stringify(this.filters);
       const cacheKey = `summary:${this.rootStore.campaignId}:${filtersKey}`;
       const cached = this.donorsSummaryCache.get(cacheKey);
       if (cached && Date.now() - cached.ts < this.cacheTTLms) {

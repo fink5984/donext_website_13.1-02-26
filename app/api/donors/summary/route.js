@@ -55,6 +55,16 @@ export async function GET(request) {
         const lastName = searchParams.get('lastName');
         const city = searchParams.get('city');
         const fundraiserId = searchParams.get('fundraiserId');
+        const search = searchParams.get('search');
+        const tagIdsParam = searchParams.get('tagIds');
+        const actualMin = searchParams.get('actualMin');
+        const actualMax = searchParams.get('actualMax');
+        
+        // Parse tagIds
+        let tagIds = [];
+        if (tagIdsParam) {
+            try { tagIds = JSON.parse(tagIdsParam); } catch (e) { tagIds = []; }
+        }
         
         // Build person filter conditions
         const personFilters = {};
@@ -63,6 +73,15 @@ export async function GET(request) {
         if (firstName) personFilters.firstName = { contains: firstName, mode: 'insensitive' };
         if (lastName) personFilters.lastName = { contains: lastName, mode: 'insensitive' };
         if (city) personFilters.city = { name: { contains: city, mode: 'insensitive' } };
+        if (search) {
+            personFilters.OR = [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } }
+            ];
+        }
+        if (tagIds.length > 0) {
+            personFilters.personTags = { some: { tagId: { in: tagIds } } };
+        }
         
         // Base where condition
         const where = { 
@@ -73,18 +92,33 @@ export async function GET(request) {
             ...(fundraiserId && { fundraiserId: parseInt(fundraiserId) })
         };
         
-        // Expected donation filter
-        if (expectedMin || expectedMax) {
-            const min = expectedMin ? parseInt(expectedMin) : undefined;
-            const max = expectedMax ? parseInt(expectedMax) : undefined;
+        // Expected donation filter - mirrors buildExpectedDonationCondition in utils.js
+        const hasExpectedMin = expectedMin !== null && expectedMin !== undefined && expectedMin !== '';
+        const hasExpectedMax = expectedMax !== null && expectedMax !== undefined && expectedMax !== '';
+        if (hasExpectedMin || hasExpectedMax) {
+            const min = hasExpectedMin ? Number(expectedMin) : undefined;
+            const max = hasExpectedMax ? Number(expectedMax) : undefined;
+            let expectedCondition;
             if (min !== undefined && max !== undefined) {
-                where.expected = { gte: min, lte: max };
+                expectedCondition = min === 0
+                    ? { OR: [{ expected: null }, { expected: { gte: min, lte: max } }] }
+                    : { expected: { gte: min, lte: max } };
             } else if (min !== undefined) {
-                where.expected = { gte: min };
-            } else if (max !== undefined) {
-                where.expected = { lte: max };
+                expectedCondition = min === 0
+                    ? { OR: [{ expected: null }, { expected: { gte: min } }] }
+                    : { expected: { gte: min } };
+            } else {
+                expectedCondition = { OR: [{ expected: null }, { expected: { lte: max } }] };
+            }
+            if (expectedCondition.OR) {
+                where.AND = [...(where.AND || []), expectedCondition];
+            } else {
+                Object.assign(where, expectedCondition);
             }
         }
+        
+        // Note: actualMin/actualMax filter is not applied at donor level
+        // since 'actual' is not a direct Prisma field - it's computed from donations
 
         // Operator filtering - show only donors under operator's fundraisers
         const operatorId = getOperatorId(request);
@@ -130,12 +164,11 @@ export async function GET(request) {
                 }
             }),
 
-            // 3. סטטיסטיקות תרומות
+            // 3. סטטיסטיקות תרומות - רק מתורמים שעומדים בסינון
             prisma.donation.findMany({
                 where: {
                     donor: {
-                        campaignId: campaignId,
-                        active: true
+                        is: where
                     },
                     deleted_at: null
                 },

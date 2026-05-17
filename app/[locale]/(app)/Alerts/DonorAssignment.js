@@ -55,6 +55,7 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
     const originalFiltersRef = useRef(null);
     const allDonorsRef = useRef([]); // Store all donors (unfiltered) for assigned donors section
     const isInitialLoadRef = useRef(true); // Track whether it's the first load vs a filter reload
+    const [allDonorsVersion, setAllDonorsVersion] = useState(0); // Increments when unfiltered donors finish loading
     const [openSynagogue, setOpenSynagogue] = useState(false);
     const [openSort, setOpenSort] = useState(false);
     const [fundraiserDropdownOpen, setFundraiserDropdownOpen] = useState(false);
@@ -104,11 +105,12 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
     }, [fundraisers, fundraiserDonorCounts, min, t]);
 
     // This effect handles assigning data once it's loaded or when the index changes
+    // allDonorsVersion triggers a re-run after unfiltered donors finish loading
     useEffect(() => {
         if (open && fundraisers.length > 0 && typeof currentFundraiserIndex === 'number') {
             handleAssignData(currentFundraiserIndex);
         }
-    }, [open, donors, fundraisers, currentFundraiserIndex]);
+    }, [open, donors, fundraisers, currentFundraiserIndex, allDonorsVersion]);
 
 
     // This effect handles data fetching and state reset when the modal opens
@@ -119,16 +121,17 @@ export default observer(function DonorAssignment({ open, onClose, fundIndex }) {
             // Save original filters - deep copy
             originalFiltersRef.current = JSON.parse(JSON.stringify(store.donorsStore.filters));
             
-            // Reset filters before loading data
-            store.donorsStore.setFilters({});
-            
+            // Do NOT reset filters - fetch assignable donors using the current page filters
             const loadData = async () => {
-                await Promise.all([
+                const [, , allDonors] = await Promise.all([
                     store.donorsStore.fetchAssignableDonors(),
-                    store.fundraisersStore.fetchFundraisers(true)
+                    store.fundraisersStore.fetchFundraisers(true),
+                    store.donorsStore.fetchAllDonorsUnfiltered()
                 ]);
-                // Save all donors (unfiltered) for assigned donors section
-                allDonorsRef.current = [...store.donorsStore.assignableDonors];
+                // allDonorsRef holds ALL donors (unfiltered) for the assigned donors top section
+                allDonorsRef.current = allDonors;
+                // Increment version to trigger re-run of handleAssignData with the now-populated ref
+                setAllDonorsVersion(v => v + 1);
                 store.donorsStore.fetchSynagogues();
                 isInitialLoadRef.current = false;
             };

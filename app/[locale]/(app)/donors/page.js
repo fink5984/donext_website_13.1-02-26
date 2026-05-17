@@ -379,8 +379,9 @@ export default observer(function DonorsPage() {
         if (filterRef.current) {
             filterRef.current.reset();
         }
+        // Use hydrateFromStore({}) instead of reset() to avoid recursive onReset→resetFilters loop
         if (advancedFilterRef.current) {
-            advancedFilterRef.current.reset();
+            advancedFilterRef.current.hydrateFromStore({});
         }
     }, [store.donorsStore]);
 
