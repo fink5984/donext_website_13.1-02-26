@@ -18,7 +18,7 @@ class ContactsStore {
     // חיפוש, סינון, מיון
     search = '';
     filters = {};
-    sortField = 'firstName';
+    sortField = 'lastName';
     sortDirection = 'asc';
 
     // עמודות - נטען מה-DB
@@ -331,7 +331,7 @@ class ContactsStore {
                 page: '1',
                 pageSize: '1',
                 statusFilter: 'pending',
-                sortBy: 'firstName',
+                sortBy: 'lastName',
                 sortOrder: 'asc',
             });
             const res = await fetchWithAuth(`/api/people?${params.toString()}`);
@@ -763,7 +763,7 @@ class ContactsStore {
         this.totalPages = 0;
         this.search = '';
         this.filters = {};
-        this.sortField = 'firstName';
+        this.sortField = 'lastName';
         this.sortDirection = 'asc';
         this.columnSettings = null;
         this.customFields = [];

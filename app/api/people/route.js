@@ -623,8 +623,12 @@ export async function GET(request) {
             orderBy = { personTags: { _count: dir } };
         } else if (sortBy === 'totalDonations' || sortBy === 'responsibleFundraiser') {
             orderBy = { donors: { _count: dir } };
+        } else if (sortBy === 'lastName') {
+            orderBy = [{ lastName: dir }, { firstName: dir }];
+        } else if (sortBy === 'firstName') {
+            orderBy = [{ firstName: dir }, { lastName: dir }];
         } else {
-            orderBy = { [orderField]: dir };
+            orderBy = [{ [orderField]: dir }, { lastName: dir }, { firstName: dir }];
         }
 
         // Includes — כולל שדות חדשים, תגיות, custom fields

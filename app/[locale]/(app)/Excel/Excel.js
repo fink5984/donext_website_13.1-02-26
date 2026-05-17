@@ -46,8 +46,17 @@ export default function Excel({ open, onClose, setDonors, mode = 'donors', fundr
         { dbName: "street", displayName: t('columns.street'), icon: <Address />, index: null, required: false },
         { dbName: "houseNumber", displayName: t('columns.houseNumber'), icon: <Address />, index: null, required: false },
         { dbName: "zipCode", displayName: t('columns.zipCode'), icon: <City />, index: null, required: false },
+        { dbName: "aptNumber", displayName: t('columns.aptNumber'), icon: <Address />, index: null, required: false },
+        { dbName: "mailingAddress", displayName: t('columns.mailingAddress'), icon: <Address />, index: null, required: false },
         { dbName: "synagogue", displayName: t('columns.synagogue'), icon: <Name />, index: null, required: false },
-        { dbName: "email", displayName: t('columns.email'), icon: <Email />, index: null, required: isFundraiserMode }
+        { dbName: "email", displayName: t('columns.email'), icon: <Email />, index: null, required: isFundraiserMode },
+        { dbName: "secondaryMobile", displayName: t('columns.secondaryMobile'), icon: <MobilePhone />, index: null, required: false },
+        { dbName: "personalId", displayName: t('columns.personalId'), icon: <Name />, index: null, required: false },
+        { dbName: "clientSystemId", displayName: t('columns.clientSystemId'), icon: <Name />, index: null, required: false },
+        { dbName: "birthDate", displayName: t('columns.birthDate'), icon: <Name />, index: null, required: false },
+        { dbName: "fatherName", displayName: t('columns.fatherName'), icon: <Name />, index: null, required: false },
+        { dbName: "motherName", displayName: t('columns.motherName'), icon: <Name />, index: null, required: false },
+        { dbName: "wifeName", displayName: t('columns.wifeName'), icon: <Name />, index: null, required: false },
     ], [t, isFundraiserMode]);
 
     const handleOpenChange = (open) => {
