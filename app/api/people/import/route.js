@@ -4,6 +4,48 @@ import { handlePrismaError } from '@/lib/prisma/utils';
 
 const BATCH_SIZE = 100; // Process in smaller batches
 
+// פרסור תאריך לידה מאקסל — תומך ב:
+// - מספר סריאלי של Excel (e.g. 30761)
+// - DD/MM/YYYY (ישראלי)
+// - YYYY-MM-DD (ISO)
+// - MM/DD/YYYY (אמריקאי)
+function parseBirthDate(value) {
+    if (value == null || value === '') return null;
+
+    // מספר סריאלי של Excel (תאריכים ב-Excel הם מספרים מ-1 ועד ~50000)
+    const num = Number(value);
+    if (!isNaN(num) && num > 1 && num < 60000) {
+        // Excel serial: 1 = January 1, 1900 (but Excel has a bug for 1900 leap year)
+        const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+        const date = new Date(excelEpoch.getTime() + num * 86400000);
+        if (!isNaN(date.getTime())) return date;
+    }
+
+    const str = String(value).trim();
+
+    // DD/MM/YYYY
+    const dmyMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+    if (dmyMatch) {
+        const [, day, month, year] = dmyMatch;
+        const date = new Date(Number(year), Number(month) - 1, Number(day));
+        if (!isNaN(date.getTime())) return date;
+    }
+
+    // YYYY-MM-DD or YYYY/MM/DD
+    const isoMatch = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+    if (isoMatch) {
+        const [, year, month, day] = isoMatch;
+        const date = new Date(Number(year), Number(month) - 1, Number(day));
+        if (!isNaN(date.getTime())) return date;
+    }
+
+    // ניסיון אחרון עם Date.parse
+    const fallback = new Date(str);
+    if (!isNaN(fallback.getTime())) return fallback;
+
+    return null;
+}
+
 // זיהוי כפילויות טלפון/שם בתוך הבאטש והגדרת סטטוס אוטומטית
 function detectAndSetDuplicateStatus(peopleData) {
     // ספירת טלפונים — לא סופרים אנשים שסומנו כ-"ראשי" (ignoreDuplicatePhone)
@@ -320,6 +362,11 @@ export async function POST(request) {
                     if (incomingPhone) {
                         updateData.mainMobile = String(incomingPhone).trim();
                     }
+                    // עדכון תאריך לידה אם סופק בייבוא ואין כבר ערך
+                    if (person.birthDate != null && person.birthDate !== '' && !existingPerson.birthDate) {
+                        const parsed = parseBirthDate(person.birthDate);
+                        if (parsed) updateData.birthDate = parsed;
+                    }
                     if (Object.keys(updateData).length > 0) {
                         await tx.person.update({
                             where: { id: existingPerson.id },
@@ -394,7 +441,7 @@ export async function POST(request) {
                         personalId: person.personalId != null ? String(person.personalId).trim() : null,
                         aptNumber: person.aptNumber != null ? String(person.aptNumber).trim() : null,
                         mailingAddress: person.mailingAddress != null ? String(person.mailingAddress).trim() : null,
-                        birthDate: person.birthDate != null ? new Date(person.birthDate) : null,
+                        birthDate: parseBirthDate(person.birthDate),
                         status: person.status || null,
                         ignoreDuplicatePhone: person.ignoreDuplicatePhone || false // דגל זמני — ניקוי לפני שמירה ב-DB
                     };
@@ -498,8 +545,9 @@ export async function POST(request) {
                     // If batch insert fails, try individual inserts with error handling
                     for (const personData of newPeopleData) {
                         try {
+                            const { ignoreDuplicatePhone, ...cleanData } = personData;
                             const newPerson = await tx.person.create({
-                                data: personData,
+                                data: { ...cleanData, importId: importRecord.id },
                                 include: {
                                     city: true,
                                     street: true,
@@ -544,6 +592,14 @@ export async function POST(request) {
                 if (person.motherName != null && person.motherName !== '') updateData.motherName = String(person.motherName).trim();
                 if (person.wifeName != null && person.wifeName !== '') updateData.wifeName = String(person.wifeName).trim();
                 if (person.aptNumber != null && person.aptNumber !== '') updateData.aptNumber = String(person.aptNumber).trim();
+                if (person.mailingAddress != null && person.mailingAddress !== '') updateData.mailingAddress = String(person.mailingAddress).trim();
+                if (person.personalId != null && person.personalId !== '') updateData.personalId = String(person.personalId).trim();
+                if (person.clientSystemId != null && person.clientSystemId !== '') updateData.clientSystemId = String(person.clientSystemId).trim();
+                if (person.secondaryMobile != null && person.secondaryMobile !== '') updateData.secondaryMobile = String(person.secondaryMobile).trim();
+                if (person.birthDate != null && person.birthDate !== '') {
+                    const parsed = parseBirthDate(person.birthDate);
+                    if (parsed) updateData.birthDate = parsed;
+                }
 
                 const cleanCity = person.city ? String(person.city).trim() : null;
                 const cleanStreet = person.street ? String(person.street).trim() : null;
@@ -638,7 +694,7 @@ async function processSingleBatch(clientId, people, importId) {
                 clientId: parseInt(clientId),
                 active: { not: false }
             },
-            select: { id: true, email: true } // Only select needed fields
+            select: { id: true, email: true, status: true, birthDate: true } // Only select needed fields
         }) : [];
         const existingEmailMap = new Map(existingPeople.map(p => [p.email, p]));
 
@@ -656,7 +712,7 @@ async function processSingleBatch(clientId, people, importId) {
                 clientId: parseInt(clientId),
                 active: { not: false }
             },
-            select: { id: true, email: true, mainMobile: true }
+            select: { id: true, email: true, mainMobile: true, status: true, birthDate: true }
         }) : [];
         const existingPhoneMap = new Map(existingByPhone.map(p => [p.mainMobile, p]));
 
@@ -688,6 +744,11 @@ async function processSingleBatch(clientId, people, importId) {
                 const incomingPhone = (person.phone || person.mainMobile);
                 if (incomingPhone) {
                     updateData.mainMobile = String(incomingPhone).trim();
+                }
+                // עדכון תאריך לידה אם סופק בייבוא ואין כבר ערך
+                if (person.birthDate != null && person.birthDate !== '' && !existingPerson.birthDate) {
+                    const parsed = parseBirthDate(person.birthDate);
+                    if (parsed) updateData.birthDate = parsed;
                 }
                 if (Object.keys(updateData).length > 0) {
                     await tx.person.update({
@@ -735,7 +796,15 @@ async function processSingleBatch(clientId, people, importId) {
                 hasExistingHok: person.hasExistingHok,
                 clientSystemId: person.clientSystemId != null ? String(person.clientSystemId).trim() : null,
                 synagogue: person.synagogue != null ? String(person.synagogue).trim() : null,
-                status: person.status || null // הוספת סטטוס הבעיות
+                fatherName: person.fatherName != null ? String(person.fatherName).trim() : null,
+                motherName: person.motherName != null ? String(person.motherName).trim() : null,
+                wifeName: person.wifeName != null ? String(person.wifeName).trim() : null,
+                personalId: person.personalId != null ? String(person.personalId).trim() : null,
+                aptNumber: person.aptNumber != null ? String(person.aptNumber).trim() : null,
+                mailingAddress: person.mailingAddress != null ? String(person.mailingAddress).trim() : null,
+                birthDate: parseBirthDate(person.birthDate),
+                status: person.status || null, // הוספת סטטוס הבעיות
+                ignoreDuplicatePhone: person.ignoreDuplicatePhone || false // דגל זמני — ניקוי לפני שמירה ב-DB
             };
             
             newPeopleData.push(personDataEntry);
