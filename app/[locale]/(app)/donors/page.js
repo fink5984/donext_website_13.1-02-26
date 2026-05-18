@@ -24,6 +24,7 @@ import NewDonor from "@/app/icons/newDonor.svg"
 import Circle from "@/app/icons/circle24.svg"
 import Note from "@/app/icons/note.svg"
 import CommitmentIcon from "@/app/icons/commitment.svg"
+import XIcon from "@/app/icons/exitMini.svg"
 import FilterComponent from '../filter/Filter.js'
 import ContactsAdvancedFilter from '../contacts/ContactsAdvancedFilter';
 import AlertDialogComponent from '../Alerts/AlertPrint';
@@ -155,6 +156,11 @@ export default observer(function DonorsPage() {
     const [isChangeDialogOpen, setIsChangeDialogOpen] = useState(false);
     const [loadingDonors, setLoadingDonors] = useState({}); // { donorId: true/false }
     const [fundraiserSearchTerm, setFundraiserSearchTerm] = useState({}); // { donorId: 'searchTerm' }
+    const [showFundraiserPicker, setShowFundraiserPicker] = useState(false);
+    const [fundraiserPickerSearch, setFundraiserPickerSearch] = useState('');
+    const [isBulkAssigning, setIsBulkAssigning] = useState(false);
+    const [pendingFundraiserAssign, setPendingFundraiserAssign] = useState(null); // { id, name }
+    const fundraiserPickerRef = useRef(null);
     const minDonors = 12;
     const maxDonors = 18;
     const currencySymbol = useCurrencySymbol();
@@ -411,6 +417,19 @@ export default observer(function DonorsPage() {
         if (advancedFilterRef.current) advancedFilterRef.current.hydrateFromStore({});
     }, [resetFilters]);
 
+    // Close fundraiser picker when clicking outside
+    useEffect(() => {
+        if (!showFundraiserPicker) return;
+        const handleClickOutside = (e) => {
+            if (fundraiserPickerRef.current && !fundraiserPickerRef.current.contains(e.target)) {
+                setShowFundraiserPicker(false);
+                setFundraiserPickerSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showFundraiserPicker]);
+
     const handlePageChange = useCallback((newPage) => {
         store.donorsStore.setPage(newPage);
         setTimeout(() => {
@@ -602,6 +621,39 @@ export default observer(function DonorsPage() {
     const handleDelete = (donor) => {
         setSelectedDeleteDonor(donor);
         setDeleteDialogOpen(true);
+    };
+
+    // Bulk assign selected donors to a fundraiser
+    const handleBulkAssignFundraiser = async (fundraiserId) => {
+        if (selectedDonors.length === 0 || isBulkAssigning) return;
+        setIsBulkAssigning(true);
+        try {
+            const assignments = selectedDonors.map(donorId => ({ donorId, fundraiserId }));
+            const res = await fetchWithAuth('/api/donors/assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignments }),
+            });
+            if (!res.ok) throw new Error('Failed to assign');
+            // Update local store for each selected donor
+            runInAction(() => {
+                selectedDonors.forEach(donorId => {
+                    const idx = store.donorsStore.donors.findIndex(d => d.id === donorId);
+                    if (idx > -1) {
+                        store.donorsStore.donors[idx].assigned_fundraiser_id = fundraiserId;
+                    }
+                });
+                store.donorsStore.donors = [...store.donorsStore.donors];
+            });
+            setSelectedDonors([]);
+            setShowFundraiserPicker(false);
+            setFundraiserPickerSearch('');
+        } catch (err) {
+            console.error(err);
+            alert(t('errorAssigningFundraiser'));
+        } finally {
+            setIsBulkAssigning(false);
+        }
     };
 
     const handleConfirmDelete = async () => {
@@ -1306,6 +1358,29 @@ export default observer(function DonorsPage() {
                     </AlertDialogPortal>
                 </AlertDialog >
             }
+            {/* Bulk assign fundraiser confirmation dialog */}
+            {pendingFundraiserAssign && (
+                <AlertDialog open={!!pendingFundraiserAssign} onOpenChange={(open) => { if (!open) setPendingFundraiserAssign(null); }}>
+                    <AlertDialogPortal>
+                        <AlertDialogContent hasOverlay={false} className={`deletePopup w-[auto] max-w-[none] rounded-[16px]`}>
+                            <AlertDialogTitle className="sr-only">{t('assignToFundraiser')}</AlertDialogTitle>
+                            <AlertDialogDescription className="sr-only">{t('assignToFundraiser')}</AlertDialogDescription>
+                            <div className={styles.popupTitles} style={{ color: 'var(--Text-able-Text, #0C4AD5)' }}>
+                                <p className={`headline-4`}>{t('assignConfirmTitle', { count: selectedDonors.length, name: pendingFundraiserAssign.name })}</p>
+                            </div>
+                            <div className={`${styles.popupButtons}`} style={{
+                                display: 'flex',
+                                gap: 'var(--Spacing-Spacing-10, 40px)',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}>
+                                <Button onClick={() => setPendingFundraiserAssign(null)} text={t('deleteConfirmNo')} />
+                                <Button primary onClick={() => { handleBulkAssignFundraiser(pendingFundraiserAssign.id); setPendingFundraiserAssign(null); }} text={t('confirmYes')} />
+                            </div>
+                        </AlertDialogContent>
+                    </AlertDialogPortal>
+                </AlertDialog>
+            )}
             <Add people={donors} fundraisers={fundraisers}
                 // onFundraiserToggle={handleFundraiserToggle}
                 open={showAdd} onClose={() => setShowAdd(false)} />
@@ -1343,7 +1418,8 @@ export default observer(function DonorsPage() {
                         />
                         <div className={styles.wrapper}>
                             <div className={styles.donors}>
-                                {(!donorsSummary || donorsSummary.active_count === "0" || donorsSummary.active_count === 0) ? (
+                                {/* Show "no donors in campaign" ONLY when there's no active filter/search, truly 0 donors, and not currently loading */}
+                                {(!isFiltered && !store.donorsStore.filters.search && !store.donorsStore.loadingDonors && (!donorsSummary || donorsSummary.active_count === "0" || donorsSummary.active_count === 0)) ? (
                                     <>
                                         <div className={styles.tableTitle}>
                                             <h2 className='headline-2'>{t('allCommunity')}</h2>
@@ -1403,6 +1479,12 @@ export default observer(function DonorsPage() {
                                             styles={styles}
                                             headerClassName={`${!showInvitationColumn ? styles.noInvitation : ''} ${!hasCommitments ? styles.noCommitment : ''} ${hasComparisonCampaign ? styles.withComparison : ''}`}
                                         />
+                                        {/* Show "no results" when filters/search return empty */}
+                                        {donors.length === 0 && (
+                                            <div className={styles.noDonors}>
+                                                <p className='button-2'>{t('noResultsForFilter')}</p>
+                                            </div>
+                                        )}
                                         {/* Mobile Cards View */}
                                         <div className={styles.mobileCardsView}>
                                             {donors.map((donor) => {
@@ -1436,6 +1518,83 @@ export default observer(function DonorsPage() {
                                             <span className={`${styles.trafficItem} ${styles.green} text`}><Circle />{t('highPotential')}</span>
                                         </div>
                                     </>
+                                )}
+                                {/* Selection Action Bar */}
+                                {selectedDonors.length > 0 && (
+                                    <div className={styles.selectionActionBar}>
+                                        <button className={styles.selectionCloseBtn} onClick={() => setSelectedDonors([])}>
+                                            <XIcon />
+                                        </button>
+                                        <div className={styles.selectionCount}>
+                                            <span className={styles.selectionCountValue}>{selectedDonors.length}</span>
+                                            <span className={styles.selectionCountLabel}>{t('donorsSelected')}</span>
+                                        </div>
+                                        <div className={styles.selectionDivider} />
+                                        {/* שיוך למתרים */}
+                                        <div className={styles.fundraiserPickerWrapper} ref={fundraiserPickerRef}>
+                                            <button
+                                                className={styles.selectionActionBtn}
+                                                onClick={() => setShowFundraiserPicker(prev => !prev)}
+                                                disabled={isBulkAssigning}
+                                            >
+                                                <span>{isBulkAssigning ? '...' : t('assignToFundraiser')}</span>
+                                            </button>
+                                            {showFundraiserPicker && (
+                                                <div className={styles.fundraiserPickerDropdown}>
+                                                    <input
+                                                        className={styles.fundraiserPickerSearch}
+                                                        type="text"
+                                                        placeholder={t('searchFundraiser')}
+                                                        value={fundraiserPickerSearch}
+                                                        onChange={e => setFundraiserPickerSearch(e.target.value)}
+                                                        autoFocus
+                                                    />
+                                                    <div className={styles.fundraiserPickerList}>
+                                                        {(fundraisersForSelect || fundraisers || [])
+                                                            .filter(f => {
+                                                                const name = `${f.firstName || f.first_name || ''} ${f.lastName || f.last_name || ''}`.toLowerCase();
+                                                                return !fundraiserPickerSearch || name.includes(fundraiserPickerSearch.toLowerCase());
+                                                            })
+                                                            .map(f => {
+                                                                const fname = `${f.firstName || f.first_name || ''} ${f.lastName || f.last_name || ''}`.trim() || t('noFundraiser');
+                                                                return (
+                                                                <button
+                                                                    key={f.fundraiser_id ?? f.id}
+                                                                    className={styles.fundraiserPickerItem}
+                                                                    onClick={() => {
+                                                                        setShowFundraiserPicker(false);
+                                                                        setFundraiserPickerSearch('');
+                                                                        setPendingFundraiserAssign({ id: f.fundraiser_id ?? f.id, name: fname });
+                                                                    }}
+                                                                >
+                                                                    {fname}
+                                                                </button>
+                                                                );
+                                                            })
+                                                        }
+                                                        {(fundraisersForSelect || fundraisers || []).filter(f => {
+                                                            const name = `${f.firstName || f.first_name || ''} ${f.lastName || f.last_name || ''}`.toLowerCase();
+                                                            return !fundraiserPickerSearch || name.includes(fundraiserPickerSearch.toLowerCase());
+                                                        }).length === 0 && (
+                                                            <span className={styles.fundraiserPickerEmpty}>{t('noFundraisersFound')}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.selectionDivider} />
+                                        {/* שליחת צנתוק */}
+                                        <button className={styles.selectionActionBtn}>
+                                            <PhoneSmall className={styles.selectionActionIcon} />
+                                            <span>{t('sendSms')}</span>
+                                        </button>
+                                        <div className={styles.selectionDivider} />
+                                        {/* שליחת מייל */}
+                                        <button className={styles.selectionActionBtn}>
+                                            <MailSmall className={styles.selectionActionIcon} />
+                                            <span>{t('sendEmailAction')}</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                             {donors.length > 0 &&

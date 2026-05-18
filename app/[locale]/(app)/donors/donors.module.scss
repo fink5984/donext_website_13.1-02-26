@@ -766,6 +766,7 @@
                 // justify-content: center;
                 align-items: center;
                 padding: var(--Spacing-Spacing-6) var(--Spacing-Spacing-8);
+                position: relative;
                 
                 @media (max-width: 768px) {
                     padding: 16px 12px;
@@ -2461,4 +2462,187 @@
         color: var(--Text-able-Text, #0C4AD5);
         line-height: 1.4;
     }
+}
+
+// ---- Donors Selection Action Bar ----
+.selectionActionBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px 8px;
+  gap: 8px;
+  background: #2B3BA2;
+  box-shadow: 0px 4px 4px rgba(43, 59, 162, 0.25);
+  border-radius: 8px;
+  direction: rtl;
+  width: fit-content;
+  min-width: 480px;
+  height: 40px;
+  margin: 0;
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.selectionCloseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: #FFFFFF;
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.selectionCount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.selectionCountValue {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 12px;
+  color: #FFFFFF;
+}
+
+.selectionCountLabel {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 12px;
+  color: #FFFFFF;
+}
+
+.selectionDivider {
+  width: 0;
+  height: 12px;
+  border-right: 1px solid #6E99EC;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.selectionActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 24px;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+
+  span {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+    color: #C5D7F8;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.selectionActionIcon {
+  width: 12px;
+  height: 12px;
+  color: #6E99EC;
+  flex-shrink: 0;
+}
+
+// ---- Fundraiser Picker (upward dropdown) ----
+.fundraiserPickerWrapper {
+  position: relative;
+}
+
+.fundraiserPickerDropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 4px;
+  min-width: 200px;
+  max-height: 240px;
+  background: #FFFFFF;
+  box-shadow:
+    0px 49px 49px rgba(137, 145, 164, 0.09),
+    0px 12px 27px rgba(137, 145, 164, 0.1);
+  border-radius: 8px;
+  z-index: 30;
+  direction: rtl;
+  overflow: hidden;
+}
+
+.fundraiserPickerSearch {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #E0E8F5;
+  border-radius: 20px;
+  font-size: 12px;
+  outline: none;
+  direction: rtl;
+  color: #333;
+  background: #F6F9FC;
+
+  &:focus {
+    border-color: #0C4AD5;
+  }
+}
+
+.fundraiserPickerList {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.fundraiserPickerItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+  text-align: right;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #EDF5FD;
+    color: #0C4AD5;
+  }
+}
+
+.fundraiserPickerEmpty {
+  font-size: 12px;
+  color: #999;
+  padding: 8px 10px;
+  text-align: center;
 }

@@ -1094,6 +1094,7 @@
     "errorDeletingDonor": "Error deleting donor",
     "noDonorsYet": "You can't do anything before uploading a community file, so let's go!",
     "noDonorsYetCrowdfunding": "No donors yet, add your first donor!",
+    "noResultsForFilter": "No data to display",
     "uploadCommunityFile": "Upload community file",
     "theDonors": "the donors",
     "firstName": "First Name",
@@ -1126,7 +1127,13 @@
     "deleteDonorsDescription": "Confirm deletion of selected donors",
     "record": "Record",
     "sendEmail": "Send Email",
-    "followUpDate": "Follow-up date"
+    "followUpDate": "Follow-up date",
+    "donorsSelected": "donors selected",
+    "assignToFundraiser": "Assign to fundraiser",
+    "assignConfirmTitle": "Are you sure you want to assign {count} donors to {name}?",
+    "confirmYes": "Yes",
+    "sendSms": "Send SMS",
+    "sendEmailAction": "Send email"
   },
 
   "donorNameHeader": {

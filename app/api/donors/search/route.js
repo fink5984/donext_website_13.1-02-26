@@ -24,10 +24,13 @@ export async function GET(request) {
         let searchConditions;
 
         if (searchParts.length === 1) {
-            // חיפוש רגיל - מילה אחת
+            // חיפוש רגיל - מילה אחת (שם או טלפון)
             searchConditions = [
                 { firstName: { contains: trimmedSearch, mode: 'insensitive' } },
                 { lastName: { contains: trimmedSearch, mode: 'insensitive' } },
+                { mainMobile: { contains: trimmedSearch, mode: 'insensitive' } },
+                { secondaryMobile: { contains: trimmedSearch, mode: 'insensitive' } },
+                { phoneLandline: { contains: trimmedSearch, mode: 'insensitive' } },
             ];
         } else {
             // חיפוש מרובה מילים - כל מילה צריכה להימצא בשם הפרטי או המשפחה
@@ -41,7 +44,11 @@ export async function GET(request) {
             searchConditions = [
                 {
                     AND: andConditions
-                }
+                },
+                // חיפוש טלפון - כל המחרוזת כמספר טלפון
+                { mainMobile: { contains: trimmedSearch, mode: 'insensitive' } },
+                { secondaryMobile: { contains: trimmedSearch, mode: 'insensitive' } },
+                { phoneLandline: { contains: trimmedSearch, mode: 'insensitive' } },
             ];
         }
 

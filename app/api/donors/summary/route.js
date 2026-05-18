@@ -74,10 +74,20 @@ export async function GET(request) {
         if (lastName) personFilters.lastName = { contains: lastName, mode: 'insensitive' };
         if (city) personFilters.city = { name: { contains: city, mode: 'insensitive' } };
         if (search) {
-            personFilters.OR = [
-                { firstName: { contains: search, mode: 'insensitive' } },
-                { lastName: { contains: search, mode: 'insensitive' } }
-            ];
+            // Split into words so "פינק דוד" matches firstName="דוד" lastName="פינק"
+            // Trim first so trailing spaces (e.g. "פינק ") don't break the match
+            const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+            if (searchTerms.length > 0) {
+                personFilters.AND = [
+                    ...(personFilters.AND || []),
+                    ...searchTerms.map(term => ({
+                        OR: [
+                            { firstName: { contains: term, mode: 'insensitive' } },
+                            { lastName: { contains: term, mode: 'insensitive' } }
+                        ]
+                    }))
+                ];
+            }
         }
         if (tagIds.length > 0) {
             personFilters.personTags = { some: { tagId: { in: tagIds } } };

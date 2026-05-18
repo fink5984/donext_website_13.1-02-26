@@ -109,7 +109,7 @@ const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange 
         const trimmedSearch = searchTerm.trim().toLowerCase();
         const searchParts = trimmedSearch.split(/\s+/);
 
-        // סינון מקומי תמיד - כולל שמות בעברית ובאנגלית
+        // סינון מקומי תמיד - כולל שמות בעברית, אנגלית וטלפון
         const localFiltered = allDonors.filter(donorOption => {
             const firstName = (donorOption.firstName || '').toLowerCase();
             const lastName = (donorOption.lastName || '').toLowerCase();
@@ -120,13 +120,17 @@ const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange 
             const englishLastName = (donorOption.english_last_name || donorOption.englishLastName || '').toLowerCase();
             const englishFullName = `${englishFirstName} ${englishLastName}`;
 
+            // טלפון
+            const phone = (donorOption.phone || '').toLowerCase();
+
             return searchParts.every(part => 
                 firstName.includes(part) || 
                 lastName.includes(part) || 
                 fullName.includes(part) ||
                 englishFirstName.includes(part) ||
                 englishLastName.includes(part) ||
-                englishFullName.includes(part)
+                englishFullName.includes(part) ||
+                phone.includes(part)
             );
         });
 

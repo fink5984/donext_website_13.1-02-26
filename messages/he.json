@@ -1116,6 +1116,8 @@
     "errorDeletingDonor": "שגיאה במחיקת התורם",
     "noDonorsYet": "אי אפשר לעשות כלום לפני שמעלים קובץ של הקהילה, אז קדימה!",
     "noDonorsYetCrowdfunding": "אין תורמים עדיין, הוסיפו את התורם הראשון!",
+    "noResultsForFilter": "אין נתונים להצגה",
+    "noResultsForFilter": "אין נתונים להצגה",
     "uploadCommunityFile": "להעלות קובץ הקהילה",
     "theDonors": "התורמים",
     "firstName": "שם פרטי",
@@ -1148,7 +1150,13 @@
     "deleteDonorsDescription": "אישור מחיקת תורמים נבחרים",
     "record": "הקלט",
     "sendEmail": "שלח מייל",
-    "followUpDate": "תאריך לטיפול"
+    "followUpDate": "תאריך לטיפול",
+    "donorsSelected": "תורמים נבחרו",
+    "assignToFundraiser": "שיוך למתרים",
+    "assignConfirmTitle": "בטוח שאתה רוצה לשייך את {count} התורמים ל{name}?",
+    "confirmYes": "כן",
+    "sendSms": "שליחת צנתוק",
+    "sendEmailAction": "שליחת מייל"
   },
 
   "donorNameHeader": {
