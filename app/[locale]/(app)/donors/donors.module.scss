@@ -2439,6 +2439,12 @@
     pointer-events: none;
 }
 
+// Display tooltip above for rows near bottom
+.donorInfoTooltipAbove {
+    top: auto;
+    bottom: calc(100% + 4px);
+}
+
 .donorInfoRow {
     display: flex;
     align-items: center;
@@ -2601,9 +2607,10 @@
   border: 1px solid #E0E8F5;
   border-radius: 20px;
   font-size: 12px;
+  font-family: var(--font-ping);
   outline: none;
   direction: rtl;
-  color: #333;
+  color: var(--Text-able-Text);
   background: #F6F9FC;
 
   &:focus {
@@ -2629,10 +2636,11 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  color: #333;
+  font-family: var(--font-ping);
+  color: var(--Text-able-Text);
   text-align: right;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
     background: #EDF5FD;
@@ -2642,6 +2650,7 @@
 
 .fundraiserPickerEmpty {
   font-size: 12px;
+  font-family: var(--font-ping);
   color: #999;
   padding: 8px 10px;
   text-align: center;

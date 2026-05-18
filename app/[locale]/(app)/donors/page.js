@@ -596,15 +596,18 @@ export default observer(function DonorsPage() {
         }
     };
 
-    const handleSelectAll = useCallback((e) => {
+    const handleSelectAll = useCallback(async (e) => {
         if (e.target.checked) {
-            // בחירת כל המתרימים - שומר את האינדקסים המקוריים
-            setSelectedDonors(donors.map((donor) => donor.id));
+            // בחירת כל התורמים מכל העמודים
+            const allDonors = await store.donorsStore.fetchAllDonorsForExport();
+            if (allDonors && Array.isArray(allDonors)) {
+                setSelectedDonors(allDonors.map((donor) => donor.id));
+            }
         } else {
             // ביטול בחירת כולם
             setSelectedDonors([]);
         }
-    }, [donors]);
+    }, [store.donorsStore]);
 
     const handleSelectdonor = useCallback((index) => {
         setSelectedDonors(prev => {
@@ -846,10 +849,12 @@ export default observer(function DonorsPage() {
         return donorNotes.some(n => n.note && n.followUpDate && !n.noteCompleted);
     };
 
-    const renderDonorRow = (donor) => {
+    const renderDonorRow = (donor, index) => {
         const fundsList = fundraisersForSelect || fundraisers;
         const selectedFundraiser = fundsList.find(f => String(f.fundraiser_id ?? f.id) === String(donor.assigned_fundraiser_id));
         const shouldShowBorder = !selectedFundraiser && !openSelects[donor.id];
+        // Check if this is one of the last 3 rows to display tooltip above
+        const isNearBottom = index >= donors.length - 3;
         return (
             <div
                 key={donor.id}
@@ -889,7 +894,7 @@ export default observer(function DonorsPage() {
                         }
                     </span>
                     {(donor.mobile || donor.address || donor.city || donor.email) && (
-                        <div className={styles.donorInfoTooltip}>
+                        <div className={`${styles.donorInfoTooltip} ${isNearBottom ? styles.donorInfoTooltipAbove : ''}`}>
                             {donor.mobile && (
                                 <div className={styles.donorInfoRow}>
                                     <PhoneSmall />
@@ -1119,7 +1124,7 @@ export default observer(function DonorsPage() {
             </div>
             <input
                 type="checkbox"
-                checked={selectedDonors.length === donors.length && donors.length > 0}
+                checked={selectedDonors.length > 0 && selectedDonors.length === store.donorsStore.totalDonors}
                 onChange={handleSelectAll}
             />
             <div className={`${styles.sortButtons}  ${styles.trafficHeaderCell}`}>

@@ -109,12 +109,6 @@ function buildSearchCondition(searchText) {
                 { lastName: { contains: term, mode: 'insensitive' } },
                 { englishName: { firstName: { contains: term, mode: 'insensitive' } } },
                 { englishName: { lastName: { contains: term, mode: 'insensitive' } } },
-                { city: { name: { contains: term, mode: 'insensitive' } } },
-                { street: { name: { contains: term, mode: 'insensitive' } } },
-                { houseNumber: { contains: term, mode: 'insensitive' } },
-                { mainMobile: { contains: term, mode: 'insensitive' } },
-                { phoneLandline: { contains: term, mode: 'insensitive' } },
-                { email: { contains: term, mode: 'insensitive' } },
             ]
         }))
     };
