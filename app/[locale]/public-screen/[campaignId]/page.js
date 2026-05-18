@@ -60,6 +60,7 @@ export default function PublicCampaignScreen() {
             donors: 'תורמים',
             fundraisers: 'מתרימים',
             outOfGoal: 'מתוך יעד של',
+            outOfMonthlyGoal: 'מתוך יעד חודשי של',
             timeToStart: 'זמן לתחילה',
             timeToEnd: 'זמן לסיום',
             ended: 'הסתיים',
@@ -129,6 +130,7 @@ export default function PublicCampaignScreen() {
             donors: 'Donors',
             fundraisers: 'Fundraisers',
             outOfGoal: 'out of a goal of',
+            outOfMonthlyGoal: 'out of a monthly goal of',
             timeToStart: 'Time to start',
             timeToEnd: 'Time to end',
             ended: 'Ended',
@@ -437,21 +439,21 @@ export default function PublicCampaignScreen() {
         return () => clearInterval(interval);
     }, [data?.publicScreenStartDate, data?.publicScreenEndDate]);
 
-    // Rotate stats every 10 seconds with fade transition
+    // Rotate stats every 7 seconds with fade transition. We currently expose 3 stats.
     useEffect(() => {
-        if (!data || !data.recentDonations || data.recentDonations.length === 0) return;
-        
+        if (!data) return;
+        const totalStats = 3;
+
         const interval = setInterval(() => {
             setIsTransitioning(true);
-            
             setTimeout(() => {
-                setCurrentStatIndex((prev) => (prev + 1) % 4);
+                setCurrentStatIndex((prev) => (prev + 1) % totalStats);
                 setIsTransitioning(false);
-            }, 500); // Half a second for fade out/in
-        }, 10000);
+            }, 400);
+        }, 7000);
 
         return () => clearInterval(interval);
-    }, [data, currentStatIndex]);
+    }, [data]);
 
     // Animate progress path
     useEffect(() => {
@@ -650,103 +652,106 @@ export default function PublicCampaignScreen() {
         return (first + last) || 'א';
     };
 
+    // Inline SVG icons used in the middle stats circle - stroke uses currentColor so they pick up the accent
+    const SVG_ICONS = {
+        cash: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%">
+                <rect x="2.5" y="6" width="19" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2.6" />
+                <path d="M6 9.5h.01M18 14.5h.01" />
+            </svg>
+        ),
+        clock: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="12 7 12 12 15.5 14" />
+            </svg>
+        ),
+        trendingUp: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="100%" height="100%">
+                <polyline points="3 17 9 11 13 15 21 7" />
+                <polyline points="15 7 21 7 21 13" />
+            </svg>
+        )
+    };
+
     // Calculate dynamic statistics for middle circle
     const calculateDynamicStats = () => {
         if (!data || !recentDonations) return [];
 
         const stats = [];
         const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // 1. Last donation time
-        if (recentDonations && recentDonations.length > 0) {
-            const lastDonation = recentDonations[0];
-            const relativeTime = getRelativeTime(lastDonation.createdAt);
+        // Filter donations made today (local time)
+        const donationsToday = recentDonations.filter(d => {
+            if (!d.createdAt) return false;
+            return new Date(d.createdAt) >= startOfToday;
+        });
+
+        const raisedToday = donationsToday.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
+        const targetAmount = Number(data?.statistics?.targetAmount) || 0;
+        const donationsTodayCount = donationsToday.length;
+
+        // ---- 1. תרומות היום (Number of donations made today) ----
+        stats.push({
+            title: language === 'he' ? 'תרומות היום' : 'Donations today',
+            value: donationsTodayCount > 0
+                ? new Intl.NumberFormat('he-IL').format(donationsTodayCount)
+                : (language === 'he' ? 'אין עדיין' : 'None yet'),
+            icon: SVG_ICONS.cash
+        });
+
+        // ---- 2. תרומה אחרונה (Last donation, relative time) ----
+        if (recentDonations.length > 0) {
+            const last = recentDonations[0];
+            const lastDate = new Date(last.createdAt);
+            const diffMs = now - lastDate;
+            const minutes = Math.floor(diffMs / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            let value;
+            if (language === 'he') {
+                if (minutes < 1) value = 'הרגע';
+                else if (minutes < 60) value = minutes === 1 ? 'לפני דקה' : `לפני ${minutes} דקות`;
+                else if (hours < 24) value = hours === 1 ? 'לפני שעה' : `לפני ${hours} שעות`;
+                else value = days === 1 ? 'לפני יום' : `לפני ${days} ימים`;
+            } else {
+                if (minutes < 1) value = 'Just now';
+                else if (minutes < 60) value = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+                else if (hours < 24) value = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+                else value = days === 1 ? '1 day ago' : `${days} days ago`;
+            }
+
             stats.push({
-                title: language === 'he' ? 'תרומה אחרונה' : 'Last Donation',
-                value: relativeTime || (language === 'he' ? 'לפני זמן רב' : 'Long ago'),
-                icon: '🎁'
+                title: language === 'he' ? 'תרומה אחרונה' : 'Last donation',
+                value,
+                icon: SVG_ICONS.clock
+            });
+        } else {
+            stats.push({
+                title: language === 'he' ? 'תרומה אחרונה' : 'Last donation',
+                value: language === 'he' ? 'אין עדיין' : 'None yet',
+                icon: SVG_ICONS.clock
             });
         }
 
-        // 2. Peak hour statistics
-        const hourlyDonations = {};
-        recentDonations.forEach(donation => {
-            const donationDate = new Date(donation.createdAt);
-            const hour = donationDate.getHours();
-            if (!hourlyDonations[hour]) {
-                hourlyDonations[hour] = { count: 0, total: 0 };
-            }
-            hourlyDonations[hour].count++;
-            hourlyDonations[hour].total += donation.totalAmount || 0;
-        });
-
-        const currentHour = now.getHours();
-        const currentHourData = hourlyDonations[currentHour] || { count: 0, total: 0 };
-        
-        let peakHour = null;
-        let peakAmount = 0;
-        Object.entries(hourlyDonations).forEach(([hour, data]) => {
-            if (data.total > peakAmount) {
-                peakAmount = data.total;
-                peakHour = parseInt(hour);
-            }
-        });
-
-        if (peakHour !== null) {
-            const difference = peakAmount - currentHourData.total;
-            const diffText = difference > 0 
-                ? `${formatCurrency(difference)} ${language === 'he' ? 'לעקיפה' : 'to overtake'}`
-                : language === 'he' ? 'שעת שיא!' : 'Peak hour!';
-            
-            stats.push({
-                title: language === 'he' ? `שעת שיא: ${peakHour}:00` : `Peak hour: ${peakHour}:00`,
-                value: diffText,
-                icon: '🏆'
-            });
-        }
-
-        // 3. Hourly average - total donations divided by hours elapsed since campaign start
-        const totalAmount = recentDonations.reduce((sum, donation) => sum + (donation.totalAmount || 0), 0);
-        
-        // Calculate hours elapsed from campaign start date to now
-        let campaignHours = 1;
-        if (campaign?.startDate) {
-            const campaignStartDate = new Date(campaign.startDate);
-            const diffTime = Math.abs(now - campaignStartDate);
-            campaignHours = Math.ceil(diffTime / (1000 * 60 * 60)) || 1;
-        }
-        
-        const hourlyAverage = totalAmount / campaignHours;
+        // ---- 3. קצב התקדמות (Today's contribution to goal, in %) ----
+        const percentToday = targetAmount > 0 ? (raisedToday / targetAmount) * 100 : 0;
+        const formattedPercent = percentToday >= 10
+            ? Math.round(percentToday).toString()
+            : (percentToday > 0 ? percentToday.toFixed(2).replace(/\.?0+$/, '') : '0');
 
         stats.push({
-            title: language === 'he' ? 'ממוצע שעתי' : 'Hourly Average',
-            value: formatCurrency(hourlyAverage),
-            icon: '📊'
+            title: language === 'he' ? 'קצב התקדמות' : 'Progress rate',
+            value: targetAmount > 0
+                ? (percentToday > 0
+                    ? `${formattedPercent}% ${language === 'he' ? 'היום' : 'today'}`
+                    : (language === 'he' ? 'אין תרומות היום' : 'No donations today'))
+                : (language === 'he' ? 'ללא יעד' : 'No goal set'),
+            icon: SVG_ICONS.trendingUp
         });
-
-        // 4. Most popular donation amount
-        const amountFrequency = {};
-        recentDonations.forEach(donation => {
-            const amount = donation.totalAmount || 0;
-            amountFrequency[amount] = (amountFrequency[amount] || 0) + 1;
-        });
-
-        let popularAmount = 0;
-        let maxFrequency = 0;
-        Object.entries(amountFrequency).forEach(([amount, freq]) => {
-            if (freq > maxFrequency) {
-                maxFrequency = freq;
-                popularAmount = parseInt(amount);
-            }
-        });
-
-        if (popularAmount > 0) {
-            stats.push({
-                title: language === 'he' ? 'סכום פופולרי' : 'Popular Amount',
-                value: formatCurrency(popularAmount),
-                icon: '⭐'
-            });
-        }
 
         return stats;
     };
@@ -1121,7 +1126,9 @@ export default function PublicCampaignScreen() {
                                                 {formatCurrency(animatedCollected)}
                                             </div>
                                             <div className={styles.gaugeTarget}>
-                                                {t('outOfGoal')} {formatCurrency(statistics.targetAmount)}
+                                                {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
+                                                    ? t('outOfMonthlyGoal')
+                                                    : t('outOfGoal')} {formatCurrency(statistics.targetAmount)}
                                             </div>
                                         </div>
                                     </div>
@@ -1137,74 +1144,56 @@ export default function PublicCampaignScreen() {
                         </div>
 
                         {/* Middle Circle - Dynamic Stats */}
-                        {dynamicStats.length > 0 && (
-                            <div className={styles.middleStatsSection}>
-                                <div className={styles.middleStatsCircle}>
-                                    <svg viewBox="0 0 200 200" className={styles.middleStatsSvg}>
-                                        <defs>
-                                            {/* Gradient for 3D sphere effect */}
-                                            <radialGradient id="sphereGradient" cx="40%" cy="40%">
-                                                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
-                                                <stop offset="50%" stopColor={data?.publicScreenRanksBackgroundColor || '#b45309'} stopOpacity="0.15" />
-                                                <stop offset="100%" stopColor={data?.publicScreenRanksBackgroundColor || '#b45309'} stopOpacity="0.4" />
-                                            </radialGradient>
-                                            
-                                            {/* Shadow gradient */}
-                                            <radialGradient id="shadowGradient" cx="50%" cy="50%">
-                                                <stop offset="70%" stopColor="#000000" stopOpacity="0" />
-                                                <stop offset="100%" stopColor="#000000" stopOpacity="0.15" />
-                                            </radialGradient>
-                                        </defs>
-                                        
-                                        {/* Shadow circle */}
-                                        <circle
-                                            cx="100"
-                                            cy="100"
-                                            r="88"
-                                            fill="url(#shadowGradient)"
-                                        />
-                                        
-                                        {/* Background circle with 3D effect */}
-                                        <circle
-                                            cx="100"
-                                            cy="100"
-                                            r="85"
-                                            fill="url(#sphereGradient)"
-                                        />
-                                        
-                                        {/* Highlight for glossy effect */}
-                                        <ellipse
-                                            cx="80"
-                                            cy="65"
-                                            rx="35"
-                                            ry="25"
-                                            fill="#ffffff"
-                                            opacity="0.2"
-                                        />
-                                    </svg>
-                                    
-                                    <div className={styles.middleStatsRotatingContainer}>
-                                        <div 
-                                            className={styles.middleStatsContent} 
-                                            style={{ 
-                                                opacity: isTransitioning ? 0 : 1,
-                                                transition: 'opacity 0.5s ease-in-out'
-                                            }}
+                        {dynamicStats.length > 0 && (() => {
+                            const accent = data?.publicScreenRanksBackgroundColor || '#b45309';
+                            const activeStat = dynamicStats[currentStatIndex] || dynamicStats[0];
+                            return (
+                                <div className={styles.middleStatsSection}>
+                                    <div
+                                        className={styles.middleStatsCircle}
+                                        style={{
+                                            '--accent': accent,
+                                            background: `radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0.65) 50%, ${accent}1f 100%)`,
+                                            borderColor: `${accent}33`
+                                        }}
+                                    >
+                                        <div className={styles.middleStatsGlow} style={{ background: `radial-gradient(circle, ${accent}55 0%, transparent 70%)` }} />
+
+                                        <div
+                                            className={styles.middleStatsContent}
+                                            key={currentStatIndex}
+                                            style={{ opacity: isTransitioning ? 0 : 1 }}
                                         >
-                                            <div className={styles.middleStatsIcon}>
-                                                {dynamicStats[currentStatIndex]?.icon}
+                                            <div className={styles.middleStatsIconWrap} style={{ background: `${accent}1a`, color: accent }}>
+                                                <span className={styles.middleStatsIcon}>{activeStat?.icon}</span>
                                             </div>
-                                            <div className={styles.middleStatsTitle}>
-                                                {dynamicStats[currentStatIndex]?.title}
-                                            </div>
-                                            <div className={styles.middleStatsValue}>
-                                                {dynamicStats[currentStatIndex]?.value}
-                                            </div>
+                                            <div className={styles.middleStatsTitle}>{activeStat?.title}</div>
+                                            <div className={styles.middleStatsValue} style={{ color: accent }}>{activeStat?.value}</div>
+                                        </div>
+
+                                        <div className={styles.middleStatsDots}>
+                                            {dynamicStats.map((_, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    aria-label={`stat ${idx + 1}`}
+                                                    onClick={() => {
+                                                        if (idx === currentStatIndex) return;
+                                                        setIsTransitioning(true);
+                                                        setTimeout(() => {
+                                                            setCurrentStatIndex(idx);
+                                                            setIsTransitioning(false);
+                                                        }, 200);
+                                                    }}
+                                                    className={`${styles.middleStatsDot} ${idx === currentStatIndex ? styles.middleStatsDotActive : ''}`}
+                                                    style={idx === currentStatIndex ? { background: accent } : undefined}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Timer Section - Left Side */}
                         <div className={styles.timerSection}>

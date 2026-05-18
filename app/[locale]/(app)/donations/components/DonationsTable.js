@@ -712,7 +712,11 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
     };
 
     // בדיקה אם אין תרומות בכלל בקמפיין (לא בגלל פילטרים)
-    const hasNoDonationsInCampaign = donationsStore.totalCount === 0 && !donationsStore.hasActiveFilters && !donationsStore.loading;
+    // חשוב: אם יש התחייבויות בקמפיין — אין להציג מסך ריק, כי הטבלה צריכה להציג את טאב ההתחייבויות
+    const hasNoDonationsInCampaign = donationsStore.totalCount === 0
+        && donationsStore.campaignHasCommitments === false
+        && !donationsStore.hasActiveFilters
+        && !donationsStore.loading;
 
     // בדיקה חד-פעמית בטעינה: האם לקמפיין יש בכלל התחייבויות (ללא פילטרים)
     React.useEffect(() => {

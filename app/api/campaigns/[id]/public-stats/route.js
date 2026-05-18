@@ -172,6 +172,7 @@ export async function GET(request, { params }) {
             include: {
                 donor: {
                     select: {
+                        id: true,
                         isAnonymous: true,
                         person: true,
                         fundraiser: {
@@ -262,6 +263,7 @@ export async function GET(request, { params }) {
 
             return {
                 id: donation.id,
+                donorId: donation.donor?.id || null,
                 donorName: `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim() || 'אנונימי',
                 donorFirstName: donation.donor?.person?.firstName || '',
                 donorLastName: donation.donor?.person?.lastName || '',
