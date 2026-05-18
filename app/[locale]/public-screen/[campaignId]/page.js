@@ -510,11 +510,16 @@ export default function PublicCampaignScreen() {
         const symbol = symbolMap[currency] || currency;
         
         // Format number with commas and put symbol on LEFT with space
+        // Allow up to 2 decimals so divided values (e.g. one-time / months) display correctly
+        const numericValue = Number(value) || 0;
+        const hasFraction = Math.abs(numericValue - Math.trunc(numericValue)) > 0.0001;
         const formattedNumber = new Intl.NumberFormat('he-IL', {
-            maximumFractionDigits: 0
-        }).format(value);
-        
-        return `${symbol} ${formattedNumber}`;
+            minimumFractionDigits: hasFraction ? 2 : 0,
+            maximumFractionDigits: hasFraction ? 2 : 0
+        }).format(numericValue);
+
+        // Wrap with Unicode LRI/PDI so the symbol stays visually to the LEFT of the number even in RTL contexts
+        return `⁦${symbol} ${formattedNumber}⁩`;
     };
 
     const formatDate = (date) => {
@@ -1113,10 +1118,7 @@ export default function PublicCampaignScreen() {
                                                 {displayPercent.toFixed(0)}%
                                             </div>
                                             <div className={styles.gaugeAmount}>
-                                                {campaign?.donationType === 'monthly' 
-                                                    ? formatCurrency(statistics.monthlyCollected || 0)
-                                                    : formatCurrency(animatedCollected)
-                                                }
+                                                {formatCurrency(animatedCollected)}
                                             </div>
                                             <div className={styles.gaugeTarget}>
                                                 {t('outOfGoal')} {formatCurrency(statistics.targetAmount)}
@@ -1430,18 +1432,13 @@ export default function PublicCampaignScreen() {
                 <div className={styles.tabsContent}>
                     {/* Fundraiser Details Header (shown when a fundraiser is selected) */}
                     {selectedFundraiser && activeTab === 'fundraisers' && (() => {
-                        // For monthly campaigns, calculate progress based on monthly raised
-                        const amountForProgress = data?.campaign?.donationType === 'monthly' 
-                            ? (selectedFundraiser.monthlyRaised || 0)
-                            : selectedFundraiser.totalRaised;
-                        const progressPercentage = selectedFundraiser.targetAmount > 0 
+                        // totalRaised and targetAmount are now both in the same projected units (×months for monthly campaigns)
+                        const amountForProgress = selectedFundraiser.totalRaised || 0;
+                        const progressPercentage = selectedFundraiser.targetAmount > 0
                             ? (amountForProgress / selectedFundraiser.targetAmount) * 100
                             : 0;
-                        
-                        // Display amount - for monthly show monthly, otherwise total
-                        const displayAmount = data?.campaign?.donationType === 'monthly' 
-                            ? (selectedFundraiser.monthlyRaised || 0)
-                            : selectedFundraiser.totalRaised;
+
+                        const displayAmount = selectedFundraiser.totalRaised || 0;
                         
                         const fundraiserShareUrl = `${window.location.origin}/public-screen/${campaignId}?fundraiser=${selectedFundraiser.id}`;
                         
@@ -1630,145 +1627,22 @@ export default function PublicCampaignScreen() {
                     
                     {/* Sort Buttons for fundraisers tab */}
                     {activeTab === 'fundraisers' && !selectedFundraiser && (
-                        <div style={{ 
-                            display: 'flex',
-                            padding: '6px',
-                            alignItems: 'center',
-                            gap: '2px',
-                            borderRadius: '40px',
-                            background: '#FFF',
-                            boxShadow: '0 39px 11px 0 rgba(168, 188, 230, 0.00), 0 25px 10px 0 rgba(168, 188, 230, 0.01), 0 14px 8px 0 rgba(168, 188, 230, 0.03), 0 6px 6px 0 rgba(168, 188, 230, 0.04), 0 2px 3px 0 rgba(168, 188, 230, 0.05)',
-                            marginTop: '1rem',
-                            marginBottom: '1.5rem',
-                            justifyContent: 'flex-start',
-                            width: '100%',
-                            maxWidth: '100%',
-                            marginLeft: 'auto',
-                            marginRight: 'auto',
-                            overflowX: 'auto',
-                            WebkitOverflowScrolling: 'touch',
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none'
-                        }}>
-                            <button
-                                onClick={() => setFundraiserSortBy('amount')}
-                                style={{
-                                    display: 'flex',
-                                    padding: '4px 8px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    borderRadius: '40px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    minWidth: '60px',
-                                    flexShrink: 0,
-                                    whiteSpace: 'nowrap',
-                                    border: fundraiserSortBy === 'amount' ? '1px solid #6E99EC' : 'none',
-                                    background: fundraiserSortBy === 'amount' ? '#EDF5FD' : 'transparent',
-                                    color: fundraiserSortBy === 'amount' ? '#0C4AD5' : '#64748b'
-                                }}
-                            >
-                                {t('byAmount')}
-                            </button>
-                            <button
-                                onClick={() => setFundraiserSortBy('donors')}
-                                style={{
-                                    display: 'flex',
-                                    padding: '4px 8px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    borderRadius: '40px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    minWidth: '60px',
-                                    flexShrink: 0,
-                                    whiteSpace: 'nowrap',
-                                    border: fundraiserSortBy === 'donors' ? '1px solid #6E99EC' : 'none',
-                                    background: fundraiserSortBy === 'donors' ? '#EDF5FD' : 'transparent',
-                                    color: fundraiserSortBy === 'donors' ? '#0C4AD5' : '#64748b'
-                                }}
-                            >
-                                {t('byDonors')}
-                            </button>
-                            <button
-                                onClick={() => setFundraiserSortBy('progress')}
-                                style={{
-                                    display: 'flex',
-                                    padding: '4px 8px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    borderRadius: '40px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    minWidth: '60px',
-                                    flexShrink: 0,
-                                    whiteSpace: 'nowrap',
-                                    border: fundraiserSortBy === 'progress' ? '1px solid #6E99EC' : 'none',
-                                    background: fundraiserSortBy === 'progress' ? '#EDF5FD' : 'transparent',
-                                    color: fundraiserSortBy === 'progress' ? '#0C4AD5' : '#64748b'
-                                }}
-                            >
-                                {t('byProgress')}
-                            </button>
-                            <button
-                                onClick={() => setFundraiserSortBy('lastDonation')}
-                                style={{
-                                    display: 'flex',
-                                    padding: '4px 8px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    borderRadius: '40px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    minWidth: '60px',
-                                    flexShrink: 0,
-                                    whiteSpace: 'nowrap',
-                                    border: fundraiserSortBy === 'lastDonation' ? '1px solid #6E99EC' : 'none',
-                                    background: fundraiserSortBy === 'lastDonation' ? '#EDF5FD' : 'transparent',
-                                    color: fundraiserSortBy === 'lastDonation' ? '#0C4AD5' : '#64748b'
-                                }}
-                            >
-                                {t('byLastDonation')}
-                            </button>
-                            <button
-                                onClick={() => setFundraiserSortBy('target')}
-                                style={{
-                                    display: 'flex',
-                                    padding: '4px 8px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    borderRadius: '40px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    minWidth: '60px',
-                                    flexShrink: 0,
-                                    whiteSpace: 'nowrap',
-                                    border: fundraiserSortBy === 'target' ? '1px solid #6E99EC' : 'none',
-                                    background: fundraiserSortBy === 'target' ? '#EDF5FD' : 'transparent',
-                                    color: fundraiserSortBy === 'target' ? '#0C4AD5' : '#64748b',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                {t('byTarget')}
-                            </button>
+                        <div className={styles.fundraiserSortBar}>
+                            {[
+                                { key: 'amount', label: t('byAmount') },
+                                { key: 'donors', label: t('byDonors') },
+                                { key: 'progress', label: t('byProgress') },
+                                { key: 'lastDonation', label: t('byLastDonation') },
+                                { key: 'target', label: t('byTarget') }
+                            ].map(option => (
+                                <button
+                                    key={option.key}
+                                    onClick={() => setFundraiserSortBy(option.key)}
+                                    className={`${styles.fundraiserSortBtn} ${fundraiserSortBy === option.key ? styles.fundraiserSortBtnActive : ''}`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
                         </div>
                     )}
                     
@@ -1822,8 +1696,8 @@ export default function PublicCampaignScreen() {
                                             const payments = donor.numberOfPayments || 1;
                                             // totalAmount is already calculated correctly in the API
                                             const displayAmount = donor.totalAmount;
-                                            // Show monthly breakdown only for monthly campaigns with multiple payments
-                                            const showMonthlyInfo = isMonthly && payments > 1;
+                                            // Show monthly breakdown for monthly campaigns when the configured months > 1 (otherwise monthly == total)
+                                            const showMonthlyInfo = isMonthly && (statistics.monthsCalculation || 1) > 1;
                                             
                                             return (
                                     <div key={donor.id || index} className={styles.donorCard} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1918,11 +1792,9 @@ export default function PublicCampaignScreen() {
                                 // Fundraiser card - clickable to view donors
                                 if (item.type === 'fundraiser') {
                                     const fundraiserUrl = `${window.location.origin}/public-screen/${campaignId}?fundraiser=${item.id}`;
-                                    // For monthly campaigns, calculate progress based on monthly raised
-                                    const amountForProgress = data?.campaign?.donationType === 'monthly' 
-                                        ? (item.monthlyRaised || 0)
-                                        : item.totalRaised;
-                                    const progressPercentage = item.targetAmount > 0 
+                                    // totalRaised and targetAmount are both in projected units (×months for monthly campaigns)
+                                    const amountForProgress = item.totalRaised || 0;
+                                    const progressPercentage = item.targetAmount > 0
                                         ? (amountForProgress / item.targetAmount) * 100
                                         : 0;
                                     
@@ -2007,11 +1879,13 @@ export default function PublicCampaignScreen() {
                                                         width: '100%'
                                                     }}>
                                                         <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>
-                                                            {t('total')}: {formatCurrency(item.totalRaised)}
+                                                            {(statistics.monthsCalculation || 1) > 1 ? `${t('total')}: ` : ''}{formatCurrency(item.totalRaised)}
                                                         </div>
-                                                        <div style={{ fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap' }}>
-                                                            {t('monthly')}: {formatCurrency(item.monthlyRaised || Math.round(item.totalRaised / (data?.campaign?.defaultHokMonths || 12)))}
-                                                        </div>
+                                                        {(statistics.monthsCalculation || 1) > 1 && (
+                                                            <div style={{ fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap' }}>
+                                                                {t('monthly')}: {formatCurrency(item.monthlyRaised || (item.totalRaised / (statistics.monthsCalculation || data?.campaign?.defaultHokMonths || 1)))}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <div style={{
@@ -2090,8 +1964,8 @@ export default function PublicCampaignScreen() {
                                 const payments = item.numberOfPayments || 1;
                                 // Use totalAmount from API - it's already calculated correctly
                                 const displayAmount = item.totalAmount || item.amount;
-                                // Show monthly breakdown only for monthly campaigns with multiple payments
-                                const showMonthlyInfo = isMonthly && payments > 1;
+                                // Show monthly breakdown for monthly campaigns when the configured months > 1 (otherwise monthly == total)
+                                const showMonthlyInfo = isMonthly && (statistics.monthsCalculation || 1) > 1;
                                 
                                 return (
                                     <div key={item.id || index} className={styles.donorCard} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
@@ -2158,13 +2032,6 @@ export default function PublicCampaignScreen() {
                                                     </div>
                                                 ) : null;
                                             })()}
-                                            
-                                            {/* Show payment details for donations tab */}
-                                            {item.type === 'donation' && item.numberOfPayments > 1 && (
-                                                <div className={styles.paymentInfo}>
-                                                    {item.numberOfPayments} תשלומים
-                                                </div>
-                                            )}
                                             
                                             {/* Show dedication/note if exists and was created in public screen */}
                                             {item.dedication && (

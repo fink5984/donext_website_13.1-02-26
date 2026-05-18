@@ -2853,3 +2853,65 @@
     transform: scale(1.08);
     background: #fff;
 }
+/* Fundraiser sort bar - centered like donors sort bar, with horizontal scroll fallback for narrow screens */
+.fundraiserSortBar {
+    display: flex;
+    padding: 8px;
+    align-items: center;
+    gap: 4px;
+    border-radius: 40px;
+    background: #FFF;
+    box-shadow: 0 2px 3px 0 rgba(168, 188, 230, 0.05), 0 6px 6px 0 rgba(168, 188, 230, 0.04), 0 14px 8px 0 rgba(168, 188, 230, 0.03);
+    margin: 1rem auto 1.5rem;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    box-sizing: border-box;
+}
+
+.fundraiserSortBar::-webkit-scrollbar {
+    display: none;
+}
+
+.fundraiserSortBtn {
+    display: flex;
+    padding: 4px 10px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 100px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #64748b;
+}
+
+.fundraiserSortBtnActive {
+    border-color: #6E99EC;
+    background: #EDF5FD;
+    color: #0C4AD5;
+}
+
+@media (max-width: 640px) {
+    .fundraiserSortBar {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 6px;
+        gap: 2px;
+    }
+    .fundraiserSortBtn {
+        padding: 4px 10px;
+        font-size: 12px;
+        min-width: auto;
+    }
+}

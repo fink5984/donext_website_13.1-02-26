@@ -696,6 +696,7 @@ model PublicScreenSettings {
   isEnabled            Boolean   @default(false) @map("is_enabled")
   showDonationDetails  Boolean   @default(true) @map("show_donation_details")
   promoVideoUrl        String?   @map("promo_video_url")
+  monthsCalculation    Int       @default(1) @map("months_calculation")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

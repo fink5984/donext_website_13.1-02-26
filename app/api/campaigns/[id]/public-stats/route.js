@@ -101,11 +101,39 @@ export async function GET(request, { params }) {
             }
         });
 
-        // Calculate total collected amount - always multiply monthly amount by payments
-        const totalCollected = donations.reduce((sum, donation) => {
+        // Number of months used to project monthly campaign totals on the public screen
+        const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+        const isMonthlyCampaign = campaign.donationType === 'monthly';
+
+        // Compute total and monthly per donation based on campaign type and rules
+        const computeAmounts = (donation) => {
             const monthlyAmount = Number(donation.monthlyAmount) || 0;
             const payments = donation.numberOfPayments || 1;
-            return sum + (monthlyAmount * payments);
+            if (isMonthlyCampaign) {
+                // Donation meets the threshold (recurring at least the configured months, or unlimited)
+                if (donation.isUnlimited || payments >= monthsCalculation) {
+                    return {
+                        totalAmount: monthlyAmount * monthsCalculation,
+                        monthlyDisplay: monthlyAmount
+                    };
+                }
+                // One-time or shorter recurring: use the real total paid, divide by months for monthly display
+                const realTotal = monthlyAmount * payments;
+                return {
+                    totalAmount: realTotal,
+                    monthlyDisplay: realTotal / monthsCalculation
+                };
+            }
+            // Non-monthly (project) campaign: total is straightforward
+            return {
+                totalAmount: monthlyAmount * payments,
+                monthlyDisplay: monthlyAmount
+            };
+        };
+
+        // Calculate total collected amount across all donations
+        const totalCollected = donations.reduce((sum, donation) => {
+            return sum + computeAmounts(donation).totalAmount;
         }, 0);
 
         // Calculate monthly collected amount - only from recurring donations (payments > 1)
@@ -195,14 +223,12 @@ export async function GET(request, { params }) {
         // Calculate total for each donor and sort
         const donorsWithTotals = topDonors.map(donor => {
             const total = donor.donations.reduce((sum, donation) => {
-                const monthlyAmount = Number(donation.monthlyAmount) || 0;
-                const payments = donation.numberOfPayments || 1;
-                return sum + (monthlyAmount * payments);
+                return sum + computeAmounts(donation).totalAmount;
             }, 0);
-            
+
             // Get the latest donation (first in sorted list)
             const latestDonation = donor.donations[0];
-            const monthlyAmount = latestDonation ? Number(latestDonation.monthlyAmount) || 0 : 0;
+            const latestAmounts = latestDonation ? computeAmounts(latestDonation) : { monthlyDisplay: 0 };
             const totalPayments = donor.donations.reduce((max, donation) => {
                 return Math.max(max, donation.numberOfPayments || 1);
             }, 1);
@@ -212,17 +238,17 @@ export async function GET(request, { params }) {
                 firstName: donor.person?.firstName || '',
                 lastName: donor.person?.lastName || '',
                 totalAmount: total,
-                monthlyAmount: monthlyAmount,
+                monthlyAmount: latestAmounts.monthlyDisplay,
                 numberOfPayments: totalPayments
             };
         }).filter(d => d.totalAmount > 0)
           .sort((a, b) => b.totalAmount - a.totalAmount)
           .slice(0, 10); // Top 10
 
-        // Calculate progress
-        const targetAmount = Number(screenSettings?.goal || campaign.targetAmount || 0);
-        // Calculate progress - for monthly campaigns use monthlyCollected, otherwise use totalCollected
-        const progressBase = campaign.donationType === 'monthly' ? monthlyCollected : totalCollected;
+        // Calculate progress - target is multiplied by months for monthly campaigns
+        const baseTarget = Number(screenSettings?.goal || campaign.targetAmount || 0);
+        const targetAmount = isMonthlyCampaign ? baseTarget * monthsCalculation : baseTarget;
+        const progressBase = totalCollected;
         const progressPercentage = targetAmount > 0 ? (progressBase / targetAmount) * 100 : 0;
         const remainingAmount = Math.max(targetAmount - progressBase, 0);
 
@@ -230,12 +256,10 @@ export async function GET(request, { params }) {
         const formattedRecentDonations = recentDonations.map(donation => {
             const monthlyAmount = Number(donation.monthlyAmount) || 0;
             const payments = donation.numberOfPayments || 1;
-            
-            // Calculate total - always multiply monthly amount by number of payments
-            // For monthly campaigns: this shows the total commitment over all months
-            // For project campaigns: this shows the total amount to be paid
-            const totalAmount = monthlyAmount * payments;
-            
+
+            // Use the shared computation so display matches the gauge
+            const { totalAmount, monthlyDisplay } = computeAmounts(donation);
+
             return {
                 id: donation.id,
                 donorName: `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim() || 'אנונימי',
@@ -243,11 +267,12 @@ export async function GET(request, { params }) {
                 donorLastName: donation.donor?.person?.lastName || '',
                 isAnonymous: donation.donor?.isAnonymous || false,
                 amount: monthlyAmount,
-                monthlyAmount: monthlyAmount,
+                monthlyAmount: monthlyDisplay,
                 numberOfPayments: payments,
+                isUnlimited: donation.isUnlimited || false,
                 totalAmount: totalAmount,
                 dedication: donation.dedication,
-                fundraiserName: donation.donor?.fundraiser?.person 
+                fundraiserName: donation.donor?.fundraiser?.person
                     ? `${donation.donor.fundraiser.person.firstName || ''} ${donation.donor.fundraiser.person.lastName || ''}`.trim()
                     : (donation.donor?.fundraiser?.user?.name || donation.donor?.fundraiser?.user?.phone || null),
                 createdAt: donation.created_at
@@ -289,6 +314,7 @@ export async function GET(request, { params }) {
                                 id: true,
                                 monthlyAmount: true,
                                 numberOfPayments: true,
+                                isUnlimited: true,
                                 dedication: true,
                                 created_at: true
                             }
@@ -307,23 +333,25 @@ export async function GET(request, { params }) {
         // Format fundraisers with statistics
         const formattedFundraisers = fundraisers.map(fundraiser => {
             const donorsWithDonations = fundraiser.donors.map(donor => {
-                const totalAmount = donor.donations.reduce((sum, donation) => {
-                    const monthlyAmount = Number(donation.monthlyAmount) || 0;
-                    const payments = donation.numberOfPayments || 1;
-                    return sum + (monthlyAmount * payments);
-                }, 0);
+                // Sum projected total and monthly across all donations for this donor
+                const { totalAmount, monthlyAmount } = donor.donations.reduce((acc, donation) => {
+                    const amounts = computeAmounts(donation);
+                    acc.totalAmount += amounts.totalAmount;
+                    acc.monthlyAmount += amounts.monthlyDisplay;
+                    return acc;
+                }, { totalAmount: 0, monthlyAmount: 0 });
 
                 // Get the latest donation (already sorted by created_at desc)
                 const latestDonation = donor.donations[0];
-                
+
                 // Calculate total number of payments across all donations
                 const totalPayments = donor.donations.reduce((max, donation) => {
                     return Math.max(max, donation.numberOfPayments || 1);
                 }, 1);
-                
-                // Get monthly amount from latest donation
-                const monthlyAmount = latestDonation ? Number(latestDonation.monthlyAmount) || 0 : 0;
-                
+
+                // Any unlimited donation marks the donor as having an unlimited commitment
+                const hasUnlimited = donor.donations.some(d => d.isUnlimited);
+
                 return {
                     id: donor.id,
                     firstName: donor.person?.firstName || '',
@@ -333,6 +361,7 @@ export async function GET(request, { params }) {
                     totalAmount: totalAmount,
                     monthlyAmount: monthlyAmount,
                     numberOfPayments: totalPayments,
+                    isUnlimited: hasUnlimited,
                     donationCount: donor.donations.length,
                     lastDonation: latestDonation?.created_at,
                     dedication: latestDonation?.dedication
@@ -340,14 +369,8 @@ export async function GET(request, { params }) {
             });
 
             const totalRaised = donorsWithDonations.reduce((sum, donor) => sum + donor.totalAmount, 0);
-            // Calculate monthly amount - sum of monthlyAmount only from donors with recurring payments (numberOfPayments > 1)
-            const monthlyRaised = donorsWithDonations.reduce((sum, donor) => {
-                // Only include donors with recurring payments in the monthly sum
-                if (donor.numberOfPayments > 1) {
-                    return sum + (donor.monthlyAmount || 0);
-                }
-                return sum;
-            }, 0);
+            // Sum of per-donor monthly display values (already includes unlimited / one-time according to the rules)
+            const monthlyRaised = donorsWithDonations.reduce((sum, donor) => sum + (donor.monthlyAmount || 0), 0);
             // Count only donors who actually donated (totalAmount > 0)
             const donorCount = donorsWithDonations.filter(donor => donor.totalAmount > 0).length;
             
@@ -358,12 +381,12 @@ export async function GET(request, { params }) {
 
             return {
                 id: fundraiser.id,
-                name: fundraiser.person 
+                name: fundraiser.person
                     ? `${fundraiser.person.firstName || ''} ${fundraiser.person.lastName || ''}`.trim()
                     : (fundraiser.user?.name || fundraiser.user?.phone || 'מתרים ללא שם'),
                 totalRaised: totalRaised,
                 monthlyRaised: monthlyRaised,
-                targetAmount: expectedSum,
+                targetAmount: isMonthlyCampaign ? expectedSum * monthsCalculation : expectedSum,
                 donorCount: donorCount,
                 donors: donorsWithDonations.sort((a, b) => b.totalAmount - a.totalAmount)
             };
@@ -398,7 +421,8 @@ export async function GET(request, { params }) {
                     remainingAmount: remainingAmount,
                     progressPercentage: Math.round(progressPercentage * 100) / 100,
                     donorCount: donorCount,
-                    donationCount: donationCount
+                    donationCount: donationCount,
+                    monthsCalculation: monthsCalculation
                 },
                 ranks: ranks.map(rank => ({
                     id: rank.id,

@@ -25,6 +25,7 @@ export async function GET(request, { params }) {
                 publicScreenBanners: [],
                 isEnabled: false,
                 showDonationDetails: true,
+                monthsCalculation: 1,
             });
         }
 
@@ -40,6 +41,7 @@ export async function GET(request, { params }) {
             isEnabled: settings.isEnabled ?? false,
             showDonationDetails: settings.showDonationDetails ?? true,
             promoVideoUrl: settings.promoVideoUrl || null,
+            monthsCalculation: settings.monthsCalculation ?? 1,
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -59,7 +61,11 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation } = body;
+
+        const monthsCalc = Number.isFinite(Number(monthsCalculation)) && Number(monthsCalculation) > 0
+            ? Math.floor(Number(monthsCalculation))
+            : 1;
 
         // בדיקת קיום הקמפיין
         const existingCampaign = await prisma.campaign.findUnique({
@@ -89,6 +95,7 @@ export async function PUT(request, { params }) {
                 isEnabled: isEnabled ?? false,
                 showDonationDetails: showDonationDetails ?? true,
                 promoVideoUrl: promoVideoUrl || null,
+                monthsCalculation: monthsCalc,
             },
             update: {
                 ranks: publicScreenRanks || [],
@@ -102,6 +109,7 @@ export async function PUT(request, { params }) {
                 isEnabled: isEnabled ?? false,
                 showDonationDetails: showDonationDetails ?? true,
                 promoVideoUrl: promoVideoUrl || null,
+                monthsCalculation: monthsCalc,
             }
         });
 

@@ -35,7 +35,8 @@ export default function AdditionalSettingsPage() {
         publicScreenEndDate: '',
         isEnabled: false,
         showDonationDetails: true,
-        promoVideoUrl: ''
+        promoVideoUrl: '',
+        monthsCalculation: 1
     });
 
     // State for copied link notification
@@ -107,7 +108,8 @@ export default function AdditionalSettingsPage() {
                     publicScreenRanksBackgroundColor: data.publicScreenRanksBackgroundColor || '#b45309',
                     isEnabled: data.isEnabled ?? false,
                     showDonationDetails: data.showDonationDetails ?? true,
-                    promoVideoUrl: data.promoVideoUrl || ''
+                    promoVideoUrl: data.promoVideoUrl || '',
+                    monthsCalculation: data.monthsCalculation ?? 1
                 });
             }
         } catch (error) {
@@ -693,6 +695,29 @@ export default function AdditionalSettingsPage() {
                                 className={styles.input}
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* חישוב לפי חודשים (לקמפיין חודשי) */}
+                <div className={styles.settingsSection}>
+                    <h2><InfoIcon className={styles.sectionTitleIcon} />חישוב סכומים בקמפיין חודשי</h2>
+                    <p className={styles.sectionDesc}>
+                        מספר החודשים שלפיו יוצגו הסכומים בדף הציבורי. היעד יוכפל במספר החודשים, וסכום כל תרומה יוצג בהתאם:
+                        תרומות חודשיות לפחות לפי מספר זה (או ללא הגבלה) — סכום חודשי × מספר חודשים. תרומות חד-פעמיות או למספר תשלומים נמוך יותר — הסכום הכולל ששולם בפועל, והסכום החודשי = סכום כולל / מספר חודשים.
+                    </p>
+                    <div className={styles.formGroup} style={{ maxWidth: '300px' }}>
+                        <label>מספר חודשים לחישוב</label>
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={formData.monthsCalculation}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                handleInputChange('monthsCalculation', Number.isFinite(val) && val > 0 ? val : 1);
+                            }}
+                            className={styles.input}
+                        />
                     </div>
                 </div>
 
