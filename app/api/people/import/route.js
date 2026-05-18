@@ -45,7 +45,7 @@ function detectAndSetDuplicateStatus(peopleData) {
 export async function POST(request) {
     try {
         const data = await request.json();
-        const { clientId, people, campaignId } = data;
+        const { clientId, people, campaignId, updatePeople = [] } = data;
 
         // DEBUG: Log all people with their status
         if (people.length > 0) {
@@ -130,8 +130,9 @@ export async function POST(request) {
             }) : [];
             const existingPhoneMap = new Map(existingByPhone.map(p => [p.mainMobile, p]));
 
-            // 2. Batch get/create cities
-            const cityNames = [...new Set(people.filter(p => p.city).map(p => typeof p.city === 'string' ? p.city.trim() : p.city))];
+            // 2. Batch get/create cities (include updatePeople cities too)
+            const allPeopleForLookup = [...people, ...updatePeople];
+            const cityNames = [...new Set(allPeopleForLookup.filter(p => p.city).map(p => typeof p.city === 'string' ? p.city.trim() : p.city))];
             const existingCities = await tx.city.findMany({
                 where: { name: { in: cityNames } }
             });
@@ -152,7 +153,7 @@ export async function POST(request) {
             }
 
             // 3. Batch get/create streets  
-            const streetData = people.filter(p => p.street && p.city)
+            const streetData = allPeopleForLookup.filter(p => p.street && p.city)
                 .map(p => ({
                     name: typeof p.street === 'string' ? p.street.trim() : p.street,
                     cityName: typeof p.city === 'string' ? p.city.trim() : p.city
@@ -194,7 +195,7 @@ export async function POST(request) {
             }
 
             // 4. Batch get/create countries
-            const countryNames = [...new Set(people.filter(p => p.country).map(p => typeof p.country === 'string' ? p.country.trim() : p.country))];
+            const countryNames = [...new Set(allPeopleForLookup.filter(p => p.country).map(p => typeof p.country === 'string' ? p.country.trim() : p.country))];
             const existingCountries = await tx.country.findMany({
                 where: { name: { in: countryNames } }
             });
@@ -522,9 +523,52 @@ export async function POST(request) {
                 }
             }
 
+            // 6. Process updatePeople - update existing people with data from the new file
+            let peopleUpdated = 0;
+            for (const person of updatePeople) {
+                if (!person._personId) continue;
+
+                const updateData = {};
+                if (person.firstName != null && person.firstName !== '') updateData.firstName = String(person.firstName).trim();
+                if (person.lastName != null && person.lastName !== '') updateData.lastName = String(person.lastName).trim();
+                if (person.titleBefore != null && person.titleBefore !== '') updateData.titleBefore = String(person.titleBefore).trim();
+                if (person.titleAfter != null && person.titleAfter !== '') updateData.titleAfter = String(person.titleAfter).trim();
+                if (person.synagogue != null && person.synagogue !== '') updateData.synagogue = String(person.synagogue).trim();
+                if (person.houseNumber != null && person.houseNumber !== '') updateData.houseNumber = String(person.houseNumber).trim();
+                if (person.email != null && person.email !== '') updateData.email = String(person.email).trim();
+                if ((person.phone || person.mainMobile) != null) updateData.mainMobile = String(person.phone || person.mainMobile).trim();
+                if ((person.landlinePhone || person.phoneLandline) != null && (person.landlinePhone || person.phoneLandline) !== '') {
+                    updateData.phoneLandline = String(person.landlinePhone || person.phoneLandline).trim();
+                }
+                if (person.fatherName != null && person.fatherName !== '') updateData.fatherName = String(person.fatherName).trim();
+                if (person.motherName != null && person.motherName !== '') updateData.motherName = String(person.motherName).trim();
+                if (person.wifeName != null && person.wifeName !== '') updateData.wifeName = String(person.wifeName).trim();
+                if (person.aptNumber != null && person.aptNumber !== '') updateData.aptNumber = String(person.aptNumber).trim();
+
+                const cleanCity = person.city ? String(person.city).trim() : null;
+                const cleanStreet = person.street ? String(person.street).trim() : null;
+                const cleanCountry = person.country ? String(person.country).trim() : null;
+                const city = cleanCity ? cityMap.get(cleanCity) : null;
+                const street = cleanStreet && city ? streetMap.get(`${cleanStreet}-${city.id}`) : null;
+                const country = cleanCountry ? countryMap.get(cleanCountry) : null;
+
+                if (city) updateData.cityId = city.id;
+                if (street) updateData.streetId = street.id;
+                if (country) updateData.countryId = country.id;
+
+                if (Object.keys(updateData).length > 0) {
+                    await tx.person.update({
+                        where: { id: person._personId },
+                        data: updateData,
+                    });
+                    peopleUpdated++;
+                }
+            }
+
             return {
                 imported: importedPeople.length,
                 newPeopleIds,
+                peopleUpdated,
                 errors: errors.length > 0 ? errors : undefined
             };
         }, {

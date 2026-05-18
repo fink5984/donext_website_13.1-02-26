@@ -97,8 +97,14 @@ export default function ContactsExcelImport({ open, onClose, onSuccess, clientId
         }, 5000);
     };
 
-    const handleFinish = async (finalContacts) => {
+    const handleFinish = async (finalContacts, rowsToUpdate = []) => {
         try {
+            // Build updatePeople array from rowsToUpdate (rows with explicit personId to update)
+            const updatePeople = rowsToUpdate.map(({ existingPersonId, rowData }) => ({
+                ...rowData,
+                _personId: existingPersonId
+            }));
+
             // Import people only (no donors creation)
             const peopleRes = await fetchWithAuth('/api/people/import', {
                 method: 'POST',
@@ -106,6 +112,7 @@ export default function ContactsExcelImport({ open, onClose, onSuccess, clientId
                 body: JSON.stringify({ 
                     people: finalContacts, 
                     clientId,
+                    updatePeople,
                     // No campaignId - contacts only import
                 }),
             });
@@ -119,11 +126,17 @@ export default function ContactsExcelImport({ open, onClose, onSuccess, clientId
 
             const peopleData = await peopleRes.json();
             const newPeopleIds = peopleData.newPeopleIds;
+            const peopleUpdated = peopleData.peopleUpdated || 0;
 
             if (!newPeopleIds || newPeopleIds.length === 0) {
-                showNotification(tContacts('importNoContacts'), 'warning');
+                if (peopleUpdated > 0) {
+                    showNotification(`${tContacts('importUpdated') || 'עודכנו'} (${peopleUpdated})`, 'success');
+                } else {
+                    showNotification(tContacts('importNoContacts'), 'warning');
+                }
             } else {
-                showNotification(`${tContacts('importSuccess')} (${newPeopleIds.length})`, 'success');
+                const updatedMsg = peopleUpdated > 0 ? ` | ${tContacts('importUpdated') || 'עודכנו'}: ${peopleUpdated}` : '';
+                showNotification(`${tContacts('importSuccess')} (${newPeopleIds.length})${updatedMsg}`, 'success');
             }
 
             setIsOpen(false);

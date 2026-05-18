@@ -229,6 +229,7 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
 
     const [deferredRows, setDeferredRows] = useState([]);
     const [deletedRows, setDeletedRows] = useState([]);
+    const [rowsToUpdate, setRowsToUpdate] = useState([]);
 
     const [tempPhoneNumbers, setTempPhoneNumbers] = useState({});
     const [tempEmailAddresses, setTempEmailAddresses] = useState({});
@@ -1067,12 +1068,13 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
         console.log('=== HANDLE FINISH DEBUG ===');
         console.log('processedRows count:', processedRows.length);
         console.log('deferredRows count:', deferredRows.length);
+        console.log('rowsToUpdate count:', rowsToUpdate.length);
         allRows.forEach((row, i) => {
             console.log(`Row ${i}: ${row.firstName} ${row.lastName} | status: ${row.status} | originalIndex: ${row.originalIndex}`);
         });
         console.log('===========================');
 
-        onFinish(allRows);
+        onFinish(allRows, rowsToUpdate);
     };
     if (isFinished) {
         const processedData = processedRows.map(row => ({
@@ -1184,6 +1186,23 @@ export default function Page4({ onCancel, data, onFinish, isFundraiserMode = fal
                                                     ? { ...row, ignoreDuplicateName: true }
                                                     : row
                                             ));
+                                        }}
+                                        onUpdateExisting={(rowNumber, existingPersonId) => {
+                                            const rowData = processedRows.find(row => row.originalIndex === rowNumber - 2);
+                                            if (rowData) {
+                                                setRowsToUpdate(prev => [...prev, { existingPersonId, rowData }]);
+                                            }
+                                        }}
+                                        onUpdateExistingRows={(items) => {
+                                            const newUpdates = items
+                                                .map(({ rowNumber, existingPersonId }) => {
+                                                    const rowData = processedRows.find(row => row.originalIndex === rowNumber - 2);
+                                                    return rowData ? { existingPersonId, rowData } : null;
+                                                })
+                                                .filter(Boolean);
+                                            if (newUpdates.length > 0) {
+                                                setRowsToUpdate(prev => [...prev, ...newUpdates]);
+                                            }
                                         }}
                                     />
                                 ) : (

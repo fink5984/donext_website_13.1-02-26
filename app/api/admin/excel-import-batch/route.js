@@ -446,7 +446,7 @@ export async function POST(request) {
         if (!isAdmin) return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 });
 
         const body = await request.json();
-        const { campaignId, rows, phase, importId: importIdFromClient, chunkStartRow = 2 } = body || {};
+        const { campaignId, rows, phase, importId: importIdFromClient, chunkStartRow = 2, updateExisting = false } = body || {};
         if (!campaignId || !Array.isArray(rows)) {
             return NextResponse.json({ error: 'campaignId/rows חסרים' }, { status: 400 });
         }
@@ -475,13 +475,14 @@ export async function POST(request) {
         // עיבוד בטרנזקציה אחת גדולה
         const result = await prisma.$transaction(async (tx) => {
             const normalizedRows = rows.map(normalizeRow);
-            let peopleAdded = 0, fundraisersAdded = 0, connectionsUpdated = 0;
+            let peopleAdded = 0, peopleUpdated = 0, fundraisersAdded = 0, connectionsUpdated = 0;
             const errors = [];
 
             if (phase === 'people_only') {
                 // שלב 1: יצירת אנשים בלבד
                 const { countryMap, stateMap, cityMap, streetMap, zipCodeMap, peopleMap } = await prepareDataForBatch(tx, rows, campaign.clientId, campaignId, importRecord.id);
                 const newPeople = [];
+                const peopleToUpdate = []; // { id, updateData } — לעדכון אנשים קיימים
 
                 for (let i = 0; i < normalizedRows.length; i++) {
                     const row = normalizedRows[i];
@@ -542,6 +543,28 @@ export async function POST(request) {
                             }
 
                             newPeople.push(personData);
+                        } else if (updateExisting) {
+                            // עדכון אדם קיים עם נתונים חדשים מהקובץ
+                            const country = countryMap.get(row['מדינה']);
+                            const city = cityMap.get(row['עיר']);
+                            const street = streetMap.get(`${row['רחוב']}_${city?.id || ''}`);
+
+                            const updateData = {};
+                            if (row['תואר לפני']?.toString().trim()) updateData.titleBefore = row['תואר לפני'].toString().trim();
+                            if (row['שם פרטי']?.toString().trim()) updateData.firstName = row['שם פרטי'].toString().trim();
+                            if (row['שם משפחה']?.toString().trim()) updateData.lastName = row['שם משפחה'].toString().trim();
+                            if (row['תואר אחרי']?.toString().trim()) updateData.titleAfter = row['תואר אחרי'].toString().trim();
+                            if (cleanLandline) updateData.phoneLandline = cleanLandline;
+                            if (email) updateData.email = email;
+                            if (row['מספר בית']?.toString().trim()) updateData.houseNumber = row['מספר בית'].toString().trim();
+                            if (row['בית כנסת']?.toString().trim()) updateData.synagogue = row['בית כנסת'].toString().trim();
+                            if (city?.id) updateData.cityId = city.id;
+                            if (street?.id) updateData.streetId = street.id;
+                            if (country?.id) updateData.countryId = country.id;
+
+                            if (Object.keys(updateData).length > 0) {
+                                peopleToUpdate.push({ id: person.id, updateData });
+                            }
                         }
                     } catch (e) {
                         if (DEBUG) console.error('[IMPORT ERROR] row=', rowNumber, e?.message);
@@ -625,6 +648,12 @@ export async function POST(request) {
                             data: { zipCodeId: update.zipCodeId }
                         });
                     }
+                }
+
+                // עדכון אנשים קיימים (כאשר updateExisting=true)
+                for (const { id, updateData } of peopleToUpdate) {
+                    await tx.person.update({ where: { id }, data: updateData });
+                    peopleUpdated++;
                 }
             }
 
@@ -810,6 +839,7 @@ export async function POST(request) {
 
             return {
                 peopleAdded,
+                peopleUpdated,
                 fundraisersAdded,
                 connectionsUpdated,
                 errors,

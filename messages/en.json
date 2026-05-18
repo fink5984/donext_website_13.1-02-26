@@ -779,7 +779,9 @@
             "useExisting": "Use existing",
             "createNew": "Different person - create new",
             "skip": "Skip this row",
-            "selectAll": "Select all automatically"
+            "selectAll": "Select all automatically",
+            "updateExisting": "Update existing",
+            "updateAll": "Update all automatically"
           },
           "missingPhones": {
             "title": "name without mobile number",

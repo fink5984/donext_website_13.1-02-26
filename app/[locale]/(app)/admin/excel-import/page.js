@@ -207,6 +207,7 @@ export default function ExcelImportPage() {
     const [showCampaignDuplicatesModal, setShowCampaignDuplicatesModal] = useState(false);
     const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
     const [rowDecisions, setRowDecisions] = useState({}); // { rowNumber: 'skip' | 'create' | 'use_existing' }
+    const [updateExisting, setUpdateExisting] = useState(false);
 
     const fileInputRef = useRef(null);
     const unmappedExpected = useMemo(() => {
@@ -367,11 +368,11 @@ export default function ExcelImportPage() {
         return rawRows.map(r => applyMappingRow(r, mapping));
     }
 
-    async function sendChunk({ rows, phase, importId, existingPersonRows }) {
+    async function sendChunk({ rows, phase, importId, existingPersonRows, updateExisting: updateExistingFlag }) {
         const res = await fetchWithAuth('/api/admin/excel-import-batch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ campaignId, rows, phase, importId, existingPersonRows })
+            body: JSON.stringify({ campaignId, rows, phase, importId, existingPersonRows, updateExisting: updateExistingFlag })
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'שגיאת שרת בבאץ’');
@@ -450,15 +451,16 @@ export default function ExcelImportPage() {
             let steps = 0;
             const totalSteps = chunks.length * 2;
 
-            let totals = { peopleAdded: 0, fundraisersAdded: 0, connectionsUpdated: 0, errors: [], skippedRows: skipRowNumbers.length };
+            let totals = { peopleAdded: 0, peopleUpdated: 0, fundraisersAdded: 0, connectionsUpdated: 0, errors: [], skippedRows: skipRowNumbers.length };
             let importId = null;
 
             // שלב 1: רק אנשים
             for (let i = 0; i < chunks.length; i++) {
                 setProgressText(`שלב 1/2 — יוצר אנשים ${i + 1}/${chunks.length}`);
-                const r = await sendChunk({ rows: chunks[i], phase: 'people_only', importId, existingPersonRows });
+                const r = await sendChunk({ rows: chunks[i], phase: 'people_only', importId, existingPersonRows, updateExisting });
                 importId = importId || r.importId; // ✅ שומר importId מהבאץ' הראשון
                 totals.peopleAdded += r.peopleAdded || 0;
+                totals.peopleUpdated += r.peopleUpdated || 0;
                 if (Array.isArray(r.errors) && r.errors.length) totals.errors.push(...r.errors);
                 steps++; setProgressPct(Math.round((steps / totalSteps) * 100));
             }
@@ -466,7 +468,7 @@ export default function ExcelImportPage() {
             // שלב 2: מתרימים ותורמים
             for (let i = 0; i < chunks.length; i++) {
                 setProgressText(`שלב 2/2 — יוצר מתרימים ותורמים ${i + 1}/${chunks.length}`);
-                const r = await sendChunk({ rows: chunks[i], phase: 'fundraisers_and_donors', importId, existingPersonRows });
+                const r = await sendChunk({ rows: chunks[i], phase: 'fundraisers_and_donors', importId, existingPersonRows, updateExisting });
                 totals.fundraisersAdded += r.fundraisersAdded || 0;
                 totals.connectionsUpdated += r.connectionsUpdated || 0;
                 if (Array.isArray(r.errors) && r.errors.length) totals.errors.push(...r.errors);
@@ -497,6 +499,7 @@ export default function ExcelImportPage() {
         setCampaignDuplicates(null);
         setShowCampaignDuplicatesModal(false);
         setRowDecisions({});
+        setUpdateExisting(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
     }
 
@@ -801,6 +804,22 @@ export default function ExcelImportPage() {
                             </div>
 
                             <div className="mt-8 flex justify-center gap-4">
+                                {/* אופציית עדכון אנשים קיימים */}
+                                <button
+                                    type="button"
+                                    onClick={() => setUpdateExisting(v => !v)}
+                                    className={`flex items-center gap-2 rounded-2xl border-2 px-6 py-4 text-base font-semibold transition-all duration-200 ${
+                                        updateExisting
+                                            ? 'border-purple-500 bg-purple-50 text-purple-800'
+                                            : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                                    }`}
+                                    title="כאשר פעיל, הנתונים החדשים מהקובץ יעדכנו אנשים קיימים (לדוגמה: יוסיפו בית כנסת)"
+                                >
+                                    <span className={`flex h-5 w-5 items-center justify-center rounded border-2 ${updateExisting ? 'border-purple-500 bg-purple-500' : 'border-gray-400 bg-white'}`}>
+                                        {updateExisting && <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                    </span>
+                                    עדכן אנשים קיימים
+                                </button>
                                 <button
                                     className="rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl disabled:opacity-50"
                                     onClick={runUpload}
@@ -917,6 +936,12 @@ export default function ExcelImportPage() {
                                         <div className="text-3xl font-bold text-green-600">{result.peopleAdded}</div>
                                         <div className="mt-1 text-sm font-semibold text-gray-700">אנשים חדשים</div>
                                     </div>
+                                    {result.peopleUpdated > 0 && (
+                                        <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-6 shadow-lg">
+                                            <div className="text-3xl font-bold text-purple-600">{result.peopleUpdated}</div>
+                                            <div className="mt-1 text-sm font-semibold text-gray-700">אנשים עודכנו</div>
+                                        </div>
+                                    )}
                                     <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 p-6 shadow-lg">
                                         <div className="text-3xl font-bold text-purple-600">{result.fundraisersAdded}</div>
                                         <div className="mt-1 text-sm font-semibold text-gray-700">מתרימים חדשים</div>

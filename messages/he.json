@@ -801,7 +801,9 @@
             "useExisting": "השתמש בקיים",
             "createNew": "אדם אחר - צור חדש",
             "skip": "דלג על שורה זו",
-            "selectAll": "בחר הכל אוטומטית"
+            "selectAll": "בחר הכל אוטומטית",
+            "updateExisting": "עדכן קיים",
+            "updateAll": "עדכן הכל אוטומטית"
           },
           "missingPhones": {
             "title": "שם ללא מספר נייד",

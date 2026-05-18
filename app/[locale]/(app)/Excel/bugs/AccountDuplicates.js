@@ -6,6 +6,7 @@ import styles from '../excel.module.scss';
 import Clock from "@/app/icons/clock.svg";
 import Check from "@/app/icons/check.svg";
 import Add from "@/app/icons/add.svg";
+import Edit from "@/app/icons/edit.svg";
 import IconTooltip from '@/app/components/IconTooltip/IconTooltip';
 
 export default function AccountDuplicates({ 
@@ -15,7 +16,9 @@ export default function AccountDuplicates({
     onSkipRow,
     onSkipRows,
     onUseExisting,
-    onUseExistingRows
+    onUseExistingRows,
+    onUpdateExisting,
+    onUpdateExistingRows
 }) {
     const t = useTranslations('admin.excelUpload.page4.bugs');
     const tPage = useTranslations('admin.excelUpload.page4');
@@ -25,7 +28,7 @@ export default function AccountDuplicates({
     const byEmail = duplicates?.byEmail || [];
     const byName = duplicates?.byName || [];
 
-    const handleDecision = (rowNumber, decision, dupType) => {
+    const handleDecision = (rowNumber, decision, dupType, existingPersonId) => {
         setDecisions(prev => ({ ...prev, [rowNumber]: decision }));
         
         // אם המשתמש בחר לדלג - השורה צריכה להימחק מהייבוא כי האדם כבר קיים
@@ -39,6 +42,12 @@ export default function AccountDuplicates({
             if (dupType === 'name') {
                 onUseExisting(rowNumber);
             }
+        }
+
+        // אם המשתמש בחר לעדכן קיים - עדכן את הנתונים ואז הסר מרשימת הייבוא
+        if (decision === 'update_existing') {
+            onUpdateExisting(rowNumber, existingPersonId);
+            onSkipRow(rowNumber);
         }
     };
 
@@ -91,6 +100,41 @@ export default function AccountDuplicates({
         setDecisions(newDecisions);
     };
 
+    // פונקציה לעדכון אוטומטי של כולם - מעדכן טלפון/מייל, משתמש בקיים לשמות
+    const handleUpdateAll = () => {
+        const newDecisions = { ...decisions };
+        const rowNumbersToSkip = [];
+        const updateItems = [];
+        const nameRowNumbers = [];
+
+        unhandledDuplicates.forEach(dup => {
+            if (dup.type === 'phone' || dup.type === 'email') {
+                newDecisions[dup.rowNumber] = 'update_existing';
+                rowNumbersToSkip.push(dup.rowNumber);
+                updateItems.push({ rowNumber: dup.rowNumber, existingPersonId: dup.existingPerson.personId });
+            } else {
+                // התאמות לפי שם - השתמש בקיים (אי אפשר לעדכן אוטומטית כשיש כמה אנשים עם שם זהה)
+                newDecisions[dup.rowNumber] = 'use_existing';
+                rowNumbersToSkip.push(dup.rowNumber);
+                nameRowNumbers.push(dup.rowNumber);
+            }
+        });
+
+        if (rowNumbersToSkip.length > 0) {
+            onSkipRows(rowNumbersToSkip);
+        }
+
+        if (updateItems.length > 0) {
+            onUpdateExistingRows(updateItems);
+        }
+
+        if (nameRowNumbers.length > 0) {
+            onUseExistingRows(nameRowNumbers);
+        }
+
+        setDecisions(newDecisions);
+    };
+
     // פונקציה לקבלת תיאור סוג הכפילות
     const getTypeLabel = (type) => {
         switch (type) {
@@ -119,6 +163,12 @@ export default function AccountDuplicates({
                     </div>
                 </div>
                 <div className={styles.actions}>
+                    <Button
+                        smallSmall
+                        onClick={handleUpdateAll}
+                        icon={<Edit />}
+                        text={t('accountDuplicates.updateAll')}
+                    />
                     <Button
                         smallSmall
                         onClick={handleSelectAll}
@@ -164,6 +214,12 @@ export default function AccountDuplicates({
                                 <button onClick={() => handleDecision(dup.rowNumber, 'use_existing', dup.type)}>
                                     <IconTooltip icon={<Check />} text={t('accountDuplicates.useExisting')} />
                                 </button>
+                                {/* עיפרון - עדכן קיים - רק לטלפון ומייל (התאמה ודאית) */}
+                                {(dup.type === 'phone' || dup.type === 'email') && (
+                                    <button onClick={() => handleDecision(dup.rowNumber, 'update_existing', dup.type, dup.existingPerson.personId)}>
+                                        <IconTooltip icon={<Edit />} text={t('accountDuplicates.updateExisting')} />
+                                    </button>
+                                )}
                                 {/* + - צור חדש - רק להתאמות לפי שם */}
                                 {dup.type === 'name' && (
                                     <button onClick={() => handleDecision(dup.rowNumber, 'create', dup.type)}>
