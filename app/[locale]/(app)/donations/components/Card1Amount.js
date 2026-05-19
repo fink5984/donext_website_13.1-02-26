@@ -16,7 +16,8 @@ const Card1Amount = observer(() => {
     const currencySymbol = useCurrencySymbol();
 
     const totalAmount = summary?.totalAmount || 0;
-    const targetAmount = campaign?.target_amount || campaign?.targetAmount || 0;
+    const baseTarget = Number(campaign?.target_amount || campaign?.targetAmount || 0);
+    const targetAmount = summary?.calculatedTargetAmount ?? baseTarget;
     const amountPercentage = targetAmount > 0 ? Math.round((totalAmount / targetAmount) * 100) : 0;
 
     // אנימציה למעבר בין טקסטים

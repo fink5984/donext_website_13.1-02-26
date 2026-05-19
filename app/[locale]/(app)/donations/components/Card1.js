@@ -23,9 +23,10 @@ const Card1 = observer(() => {
     const donorsWhoDonated = summary?.donorsWhoDonated || 0;
     const donationPercentage = activeDonors > 0 ? Math.round((donorsWhoDonated / activeDonors) * 100) : 0;
 
-    // נתוני סכומים
+    // נתוני סכומים - היעד מחושב לפי monthsCalculation (סופק על-ידי ה-API)
     const totalAmount = summary?.totalAmount || 0;
-    const targetAmount = campaign?.target_amount || campaign?.targetAmount || 0;
+    const baseTarget = Number(campaign?.target_amount || campaign?.targetAmount || 0);
+    const targetAmount = summary?.calculatedTargetAmount ?? baseTarget;
     const amountPercentage = targetAmount > 0 ? Math.round((totalAmount / targetAmount) * 100) : 0;
 
     // פורמט מספר עם פסיקים

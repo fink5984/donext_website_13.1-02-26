@@ -46,7 +46,9 @@ const Card3 = observer(() => {
     const totalExpected = 0;
     const totalActual = summary?.totalAmount || 0;
     const commitmentTotal = summary?.commitmentTotal || 0;
-    const totalTarget = campaign?.target_amount || 0; // Use campaign from context
+    // יעד מחושב (כולל monthsCalculation בקמפיין חודשי) מסופק ע"י summary
+    const baseTarget = Number(campaign?.target_amount || campaign?.targetAmount || 0);
+    const totalTarget = summary?.calculatedTargetAmount ?? baseTarget;
     const [activeTab, setActiveTab] = useState("actual");
     const [targetPercentage, setTargetPercentage] = useState(totalExpected * 2 >= totalTarget ? 50 : 75); // קו היעד תמיד ב-75%
     const getPercentage = (amount) => Math.min((amount * targetPercentage) / totalTarget, 100);

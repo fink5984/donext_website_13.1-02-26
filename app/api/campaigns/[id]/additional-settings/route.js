@@ -65,11 +65,13 @@ export async function PUT(request, { params }) {
 
         const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation } = body;
 
+        // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
+        // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
         const toPositiveInt = (val) => Number.isFinite(Number(val)) && Number(val) > 0
             ? Math.floor(Number(val))
-            : 1;
-        const monthsCalc = toPositiveInt(monthsCalculation);
-        const donationsCalc = toPositiveInt(donationsCalculation);
+            : null;
+        const monthsCalc = monthsCalculation !== undefined ? toPositiveInt(monthsCalculation) : null;
+        const donationsCalc = donationsCalculation !== undefined ? toPositiveInt(donationsCalculation) : null;
 
         // בדיקת קיום הקמפיין
         const existingCampaign = await prisma.campaign.findUnique({
@@ -83,40 +85,31 @@ export async function PUT(request, { params }) {
             );
         }
 
-        // יצירה או עדכון ההגדרות במודל החדש
+        const updateData = {
+            ranks: publicScreenRanks || [],
+            aboutText: publicScreenAbout || null,
+            phone: publicScreenPhone || null,
+            email: publicScreenEmail || null,
+            banners: publicScreenBanners || [],
+            startDate: publicScreenStartDate ? new Date(publicScreenStartDate) : null,
+            endDate: publicScreenEndDate ? new Date(publicScreenEndDate) : null,
+            ranksBackgroundColor: publicScreenRanksBackgroundColor || '#b45309',
+            isEnabled: isEnabled ?? false,
+            showDonationDetails: showDonationDetails ?? true,
+            promoVideoUrl: promoVideoUrl || null,
+        };
+        if (monthsCalc !== null) updateData.monthsCalculation = monthsCalc;
+        if (donationsCalc !== null) updateData.donationsCalculation = donationsCalc;
+
         const updatedSettings = await prisma.publicScreenSettings.upsert({
             where: { campaignId: campaignId },
             create: {
                 campaignId: campaignId,
-                ranks: publicScreenRanks || [],
-                aboutText: publicScreenAbout || null,
-                phone: publicScreenPhone || null,
-                email: publicScreenEmail || null,
-                banners: publicScreenBanners || [],
-                startDate: publicScreenStartDate ? new Date(publicScreenStartDate) : null,
-                endDate: publicScreenEndDate ? new Date(publicScreenEndDate) : null,
-                ranksBackgroundColor: publicScreenRanksBackgroundColor || '#b45309',
-                isEnabled: isEnabled ?? false,
-                showDonationDetails: showDonationDetails ?? true,
-                promoVideoUrl: promoVideoUrl || null,
-                monthsCalculation: monthsCalc,
-                donationsCalculation: donationsCalc,
+                ...updateData,
+                monthsCalculation: updateData.monthsCalculation ?? 1,
+                donationsCalculation: updateData.donationsCalculation ?? 1,
             },
-            update: {
-                ranks: publicScreenRanks || [],
-                aboutText: publicScreenAbout || null,
-                phone: publicScreenPhone || null,
-                email: publicScreenEmail || null,
-                banners: publicScreenBanners || [],
-                startDate: publicScreenStartDate ? new Date(publicScreenStartDate) : null,
-                endDate: publicScreenEndDate ? new Date(publicScreenEndDate) : null,
-                ranksBackgroundColor: publicScreenRanksBackgroundColor || '#b45309',
-                isEnabled: isEnabled ?? false,
-                showDonationDetails: showDonationDetails ?? true,
-                promoVideoUrl: promoVideoUrl || null,
-                monthsCalculation: monthsCalc,
-                donationsCalculation: donationsCalc,
-            }
+            update: updateData
         });
 
         return NextResponse.json({

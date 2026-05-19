@@ -148,6 +148,7 @@ export async function GET(request) {
         // הרצה במקביל של כל השאילתות לשיפור ביצועים
         const [
             campaignInfo,
+            publicScreenSettings,
             donorStats,
             donationStats,
             fundraiserStats,
@@ -159,7 +160,13 @@ export async function GET(request) {
             // 1. מידע קמפיין
             prisma.campaign.findUnique({
                 where: { id: campaignId },
-                select: { donationType: true }
+                select: { donationType: true, defaultHokMonths: true }
+            }),
+
+            // 1b. הגדרות חישוב היעד
+            prisma.publicScreenSettings.findUnique({
+                where: { campaignId: campaignId },
+                select: { monthsCalculation: true, donationsCalculation: true }
             }),
 
             // 2. סטטיסטיקות תורמים בסיסיות
@@ -223,6 +230,24 @@ export async function GET(request) {
             prisma.donor.count({ where: { ...where, arrivalConfirmed: true } })
         ]);
 
+        // הגדרות חישוב לתרומה חוזרת/קצרה - זהה ללוגיקה ב-summary, public-stats ו-fundraisers
+        const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+        const rawDonationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
+        const isScenario1WithYearView = (campaignInfo?.defaultHokMonths ?? 0) === 0 && monthsCalculation > 1;
+        const donationsCalculation = isScenario1WithYearView
+            ? Math.max(rawDonationsCalculation, monthsCalculation)
+            : rawDonationsCalculation;
+        const recurringThreshold = Math.max(2, donationsCalculation);
+        const amortizationMonths = Math.max(1, monthsCalculation, donationsCalculation);
+        const monthlyEquivalent = (donation) => {
+            const monthlyAmount = Number(donation.monthlyAmount) || 0;
+            const payments = donation.numberOfPayments || 1;
+            if (donation.isUnlimited || payments >= recurringThreshold) {
+                return monthlyAmount;
+            }
+            return (monthlyAmount * payments) / amortizationMonths;
+        };
+
         // חישוב סכום תרומות בפועל לפי סוג קמפיין
         let total_actual = 0;
         let commitment_total = 0;
@@ -242,9 +267,9 @@ export async function GET(request) {
                 return sum + amount;
             }, 0);
         } else {
-            // עבור קמפיין חודשי - סכום פשוט
+            // עבור קמפיין חודשי - ערך חודשי שווה ערך לפי הכללים החדשים
             total_actual = donationStats.reduce((sum, donation) => {
-                const amount = Number(donation.monthlyAmount || 0);
+                const amount = monthlyEquivalent(donation);
                 if (donation.paymentMethod === 'COMMITMENT') commitment_total += amount;
                 return sum + amount;
             }, 0);

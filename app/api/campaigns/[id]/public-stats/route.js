@@ -103,10 +103,14 @@ export async function GET(request, { params }) {
 
         // Months used to project the goal on the public screen (1 = monthly goal, 12 = yearly goal, etc.)
         const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+        const rawDonationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
         // Months used to amortize one-time donations and to flag a donation as "recurring".
-        // Donations with payments >= donationsCalculation (or isUnlimited) are treated as recurring;
-        // others are split over donationsCalculation months for the gauge.
-        const donationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
+        // In scenario 1 (defaultHokMonths=0) with year+ view (monthsCalculation>1) there is no
+        // dedicated min-months setting, so we align the amortization period with the view period.
+        const isScenario1WithYearView = (campaign.defaultHokMonths ?? 0) === 0 && monthsCalculation > 1;
+        const donationsCalculation = isScenario1WithYearView
+            ? Math.max(rawDonationsCalculation, monthsCalculation)
+            : rawDonationsCalculation;
         const isMonthlyCampaign = campaign.donationType === 'monthly';
 
         // Compute totalAmount (card display, mirrors gauge contribution) and monthlyDisplay per donation

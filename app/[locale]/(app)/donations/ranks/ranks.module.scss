@@ -461,13 +461,14 @@
 
             .settingsContent {
                 display: flex;
-                padding: 0 var(--Spacing-Spacing-7, 20px);
-                justify-content: flex-end;
+                flex-direction: row;
                 align-items: flex-start;
-                gap: var(--Spacing-Spacing-11, 48px);
+                padding: 0 var(--Spacing-Spacing-7, 20px) var(--Spacing-Spacing-7, 20px);
+                gap: var(--Spacing-Spacing-8, 24px);
                 align-self: stretch;
-                max-height: 1000px;
-                overflow: hidden;
+                max-height: 600px;
+                overflow-y: auto;
+                overflow-x: hidden;
                 transition: max-height 0.4s ease-out, transform 0.3s ease-out;
                 opacity: 1;
                 transform: translateY(0);
@@ -476,6 +477,21 @@
                     max-height: 0;
                     opacity: 0;
                     transform: translateY(-10px);
+                }
+
+                .settingsRightSide {
+                    flex: 1 1 0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .settingsLeftSide {
+                    flex: 1 1 0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: var(--Spacing-Spacing-8, 24px);
                 }
 
                 .settingSection {

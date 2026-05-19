@@ -34,6 +34,12 @@ function DonationSettings({ campaignId }) {
     const [isCustom, setIsCustom] = useState(false);
     const [isUnlimited, setIsUnlimited] = useState(false);
 
+    // הגדרות חישוב יעד לדף הציבורי
+    const [monthsCalculation, setMonthsCalculation] = useState(1);
+    const [donationsCalculation, setDonationsCalculation] = useState(1);
+    const [savingMonthsCalc, setSavingMonthsCalc] = useState(false);
+    const [savingDonationsCalc, setSavingDonationsCalc] = useState(false);
+
     // הגדרות מסך
     const [lowDonationDisplay, setLowDonationDisplay] = useState('HIDE');
 
@@ -76,6 +82,24 @@ function DonationSettings({ campaignId }) {
             }
         }
     }, [campaign]);
+
+    // טעינת הגדרות חישוב יעד (monthsCalculation / donationsCalculation)
+    useEffect(() => {
+        if (!campaignId) return;
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetchWithAuth(`/api/campaigns/${campaignId}/calculation-settings`);
+                if (!mounted || !res.ok) return;
+                const data = await res.json();
+                setMonthsCalculation(data.monthsCalculation ?? 1);
+                setDonationsCalculation(data.donationsCalculation ?? 1);
+            } catch (error) {
+                console.error('Error loading calculation settings:', error);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [campaignId]);
 
     // טעינת הגדרות מסך בלבד
     useEffect(() => {
@@ -161,9 +185,16 @@ function DonationSettings({ campaignId }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ defaultHokMonths: months })
             });
-            
+
             if (response.ok && stores) {
                 stores.updateCampaign({ defaultHokMonths: months });
+            }
+
+            // תרחיש 2: כאשר תקופת ברירת המחדל אינה "ללא הגבלה",
+            // סף הזיהוי לתרומה חודשית נגזר אוטומטית מתקופת ברירת המחדל.
+            if (months > 0 && donationsCalculation !== months) {
+                setDonationsCalculation(months);
+                saveCalculationSettings({ donationsCalculation: months });
             }
         } catch (error) {
             console.error('Error saving defaultHokMonths:', error);
@@ -171,6 +202,45 @@ function DonationSettings({ campaignId }) {
         } finally {
             setSavingHokMonths(false);
         }
+    }
+
+    async function saveCalculationSettings(payload) {
+        const hasMonths = Object.prototype.hasOwnProperty.call(payload, 'monthsCalculation');
+        const hasDonations = Object.prototype.hasOwnProperty.call(payload, 'donationsCalculation');
+        if (hasMonths) setSavingMonthsCalc(true);
+        if (hasDonations) setSavingDonationsCalc(true);
+        try {
+            await fetchWithAuth(`/api/campaigns/${campaignId}/calculation-settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (error) {
+            console.error('Error saving calculation settings:', error);
+            alert('שגיאה בשמירת הגדרת חישוב היעד');
+        } finally {
+            if (hasMonths) setSavingMonthsCalc(false);
+            if (hasDonations) setSavingDonationsCalc(false);
+        }
+    }
+
+    function handleMonthsCalculationChange(value) {
+        if (savingMonthsCalc || monthsCalculation === value) return;
+        setMonthsCalculation(value);
+        const payload = { monthsCalculation: value };
+        // בתרחיש 1 (ללא הגבלה) עם יעד של שנה ומעלה (value>1) אין הגדרה נפרדת לסף חודשי,
+        // לכן מסנכרנים את הסף והפיצול לערך תקופת היעד עצמו.
+        if (isUnlimited && value > 1 && donationsCalculation !== value) {
+            setDonationsCalculation(value);
+            payload.donationsCalculation = value;
+        }
+        saveCalculationSettings(payload);
+    }
+
+    function handleDonationsCalculationChange(value) {
+        if (savingDonationsCalc || donationsCalculation === value) return;
+        setDonationsCalculation(value);
+        saveCalculationSettings({ donationsCalculation: value });
     }
 
     async function saveLowDonationDisplay(value) {
@@ -209,6 +279,11 @@ function DonationSettings({ campaignId }) {
         setCustomMonths('');
         setDefaultHokMonths(0);
         saveDefaultHokMonths(0);
+        // אם יעד התצוגה כבר שנה+ (monthsCalculation>1), נסנכרן את הסף לפיצול תרומות קצרות
+        if (monthsCalculation > 1 && donationsCalculation !== monthsCalculation) {
+            setDonationsCalculation(monthsCalculation);
+            saveCalculationSettings({ donationsCalculation: monthsCalculation });
+        }
     }
 
     function handleCustomMonthsClick() {
@@ -275,6 +350,8 @@ function DonationSettings({ campaignId }) {
 
             {/* {isExpanded && ( */}
                 <div className={`${styles.settingsContent} ${!isExpanded ? styles.closing : ''}`}>
+                    {/* צד ימין: שאלה 1 בלבד */}
+                    <div className={styles.settingsRightSide}>
                     {/* שאלה 1: מדיניות תרומות נמוכות */}
                     <div className={styles.settingSection}>
                         <div className={styles.questionHeader}>
@@ -300,7 +377,10 @@ function DonationSettings({ campaignId }) {
                             ))}
                         </div>
                     </div>
+                    </div>
 
+                    {/* צד שמאל: שאלות 2, 3, 4 - זו מתחת לזו, מיושרות לימין עד גבול האמצע */}
+                    <div className={styles.settingsLeftSide}>
                     {/* שאלה 2: תקופת תשלום */}
                     <div className={styles.settingSection}>
                         <div className={styles.questionHeader}>
@@ -370,6 +450,62 @@ function DonationSettings({ campaignId }) {
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    {/* שאלה 3: תקופת יעד בדף הציבורי - שורה משלה למטה */}
+                    {(campaign?.donationType === 'monthly' || campaign?.donation_type === 'monthly') && (
+                        <div className={styles.settingSection}>
+                            <div className={styles.questionHeader}>
+                                <h4 className={`headline-5`}>{t('targetPeriodQuestion')}</h4>
+                            </div>
+                            <div className={styles.optionsRow}>
+                                {[
+                                    { value: 1, label: t('targetPeriodMonth') },
+                                    { value: 12, label: t('targetPeriodYear') },
+                                    { value: 24, label: t('targetPeriodTwoYears') },
+                                    { value: 36, label: t('targetPeriodThreeYears') }
+                                ].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        className={`${styles.optionButton} ${monthsCalculation === opt.value ? styles.active : ''} ${savingMonthsCalc ? styles.disabled : ''}`}
+                                        onClick={() => handleMonthsCalculationChange(opt.value)}
+                                        disabled={savingMonthsCalc}
+                                    >
+                                        {savingMonthsCalc && monthsCalculation === opt.value ? t('saving') : opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* שאלה 4: סף לזיהוי תרומה חודשית - שורה משלה, מותנית בתרחיש 1 + יעד חודשי */}
+                    {(campaign?.donationType === 'monthly' || campaign?.donation_type === 'monthly') &&
+                     isUnlimited && monthsCalculation === 1 && (
+                        <div className={styles.settingSection}>
+                            <div className={styles.questionHeader}>
+                                <h4 className={`headline-5`}>{t('minMonthsForMonthlyQuestion')}</h4>
+                                <p className={`table-3 ${styles.questionSubtext}`}>
+                                    {t('minMonthsHint')}
+                                </p>
+                            </div>
+                            <div className={styles.optionsRow}>
+                                {[
+                                    { value: 12, label: t('targetPeriodYear') },
+                                    { value: 24, label: t('targetPeriodTwoYears') },
+                                    { value: 36, label: t('targetPeriodThreeYears') }
+                                ].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        className={`${styles.optionButton} ${donationsCalculation === opt.value ? styles.active : ''} ${savingDonationsCalc ? styles.disabled : ''}`}
+                                        onClick={() => handleDonationsCalculationChange(opt.value)}
+                                        disabled={savingDonationsCalc}
+                                    >
+                                        {savingDonationsCalc && donationsCalculation === opt.value ? t('saving') : opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     </div>
                 </div>
         </div>

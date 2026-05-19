@@ -275,6 +275,37 @@ async function getFundraisersWithDonorCount(campaignId) {
 async function getFilteredFundraisers(params) {
     const { campaignId, fundraiserId, operatorId, limit, offset, sortField = 'name', sortDirection = 'asc', filters } = params;
 
+    // טעינת הגדרות חישוב היעד של הקמפיין - לאותו חישוב כמו ב-summary ובדף הציבורי
+    const campaignIdInt = campaignId ? parseInt(campaignId) : null;
+    const campaignSettings = campaignIdInt
+        ? await prisma.campaign.findUnique({
+            where: { id: campaignIdInt },
+            select: { donationType: true, defaultHokMonths: true }
+        })
+        : null;
+    const publicScreenSettings = campaignIdInt
+        ? await prisma.publicScreenSettings.findUnique({
+            where: { campaignId: campaignIdInt },
+            select: { monthsCalculation: true, donationsCalculation: true }
+        })
+        : null;
+    const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+    const rawDonationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
+    const isScenario1WithYearView = (campaignSettings?.defaultHokMonths ?? 0) === 0 && monthsCalculation > 1;
+    const donationsCalculation = isScenario1WithYearView
+        ? Math.max(rawDonationsCalculation, monthsCalculation)
+        : rawDonationsCalculation;
+    const recurringThreshold = Math.max(2, donationsCalculation);
+    const amortizationMonths = Math.max(1, monthsCalculation, donationsCalculation);
+    const monthlyEquivalent = (donation) => {
+        const monthlyAmount = Number(donation.monthlyAmount) || 0;
+        const payments = donation.numberOfPayments || 1;
+        if (donation.isUnlimited || payments >= recurringThreshold) {
+            return monthlyAmount;
+        }
+        return (monthlyAmount * payments) / amortizationMonths;
+    };
+
     let where = {
         campaignId: campaignId,
         deleted_at: null,
@@ -370,12 +401,14 @@ async function getFilteredFundraisers(params) {
         for (const donor of donors) {
             if (donor.donations && donor.donations.length > 0) {
                 actualDonorsCount++;
+                const isMonthlyCampaign = donor.campaign?.donationType === 'monthly';
                 const donorDonations = donor.donations.reduce((sum, donation) => {
-                    const monthlyAmount = Number(donation.monthlyAmount) || 0;
-                    const isMonthlyCampaign = donor.campaign?.donationType === 'monthly';
-                    if (isMonthlyCampaign || donation.isUnlimited) {
-                        return sum + monthlyAmount;
+                    if (isMonthlyCampaign) {
+                        // קמפיין חודשי - ערך חודשי שווה ערך (זהה ללוגיקה ב-summary ובדף הציבורי)
+                        return sum + monthlyEquivalent(donation);
                     }
+                    // קמפיין פרויקט - כפול במספר התשלומים
+                    const monthlyAmount = Number(donation.monthlyAmount) || 0;
                     const numberOfPayments = Number(donation.numberOfPayments) || 0;
                     return sum + (monthlyAmount * numberOfPayments);
                 }, 0);

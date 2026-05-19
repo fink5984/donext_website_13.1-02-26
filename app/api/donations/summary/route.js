@@ -65,11 +65,24 @@ export async function GET(request) {
                 isUnlimited: true
             }
         });
-        // שליפת סוג הקמפיין ודרגות תרומה מטבלת ranks
+        // שליפת סוג הקמפיין, יעד והגדרות חישוב היעד
         const campaign = await prisma.campaign.findUnique({
             where: { id: parseInt(campaignId) },
-            select: { donationType: true }
+            select: { donationType: true, targetAmount: true, defaultHokMonths: true }
         });
+
+        const publicScreenSettings = await prisma.publicScreenSettings.findUnique({
+            where: { campaignId: parseInt(campaignId) },
+            select: { monthsCalculation: true, donationsCalculation: true }
+        });
+        const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+        const rawDonationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
+        // בתרחיש 1 (ללא הגבלה) עם יעד שנה ומעלה אין הגדרה נפרדת לסף, לכן הסף נגזר מתקופת התצוגה.
+        const isScenario1WithYearView = (campaign?.defaultHokMonths ?? 0) === 0 && monthsCalculation > 1;
+        const donationsCalculation = isScenario1WithYearView
+            ? Math.max(rawDonationsCalculation, monthsCalculation)
+            : rawDonationsCalculation;
+        const isMonthlyCampaign = campaign?.donationType === 'monthly';
         
         // שליפת דרגות תרומה מטבלת ranks
         const ranksFromDb = await prisma.rank.findMany({
@@ -83,6 +96,21 @@ export async function GET(request) {
             : [5000, 3600, 2400, 1200, 600]; // ברירת מחדל אם אין דרגות
         
         // חישוב הסכום הכולל בהתאם לסוג הקמפיין (כולל תורמים לא פעילים)
+        // קמפיין חודשי בעמוד /donations: היעד נשאר חודשי תמיד (ללא הכפלה), והתרומות
+        // נספרות כערכן החודשי. תרומה חוזרת נספרת לפי הסכום החודשי; תרומה חד-פעמית /
+        // קצרה מהסף מתפצלת על פני תקופת התצוגה (max של ההגדרות).
+        const recurringThreshold = Math.max(2, donationsCalculation);
+        const amortizationMonths = Math.max(1, monthsCalculation, donationsCalculation);
+        const monthlyEquivalent = (donation) => {
+            const monthlyAmount = Number(donation.monthlyAmount) || 0;
+            const payments = donation.numberOfPayments || 1;
+            if (donation.isUnlimited || payments >= recurringThreshold) {
+                return monthlyAmount;
+            }
+            const total = monthlyAmount * payments;
+            return total / amortizationMonths;
+        };
+
         let totalAmount = 0;
         let commitmentTotal = 0;
         donations.forEach(donation => {
@@ -95,11 +123,16 @@ export async function GET(request) {
                 totalAmount += amount;
                 if (isCommitment) commitmentTotal += amount;
             } else {
-                // קמפיין חודשי - רק הסכום החודשי
-                totalAmount += monthlyAmount;
-                if (isCommitment) commitmentTotal += monthlyAmount;
+                // קמפיין חודשי - ערך חודשי שווה ערך
+                const amount = monthlyEquivalent(donation);
+                totalAmount += amount;
+                if (isCommitment) commitmentTotal += amount;
             }
         });
+
+        // היעד המחושב לעמוד /donations נשאר חודשי - אינו מוכפל ב-monthsCalculation
+        const baseTarget = Number(campaign?.targetAmount || 0);
+        const calculatedTargetAmount = baseTarget;
 
         // שליפת 50 התורמים האטרקטיביים ביותר: קודם ירוקים ואז לפי צפי מהגבוה לנמוך
         let topAttractiveDonors = [];
@@ -245,7 +278,10 @@ export async function GET(request) {
             ranks: ranksWithData,
             hasForecast: hasAnyForecast > 0,
             totalAmount: Number(totalAmount),
-            commitmentTotal: Number(commitmentTotal)
+            commitmentTotal: Number(commitmentTotal),
+            calculatedTargetAmount: Number(calculatedTargetAmount),
+            monthsCalculation,
+            donationsCalculation
         });
 
     } catch (error) {
