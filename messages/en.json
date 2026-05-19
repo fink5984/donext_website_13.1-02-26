@@ -1198,6 +1198,7 @@
       "BIT": "Bit",
       "PAYPAL": "PayPal",
       "NEDARIM_PLUS": "Nedarim Plus",
+      "MERKAZ_HATZEDAKA": "Merkaz Hatzedaka",
       "COMMITMENT": "Commitment",
       "OTHER": "Other"
     },
@@ -1412,7 +1413,14 @@
     "noLimit": "No Limit",
     "other": "Other",
     "months": "months",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "targetPeriodQuestion": "Which target period do you want to display on the public page?",
+    "targetPeriodMonth": "Month",
+    "targetPeriodYear": "Year",
+    "targetPeriodTwoYears": "2 Years",
+    "targetPeriodThreeYears": "3 Years",
+    "minMonthsForMonthlyQuestion": "What is the minimum number of months to qualify as a recurring donation?",
+    "minMonthsHint": "Donations with fewer payments will be split over the configured number of months and applied to the overall target."
   },
 
   "operatorRanksPage": {
@@ -1632,6 +1640,7 @@
       "MATBIA": "Matbia",
       "OJC": "OJC",
       "NEDARIM_PLUS": "Credit Card",
+      "MERKAZ_HATZEDAKA": "Credit Card",
       "BIT": "bit",
       "PAYPAL": "PayPal",
       "cash": "Cash",
@@ -2068,6 +2077,7 @@
       "COMMITMENT": "Commitment",
       "NEDARIM": "Credit Card",
       "NEDARIM_PLUS": "Nedarim Plus",
+      "MERKAZ_HATZEDAKA": "Merkaz Hatzedaka",
       "BEVEL": "Credit Card",
       "STRIPE": "Credit Card",
       "PLEDGER": "Pledger",

@@ -1221,6 +1221,7 @@
       "BIT": "Bit",
       "PAYPAL": "PayPal",
       "NEDARIM_PLUS": "נדרים פלוס",
+      "MERKAZ_HATZEDAKA": "מרכז הצדקה",
       "COMMITMENT": "התחייבות",
       "OTHER": "אחר"
     },
@@ -1427,7 +1428,7 @@
     "lowDonationHide": "שם התורם וסכום התרומה לא יופיעו במסכי האירוע.",
     "lowDonationApproval": "שם התורם וסכום התרומה יישלחו למנהל הקמפיין ויופיעו במסכי האירוע להחלטתו.",
     "lowDonationShow": "שם התורם וסכום התרומה יופיעו אוטומטית במסכי האירוע.",
-    "defaultHokQuestion": "מה תהיה תקופת ברירת מחדל להחזר תרומות הו\"ק?",
+    "defaultHokQuestion": "מה תהיה תקופת ברירת מחדל לתרומות הו\"ק?",
     "fundraiserCanChange": "המתרים או התורם יוכלו לשנות ידנית",
     "oneYear": "שנה",
     "twoYears": "שנתיים",
@@ -1435,7 +1436,14 @@
     "noLimit": "ללא הגבלה",
     "other": "אחר",
     "months": "חודשים",
-    "saving": "שומר..."
+    "saving": "שומר...",
+    "targetPeriodQuestion": "איזה תקופת יעד תרצה לראות בדף הציבורי?",
+    "targetPeriodMonth": "חודש",
+    "targetPeriodYear": "שנה",
+    "targetPeriodTwoYears": "שנתיים",
+    "targetPeriodThreeYears": "3 שנים",
+    "minMonthsForMonthlyQuestion": "מה המינימום חודשים להגדרת תרומה חודשית?",
+    "minMonthsHint": "תרומה שניתנה בפחות תשלומים מההגדרה תחולק לסכום החודשים שהוגדר ותעודכן ביעד הכללי"
   },
 
   "operatorRanksPage": {
@@ -1655,6 +1663,7 @@
       "MATBIA": "Matbia",
       "OJC": "OJC",
       "NEDARIM_PLUS": "כרטיס אשראי",
+      "MERKAZ_HATZEDAKA": "כרטיס אשראי",
       "BIT": "bit",
       "PAYPAL": "PayPal",
       "cash": "מזומן",
@@ -2096,6 +2105,7 @@
       "COMMITMENT": "התחייבות",
       "NEDARIM": "כרטיס אשראי",
       "NEDARIM_PLUS": "נדרים פלוס",
+      "MERKAZ_HATZEDAKA": "מרכז הצדקה",
       "BEVEL": "כרטיס אשראי",
       "STRIPE": "כרטיס אשראי",
       "PLEDGER": "Pledger",
