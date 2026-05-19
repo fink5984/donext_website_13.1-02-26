@@ -734,8 +734,9 @@ enum payment_method_enum {
   PLEDGER       @map("Pledger")
   MATBIA        @map("Matbia")
   OJC           @map("OJC")
-  NEDARIM_PLUS  @map("Nedarim Plus")
-  COMMITMENT    @map("התחייבות")
+  NEDARIM_PLUS     @map("Nedarim Plus")
+  MERKAZ_HATZEDAKA @map("Merkaz Hatzedaka")
+  COMMITMENT       @map("התחייבות")
 }
 
 enum donation_source_enum {
