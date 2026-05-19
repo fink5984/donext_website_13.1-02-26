@@ -1172,6 +1172,7 @@
 .donorsGrid {
     display: grid;
     gap: 1rem;
+    align-items: start;
 }
 
 @media (min-width: 768px) {
@@ -1198,16 +1199,59 @@
     border-radius: 8px;
     padding: 1.25rem;
     border: 1px solid #e2e8f0;
-    transition: all 0.2s ease;
+    transition: box-shadow 0.25s ease, border-color 0.2s ease;
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .donorCard:hover {
+    z-index: 5;
     border-color: var(--Primary-blue, #0C4AD5);
     box-shadow: 0 4px 12px rgba(12, 74, 213, 0.1);
+}
+
+/* Dedication box: stays in flow as a single full-width line; on hover it expands downward, growing the card without overlapping the texts above */
+.dedicationBox {
+    margin-top: 0.25rem;
+    padding: 0.4rem 0.7rem;
+    background: rgba(110, 153, 236, 0.1);
+    border-radius: 8px;
+    border-right: 3px solid #6E99EC;
+    font-size: 0.85rem;
+    color: #475569;
+    font-style: italic;
+    direction: rtl;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    width: 100%;
+    box-sizing: border-box;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.donorCard:hover .dedicationBox {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    background: rgba(110, 153, 236, 0.18);
+    box-shadow: 0 2px 8px rgba(12, 74, 213, 0.08);
+}
+
+/* Dedication slot for cards without a dedication (keeps the same one-line height for uniform cards) */
+.dedicationSlot {
+    margin-top: 0.25rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    width: 100%;
+    box-sizing: border-box;
+    visibility: hidden;
 }
 
 .donorCardHeader {
@@ -1226,6 +1270,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
 }
 
 .donorAmount {
@@ -1238,6 +1284,11 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
 }
 
 .donorAvatar {
@@ -1873,7 +1924,7 @@
     background: var(--Primary-blue, #0C4AD5);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 50px;
     font-size: 0.938rem;
     font-weight: 600;
     cursor: pointer;
@@ -2295,9 +2346,6 @@
         max-width: 1400px;
     }
     
-    .donorsGrid {
-        grid-template-columns: repeat(4, 1fr);
-    }
 }
 
 /* Large Tablets and Small Desktops (1024px - 1199px) */

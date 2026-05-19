@@ -697,6 +697,7 @@ model PublicScreenSettings {
   showDonationDetails  Boolean   @default(true) @map("show_donation_details")
   promoVideoUrl        String?   @map("promo_video_url")
   monthsCalculation    Int       @default(1) @map("months_calculation")
+  donationsCalculation Int       @default(1) @map("donations_calculation")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

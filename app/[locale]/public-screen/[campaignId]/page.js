@@ -26,6 +26,7 @@ export default function PublicCampaignScreen() {
     const [sortBy, setSortBy] = useState('recent'); // recent, oldest, highest
     const [fundraiserSortBy, setFundraiserSortBy] = useState('amount'); // amount, donors, progress, target
     const [visibleCount, setVisibleCount] = useState(15); // Number of items to show (5 rows × 3 cards)
+    const [columnsCount, setColumnsCount] = useState(3);
     const pusherRef = useRef(null);
     const channelRef = useRef(null);
     const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -61,6 +62,7 @@ export default function PublicCampaignScreen() {
             fundraisers: 'מתרימים',
             outOfGoal: 'מתוך יעד של',
             outOfMonthlyGoal: 'מתוך יעד חודשי של',
+            perMonth: 'לחודש',
             timeToStart: 'זמן לתחילה',
             timeToEnd: 'זמן לסיום',
             ended: 'הסתיים',
@@ -131,6 +133,7 @@ export default function PublicCampaignScreen() {
             fundraisers: 'Fundraisers',
             outOfGoal: 'out of a goal of',
             outOfMonthlyGoal: 'out of a monthly goal of',
+            perMonth: '/ month',
             timeToStart: 'Time to start',
             timeToEnd: 'Time to end',
             ended: 'Ended',
@@ -268,11 +271,34 @@ export default function PublicCampaignScreen() {
     // Set default tab to 'about' when showDonationDetails is false
     useEffect(() => {
         if (!data || loading) return;
-        
+
         if (data.showDonationDetails === false) {
             setActiveTab('about');
         }
     }, [data, loading]);
+
+    // Track the donors grid columns count to enforce full rows
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const updateColumns = () => {
+            const w = window.innerWidth;
+            if (w >= 1024) setColumnsCount(3);
+            else if (w >= 768) setColumnsCount(2);
+            else setColumnsCount(1);
+        };
+        updateColumns();
+        window.addEventListener('resize', updateColumns);
+        return () => window.removeEventListener('resize', updateColumns);
+    }, []);
+
+    // Round visibleCount down to full rows when more items exist beyond what's shown
+    const getFullRowsCount = (totalLength) => {
+        if (totalLength <= visibleCount) return totalLength;
+        const fullRows = Math.floor(visibleCount / columnsCount) * columnsCount;
+        return fullRows || columnsCount;
+    };
+
+    const loadMoreStep = () => columnsCount * 4;
 
     // Handle fundraiser from URL parameter
     useEffect(() => {
@@ -557,6 +583,9 @@ export default function PublicCampaignScreen() {
     }
 
     const { campaign, statistics, settings, recentDonations, topDonors, ranks, publicScreenRanks, fundraisers, publicScreenAbout, showDonationDetails } = data;
+    // When a monthly campaign is displayed in monthly units (monthsCalculation === 1), every amount on the page
+    // represents a monthly figure. We append "לחודש" next to amounts so it stays unambiguous for viewers.
+    const isMonthlyUnitMode = campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1;
     // progressPercent for visual fill (capped at 100 for the wave)
     const progressPercent = Math.min(statistics.progressPercentage, 100);
     // Display percentage - can be above 100%
@@ -819,6 +848,7 @@ export default function PublicCampaignScreen() {
                         numberOfPayments: donor.numberOfPayments || 1,
                         totalAmount: donor.totalAmount,
                         rank: index + 1,
+                        isAnonymous: donor.isAnonymous || false,
                         type: 'top'
                     })) || [],
                     emptyMessage: t('noTopDonors')
@@ -1453,8 +1483,13 @@ export default function PublicCampaignScreen() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className={styles.fundraiserDetailsAmount}>
-                                            {formatCurrency(displayAmount)}
+                                        <div className={styles.fundraiserDetailsAmount} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                            <span>{formatCurrency(displayAmount)}</span>
+                                            {isMonthlyUnitMode && (
+                                                <span style={{ fontSize: '0.55em', color: '#94a3b8', fontWeight: 'normal', marginTop: '-2px' }}>
+                                                    {t('perMonth')}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     
@@ -1675,8 +1710,9 @@ export default function PublicCampaignScreen() {
                                     return <div className={styles.emptyState}>{t('noDonorsYet')}</div>;
                                 }
                                 
-                                const visibleDonors = filteredFundraiserDonors.slice(0, visibleCount);
-                                const hasMore = filteredFundraiserDonors.length > visibleCount;
+                                const displayCount = getFullRowsCount(filteredFundraiserDonors.length);
+                                const visibleDonors = filteredFundraiserDonors.slice(0, displayCount);
+                                const hasMore = filteredFundraiserDonors.length > displayCount;
                                 
                                 return (
                                     <>
@@ -1714,9 +1750,14 @@ export default function PublicCampaignScreen() {
                                                     <div style={{ fontWeight: 'bold', fontSize: '1.1em', textAlign: 'center' }}>
                                                         {formatCurrency(displayAmount)}
                                                     </div>
+                                                    {isMonthlyUnitMode && (
+                                                        <div style={{ fontSize: '0.7em', fontWeight: 'normal', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                            {t('perMonth')}
+                                                        </div>
+                                                    )}
                                                     {showMonthlyInfo && (
-                                                        <div style={{ 
-                                                            fontSize: '0.75em', 
+                                                        <div style={{
+                                                            fontSize: '0.75em',
                                                             fontWeight: 'normal',
                                                             color: '#666',
                                                             whiteSpace: 'nowrap',
@@ -1729,23 +1770,12 @@ export default function PublicCampaignScreen() {
                                             </div>
                                         </div>
                                         
-                                        {/* Show dedication/note if exists */}
-                                        {donor.dedication && (
-                                            <div style={{
-                                                marginTop: '8px',
-                                                padding: '8px 12px',
-                                                background: 'rgba(110, 153, 236, 0.1)',
-                                                borderRadius: '8px',
-                                                borderRight: '3px solid #6E99EC',
-                                                fontSize: '0.85rem',
-                                                color: '#475569',
-                                                fontStyle: 'italic',
-                                                direction: 'rtl',
-                                                textAlign: 'right'
-                                            }}>
-                                                <span style={{ fontWeight: '600', color: '#0C4AD5' }}>הקדשה: </span>
+                                        {donor.dedication ? (
+                                            <div className={styles.dedicationBox}>
                                                 {donor.dedication}
                                             </div>
+                                        ) : (
+                                            <div className={styles.dedicationSlot} aria-hidden="true">&nbsp;</div>
                                         )}
                                     </div>
                                     );
@@ -1753,7 +1783,7 @@ export default function PublicCampaignScreen() {
                                 {hasMore && (
                                     <div style={{ gridColumn: '1 / -1', textAlign: 'center', marginTop: '1rem' }}>
                                         <button 
-                                            onClick={() => setVisibleCount(prev => prev + 15)}
+                                            onClick={() => setVisibleCount(prev => prev + loadMoreStep())}
                                             className={styles.loadMoreBtn}
                                         >
                                             {t('showMore')}
@@ -1772,8 +1802,9 @@ export default function PublicCampaignScreen() {
                                 return <div className={styles.emptyState}>{tabContent.emptyMessage}</div>;
                             }
                             
-                            const visibleData = sortedAndFilteredData.slice(0, visibleCount);
-                            const hasMore = sortedAndFilteredData.length > visibleCount;
+                            const displayCount = getFullRowsCount(sortedAndFilteredData.length);
+                            const visibleData = sortedAndFilteredData.slice(0, displayCount);
+                            const hasMore = sortedAndFilteredData.length > displayCount;
                             
                             return (
                                 <>
@@ -1870,6 +1901,11 @@ export default function PublicCampaignScreen() {
                                                         <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>
                                                             {(statistics.monthsCalculation || 1) > 1 ? `${t('total')}: ` : ''}{formatCurrency(item.totalRaised)}
                                                         </div>
+                                                        {isMonthlyUnitMode && (
+                                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                                {t('perMonth')}
+                                                            </div>
+                                                        )}
                                                         {(statistics.monthsCalculation || 1) > 1 && (
                                                             <div style={{ fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap' }}>
                                                                 {t('monthly')}: {formatCurrency(item.monthlyRaised || (item.totalRaised / (statistics.monthsCalculation || data?.campaign?.defaultHokMonths || 1)))}
@@ -1966,7 +2002,7 @@ export default function PublicCampaignScreen() {
                                         )}
                                         
                                         {/* Left side: Donor info and content */}
-                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 0 }}>
                                             {/* Card Header: Donor Name + Avatar */}
                                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                                 <div className={styles.donorHeaderRight}>
@@ -1983,12 +2019,11 @@ export default function PublicCampaignScreen() {
                                             <div className={styles.donorCardContent}>
                                             {/* Show fundraiser name */}
                                             {item.fundraiserName && (
-                                                <div 
+                                                <div
                                                     className={styles.fundraiserInfo}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        // Find the fundraiser in the data
-                                                        const fundraiser = fundraisers?.find(f => 
+                                                        const fundraiser = fundraisers?.find(f =>
                                                             f.name === item.fundraiserName
                                                         );
                                                         if (fundraiser) {
@@ -2011,7 +2046,7 @@ export default function PublicCampaignScreen() {
                                                     {t('via')} {item.fundraiserName}
                                                 </div>
                                             )}
-                                            
+
                                             {/* Show relative time if within 24 hours */}
                                             {item.createdAt && (() => {
                                                 const relativeTime = getRelativeTime(item.createdAt);
@@ -2022,23 +2057,12 @@ export default function PublicCampaignScreen() {
                                                 ) : null;
                                             })()}
                                             
-                                            {/* Show dedication/note if exists and was created in public screen */}
-                                            {item.dedication && (
-                                                <div style={{
-                                                    marginTop: '8px',
-                                                    padding: '8px 12px',
-                                                    background: 'rgba(110, 153, 236, 0.1)',
-                                                    borderRadius: '8px',
-                                                    borderRight: '3px solid #6E99EC',
-                                                    fontSize: '0.85rem',
-                                                    color: '#475569',
-                                                    fontStyle: 'italic',
-                                                    direction: 'rtl',
-                                                    textAlign: 'right'
-                                                }}>
-                                                    <span style={{ fontWeight: '600', color: '#0C4AD5' }}>הקדשה: </span>
+                                            {item.dedication ? (
+                                                <div className={styles.dedicationBox}>
                                                     {item.dedication}
                                                 </div>
+                                            ) : (
+                                                <div className={styles.dedicationSlot} aria-hidden="true">&nbsp;</div>
                                             )}
                                         </div>
                                         </div>
@@ -2059,9 +2083,14 @@ export default function PublicCampaignScreen() {
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.1em', textAlign: 'center' }}>
                                                     {formatCurrency(displayAmount)}
                                                 </div>
+                                                {isMonthlyUnitMode && (
+                                                    <div style={{ fontSize: '0.7em', fontWeight: 'normal', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                        {t('perMonth')}
+                                                    </div>
+                                                )}
                                                 {showMonthlyInfo && (
-                                                    <div style={{ 
-                                                        fontSize: '0.75em', 
+                                                    <div style={{
+                                                        fontSize: '0.75em',
                                                         fontWeight: 'normal',
                                                         color: '#666',
                                                         whiteSpace: 'nowrap',
@@ -2078,7 +2107,7 @@ export default function PublicCampaignScreen() {
                             {hasMore && (
                                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', marginTop: '1rem' }}>
                                     <button 
-                                        onClick={() => setVisibleCount(prev => prev + 15)}
+                                        onClick={() => setVisibleCount(prev => prev + loadMoreStep())}
                                         className={styles.loadMoreBtn}
                                     >
                                         {t('showMore')}

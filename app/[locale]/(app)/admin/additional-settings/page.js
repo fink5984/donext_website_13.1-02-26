@@ -36,7 +36,8 @@ export default function AdditionalSettingsPage() {
         isEnabled: false,
         showDonationDetails: true,
         promoVideoUrl: '',
-        monthsCalculation: 1
+        monthsCalculation: 1,
+        donationsCalculation: 1
     });
 
     // State for copied link notification
@@ -109,7 +110,8 @@ export default function AdditionalSettingsPage() {
                     isEnabled: data.isEnabled ?? false,
                     showDonationDetails: data.showDonationDetails ?? true,
                     promoVideoUrl: data.promoVideoUrl || '',
-                    monthsCalculation: data.monthsCalculation ?? 1
+                    monthsCalculation: data.monthsCalculation ?? 1,
+                    donationsCalculation: data.donationsCalculation ?? 1
                 });
             }
         } catch (error) {
@@ -702,22 +704,43 @@ export default function AdditionalSettingsPage() {
                 <div className={styles.settingsSection}>
                     <h2><InfoIcon className={styles.sectionTitleIcon} />חישוב סכומים בקמפיין חודשי</h2>
                     <p className={styles.sectionDesc}>
-                        מספר החודשים שלפיו יוצגו הסכומים בדף הציבורי. היעד יוכפל במספר החודשים, וסכום כל תרומה יוצג בהתאם:
-                        תרומות חודשיות לפחות לפי מספר זה (או ללא הגבלה) — סכום חודשי × מספר חודשים. תרומות חד-פעמיות או למספר תשלומים נמוך יותר — הסכום הכולל ששולם בפועל, והסכום החודשי = סכום כולל / מספר חודשים.
+                        שתי הגדרות שמשפיעות על אופן הצגת הסכומים ועיגול הסה"כ בדף הציבורי בקמפיין חודשי.
                     </p>
-                    <div className={styles.formGroup} style={{ maxWidth: '300px' }}>
-                        <label>מספר חודשים לחישוב</label>
-                        <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={formData.monthsCalculation}
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                handleInputChange('monthsCalculation', Number.isFinite(val) && val > 0 ? val : 1);
-                            }}
-                            className={styles.input}
-                        />
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div className={styles.formGroup} style={{ maxWidth: '300px', flex: '1 1 250px' }}>
+                            <label>חודשים להצגת היעד (חישוב סה"כ)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={formData.monthsCalculation}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    handleInputChange('monthsCalculation', Number.isFinite(val) && val > 0 ? val : 1);
+                                }}
+                                className={styles.input}
+                            />
+                            <small style={{ color: '#64748b', display: 'block', marginTop: '4px' }}>
+                                היעד הוצג בדף הציבורי: יעד הקמפיין × ערך זה. 1 = יעד חודשי. 12 = יעד שנתי.
+                            </small>
+                        </div>
+                        <div className={styles.formGroup} style={{ maxWidth: '300px', flex: '1 1 250px' }}>
+                            <label>חודשים לחישוב תרומה חד-פעמית</label>
+                            <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={formData.donationsCalculation}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    handleInputChange('donationsCalculation', Number.isFinite(val) && val > 0 ? val : 1);
+                                }}
+                                className={styles.input}
+                            />
+                            <small style={{ color: '#64748b', display: 'block', marginTop: '4px' }}>
+                                סף לזיהוי תרומה חודשית. תרומות עם פחות תשלומים מערך זה יחושבו כתרומה חד-פעמית ויפוצלו על פניו (לדוגמה: 120 חד-פעמי ÷ 12 = 10 לחודש).
+                            </small>
+                        </div>
                     </div>
                 </div>
 

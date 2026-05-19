@@ -101,39 +101,51 @@ export async function GET(request, { params }) {
             }
         });
 
-        // Number of months used to project monthly campaign totals on the public screen
+        // Months used to project the goal on the public screen (1 = monthly goal, 12 = yearly goal, etc.)
         const monthsCalculation = Math.max(1, parseInt(publicScreenSettings?.monthsCalculation ?? 1) || 1);
+        // Months used to amortize one-time donations and to flag a donation as "recurring".
+        // Donations with payments >= donationsCalculation (or isUnlimited) are treated as recurring;
+        // others are split over donationsCalculation months for the gauge.
+        const donationsCalculation = Math.max(1, parseInt(publicScreenSettings?.donationsCalculation ?? 1) || 1);
         const isMonthlyCampaign = campaign.donationType === 'monthly';
 
-        // Compute total and monthly per donation based on campaign type and rules
+        // Compute totalAmount (card display, mirrors gauge contribution) and monthlyDisplay per donation
         const computeAmounts = (donation) => {
             const monthlyAmount = Number(donation.monthlyAmount) || 0;
             const payments = donation.numberOfPayments || 1;
             if (isMonthlyCampaign) {
-                // Donation meets the threshold (recurring at least the configured months, or unlimited)
-                if (donation.isUnlimited || payments >= monthsCalculation) {
+                const meetsThreshold = donation.isUnlimited || payments >= donationsCalculation;
+                if (meetsThreshold) {
+                    // Recurring donation - project over monthsCalculation months
+                    const projected = monthlyAmount * monthsCalculation;
                     return {
-                        totalAmount: monthlyAmount * monthsCalculation,
-                        monthlyDisplay: monthlyAmount
+                        totalAmount: projected,
+                        monthlyDisplay: monthlyAmount,
+                        gaugeContribution: projected
                     };
                 }
-                // One-time or shorter recurring: use the real total paid, divide by months for monthly display
-                const realTotal = monthlyAmount * payments;
+                // One-time or short recurring - amortize over donationsCalculation months and project to gauge units
+                const actualPaid = monthlyAmount * payments;
+                const monthlyDisplay = actualPaid / donationsCalculation;
+                const contribution = monthlyDisplay * monthsCalculation;
                 return {
-                    totalAmount: realTotal,
-                    monthlyDisplay: realTotal / monthsCalculation
+                    totalAmount: contribution,
+                    monthlyDisplay,
+                    gaugeContribution: contribution
                 };
             }
-            // Non-monthly (project) campaign: total is straightforward
+            // Non-monthly (project) campaign: gauge mirrors the card amount
+            const projectTotal = monthlyAmount * payments;
             return {
-                totalAmount: monthlyAmount * payments,
-                monthlyDisplay: monthlyAmount
+                totalAmount: projectTotal,
+                monthlyDisplay: monthlyAmount,
+                gaugeContribution: projectTotal
             };
         };
 
-        // Calculate total collected amount across all donations
+        // Total raised against the gauge — uses gauge contribution so one-time donations don't inflate a monthly goal
         const totalCollected = donations.reduce((sum, donation) => {
-            return sum + computeAmounts(donation).totalAmount;
+            return sum + computeAmounts(donation).gaugeContribution;
         }, 0);
 
         // Calculate monthly collected amount - only from recurring donations (payments > 1)
@@ -221,7 +233,7 @@ export async function GET(request, { params }) {
             take: 100 // Get more to calculate totals
         });
 
-        // Calculate total for each donor and sort
+        // Calculate total per donor (using card-display amount) and sort
         const donorsWithTotals = topDonors.map(donor => {
             const total = donor.donations.reduce((sum, donation) => {
                 return sum + computeAmounts(donation).totalAmount;
@@ -240,7 +252,8 @@ export async function GET(request, { params }) {
                 lastName: donor.person?.lastName || '',
                 totalAmount: total,
                 monthlyAmount: latestAmounts.monthlyDisplay,
-                numberOfPayments: totalPayments
+                numberOfPayments: totalPayments,
+                isAnonymous: donor.isAnonymous || false
             };
         }).filter(d => d.totalAmount > 0)
           .sort((a, b) => b.totalAmount - a.totalAmount)
@@ -335,13 +348,14 @@ export async function GET(request, { params }) {
         // Format fundraisers with statistics
         const formattedFundraisers = fundraisers.map(fundraiser => {
             const donorsWithDonations = fundraiser.donors.map(donor => {
-                // Sum projected total and monthly across all donations for this donor
-                const { totalAmount, monthlyAmount } = donor.donations.reduce((acc, donation) => {
+                // Sum projected total, monthly, and gauge contribution across all donations for this donor
+                const { totalAmount, monthlyAmount, gaugeContribution } = donor.donations.reduce((acc, donation) => {
                     const amounts = computeAmounts(donation);
                     acc.totalAmount += amounts.totalAmount;
                     acc.monthlyAmount += amounts.monthlyDisplay;
+                    acc.gaugeContribution += amounts.gaugeContribution;
                     return acc;
-                }, { totalAmount: 0, monthlyAmount: 0 });
+                }, { totalAmount: 0, monthlyAmount: 0, gaugeContribution: 0 });
 
                 // Get the latest donation (already sorted by created_at desc)
                 const latestDonation = donor.donations[0];
@@ -365,12 +379,14 @@ export async function GET(request, { params }) {
                     numberOfPayments: totalPayments,
                     isUnlimited: hasUnlimited,
                     donationCount: donor.donations.length,
+                    gaugeContribution: gaugeContribution,
                     lastDonation: latestDonation?.created_at,
                     dedication: latestDonation?.dedication
                 };
             });
 
-            const totalRaised = donorsWithDonations.reduce((sum, donor) => sum + donor.totalAmount, 0);
+            // Sum the gauge contributions so the fundraiser's progress matches the campaign gauge math
+            const totalRaised = donorsWithDonations.reduce((sum, donor) => sum + (donor.gaugeContribution || 0), 0);
             // Sum of per-donor monthly display values (already includes unlimited / one-time according to the rules)
             const monthlyRaised = donorsWithDonations.reduce((sum, donor) => sum + (donor.monthlyAmount || 0), 0);
             // Count only donors who actually donated (totalAmount > 0)
@@ -424,7 +440,8 @@ export async function GET(request, { params }) {
                     progressPercentage: Math.round(progressPercentage * 100) / 100,
                     donorCount: donorCount,
                     donationCount: donationCount,
-                    monthsCalculation: monthsCalculation
+                    monthsCalculation: monthsCalculation,
+                    donationsCalculation: donationsCalculation
                 },
                 ranks: ranks.map(rank => ({
                     id: rank.id,
