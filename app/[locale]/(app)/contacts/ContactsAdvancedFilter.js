@@ -195,6 +195,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
   // Tags
   const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [noTag, setNoTag] = useState(false);
 
   // Traffic Light Colors
   const [selectedTrafficColors, setSelectedTrafficColors] = useState([]);
@@ -338,6 +339,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
 
     // Tags
     if (selectedTagIds.length > 0) filters.tagIds = selectedTagIds;
+    if (noTag) filters.noTag = true;
 
     // Age
     if (ageFrom) filters.ageFrom = parseInt(ageFrom);
@@ -402,6 +404,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedSynagogues([]);
     setNoSynagogue(false);
     setSelectedTagIds([]);
+    setNoTag(false);
     setAgeFrom('');
     setAgeTo('');
     setSelectedTrafficColors([]);
@@ -452,6 +455,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedSynagogues(storeFilters.synagogues || []);
     setNoSynagogue(!!storeFilters.noSynagogue);
     setSelectedTagIds(storeFilters.tagIds || []);
+    setNoTag(!!storeFilters.noTag);
     setAgeFrom(storeFilters.ageFrom ? String(storeFilters.ageFrom) : '');
     setAgeTo(storeFilters.ageTo ? String(storeFilters.ageTo) : '');
     setSelectedTrafficColors(storeFilters.trafficColors || []);
@@ -527,8 +531,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       (noSynagogue ? 1 : 0) +
       (ageFrom ? 1 : 0) +
       (ageTo ? 1 : 0) +
-      selectedTagIds.length,
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, selectedTrafficColors]);
+      selectedTagIds.length +
+      (noTag ? 1 : 0),
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, noTag, selectedTrafficColors]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -582,6 +587,15 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                   <div className={styles.filterField}>
                     <h4 className={styles.sectionHeading}>{t('af_tags')}</h4>
                     <div className={styles.tagFilterPills}>
+                      <button
+                        type="button"
+                        className={`${styles.tagFilterPill} ${noTag ? styles.tagFilterPillSelected : ''}`}
+                        style={{ '--tag-color': '#e0e0e0' }}
+                        onClick={() => setNoTag(prev => !prev)}
+                      >
+                        {noTag && <span className={styles.checkmark}>✓</span>}
+                        <span>ללא תגית</span>
+                      </button>
                       {tags.map((tag, tagIdx) => {
                         const isSelected = selectedTagIds.includes(tag.id);
                         return (

@@ -92,6 +92,18 @@ class DonorsStore {
     if (filters.tagIds && Array.isArray(filters.tagIds) && filters.tagIds.length > 0) {
       url += `&tagIds=${encodeURIComponent(JSON.stringify(filters.tagIds))}`;
     }
+    if (filters.noTag) {
+      url += `&noTag=1`;
+    }
+    if (filters.titlesBefore && Array.isArray(filters.titlesBefore) && filters.titlesBefore.length > 0) {
+      url += `&titlesBefore=${encodeURIComponent(JSON.stringify(filters.titlesBefore))}`;
+    }
+    if (filters.titlesAfter && Array.isArray(filters.titlesAfter) && filters.titlesAfter.length > 0) {
+      url += `&titlesAfter=${encodeURIComponent(JSON.stringify(filters.titlesAfter))}`;
+    }
+    if (filters.fundraiserNames && Array.isArray(filters.fundraiserNames) && filters.fundraiserNames.length > 0) {
+      url += `&fundraiserNames=${encodeURIComponent(JSON.stringify(filters.fundraiserNames))}`;
+    }
     // Sorting
     if (this.sortConfig.key && this.sortConfig.direction) {
       url += `&sortField=${this.sortConfig.key}&sortDir=${this.sortConfig.direction}`;

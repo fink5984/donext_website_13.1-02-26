@@ -31,6 +31,38 @@ function parseRequestParams(searchParams, campaignId) {
         } catch (_) {}
     }
 
+    // noTag - filter persons with no tags
+    if (searchParams.get('noTag') === '1') {
+        filters.noTag = true;
+    }
+
+    // titlesBefore - JSON array
+    const titlesBeforeParam = searchParams.get('titlesBefore');
+    if (titlesBeforeParam) {
+        try {
+            const parsed = JSON.parse(titlesBeforeParam);
+            if (Array.isArray(parsed) && parsed.length > 0) filters.titlesBefore = parsed;
+        } catch (_) {}
+    }
+
+    // titlesAfter - JSON array
+    const titlesAfterParam = searchParams.get('titlesAfter');
+    if (titlesAfterParam) {
+        try {
+            const parsed = JSON.parse(titlesAfterParam);
+            if (Array.isArray(parsed) && parsed.length > 0) filters.titlesAfter = parsed;
+        } catch (_) {}
+    }
+
+    // fundraiserNames - JSON array
+    const fundraiserNamesParam = searchParams.get('fundraiserNames');
+    if (fundraiserNamesParam) {
+        try {
+            const parsed = JSON.parse(fundraiserNamesParam);
+            if (Array.isArray(parsed) && parsed.length > 0) filters.fundraiserNames = parsed;
+        } catch (_) {}
+    }
+
     // trafficColors - JSON array
     const trafficColorsParam = searchParams.get('trafficColors');
     if (trafficColorsParam) {
@@ -233,7 +265,10 @@ function buildPersonFilters(filters, personSearchCondition) {
         ...(filters.phone && { phoneLandline: { contains: filters.phone, mode: 'insensitive' } }),
         ...(filters.email && { email: { contains: filters.email, mode: 'insensitive' } }),
         ...(synagogueCondition && synagogueCondition),
-        ...(filters.tagIds?.length > 0 && { personTags: { some: { tagId: { in: filters.tagIds } } } })
+        ...(filters.titlesBefore?.length > 0 && { titleBefore: { in: filters.titlesBefore } }),
+        ...(filters.titlesAfter?.length > 0 && { titleAfter: { in: filters.titlesAfter } }),
+        ...(filters.tagIds?.length > 0 && { personTags: { some: { tagId: { in: filters.tagIds } } } }),
+        ...(filters.noTag && { personTags: { none: {} } })
     };
 }
 
@@ -267,6 +302,32 @@ function buildWhereConditions(params) {
         ...(fundraiserId && {
             fundraiserId: parseInt(fundraiserId),
             fundraiser: { deleted_at: null }
+        }),
+        ...(filters.fundraiserNames?.length > 0 && {
+            fundraiser: {
+                deleted_at: null,
+                person: {
+                    OR: filters.fundraiserNames.map(name => {
+                        const parts = name.trim().split(/\s+/);
+                        if (parts.length === 1) {
+                            return {
+                                OR: [
+                                    { firstName: { contains: parts[0], mode: 'insensitive' } },
+                                    { lastName: { contains: parts[0], mode: 'insensitive' } },
+                                ]
+                            };
+                        }
+                        return {
+                            AND: parts.map(p => ({
+                                OR: [
+                                    { firstName: { contains: p, mode: 'insensitive' } },
+                                    { lastName: { contains: p, mode: 'insensitive' } },
+                                ]
+                            }))
+                        };
+                    })
+                }
+            }
         }),
         ...(filters.trafficLight && { trafficLightColor: filters.trafficLight }),
         ...(filters.trafficColors?.length > 0 && { trafficLightColor: { in: filters.trafficColors } }),

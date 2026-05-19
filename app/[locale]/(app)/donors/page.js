@@ -401,6 +401,10 @@ export default observer(function DonorsPage() {
             houseNumber: filters.houseNumbers?.[0] || '',
             synagogue: filters.synagogues || [],
             tagIds: filters.tagIds || [],
+            noTag: filters.noTag || false,
+            titlesBefore: filters.titlesBefore || [],
+            titlesAfter: filters.titlesAfter || [],
+            fundraiserNames: filters.fundraiserNames || [],
             trafficColors: filters.trafficColors || [],
             expectedRange: (filters.expectedMin !== undefined || filters.expectedMax !== undefined)
                 ? { min: filters.expectedMin ?? 0, max: filters.expectedMax ?? 1000000 }
