@@ -37,6 +37,11 @@ export async function middleware(request) {
       '/api/cron/daily-tasks'
     ];
 
+    // Nedarim Plus callback endpoint (called by Nedarim servers, no auth)
+    if (pathname.match(/^\/api\/payments\/nedarim-plus\/callback(\/\d+)?$/)) {
+      return NextResponse.next();
+    }
+
     // בדיקה אם זה public-stats endpoint (מאפשר גישה ציבורית לנתוני קמפיין)
     if (pathname.match(/^\/api\/campaigns\/\d+\/public-stats$/)) {
       return NextResponse.next();
