@@ -401,6 +401,7 @@ export default observer(function DonorsPage() {
             houseNumber: filters.houseNumbers?.[0] || '',
             synagogue: filters.synagogues || [],
             tagIds: filters.tagIds || [],
+            trafficColors: filters.trafficColors || [],
             expectedRange: (filters.expectedMin !== undefined || filters.expectedMax !== undefined)
                 ? { min: filters.expectedMin ?? 0, max: filters.expectedMax ?? 1000000 }
                 : (store.donorsStore.filters?.expectedRange || { min: 0, max: 1000000 }),

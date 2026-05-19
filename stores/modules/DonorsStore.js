@@ -86,6 +86,9 @@ class DonorsStore {
     if (filters.trafficScore) {
       url += `&trafficLight=${filters.trafficScore}`;
     }
+    if (filters.trafficColors && Array.isArray(filters.trafficColors) && filters.trafficColors.length > 0) {
+      url += `&trafficColors=${encodeURIComponent(JSON.stringify(filters.trafficColors))}`;
+    }
     if (filters.tagIds && Array.isArray(filters.tagIds) && filters.tagIds.length > 0) {
       url += `&tagIds=${encodeURIComponent(JSON.stringify(filters.tagIds))}`;
     }

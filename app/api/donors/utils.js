@@ -31,6 +31,17 @@ function parseRequestParams(searchParams, campaignId) {
         } catch (_) {}
     }
 
+    // trafficColors - JSON array
+    const trafficColorsParam = searchParams.get('trafficColors');
+    if (trafficColorsParam) {
+        try {
+            const parsed = JSON.parse(trafficColorsParam);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                filters.trafficColors = parsed;
+            }
+        } catch (_) {}
+    }
+
     // מיון ופגינציה
     const sorting = {
         sortField: searchParams.get('sortField'),
@@ -109,6 +120,8 @@ function buildSearchCondition(searchText) {
                 { lastName: { contains: term, mode: 'insensitive' } },
                 { englishName: { firstName: { contains: term, mode: 'insensitive' } } },
                 { englishName: { lastName: { contains: term, mode: 'insensitive' } } },
+                { mainMobile: { contains: term } },
+                { phoneLandline: { contains: term } },
             ]
         }))
     };
@@ -256,6 +269,7 @@ function buildWhereConditions(params) {
             fundraiser: { deleted_at: null }
         }),
         ...(filters.trafficLight && { trafficLightColor: filters.trafficLight }),
+        ...(filters.trafficColors?.length > 0 && { trafficLightColor: { in: filters.trafficColors } }),
         ...(Object.keys(expectedCondition).length > 0 && expectedCondition),
         ...activeCondition
     };

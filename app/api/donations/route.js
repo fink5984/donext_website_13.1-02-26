@@ -242,6 +242,8 @@ export async function GET(request) {
                     { donor: { person: { lastName: { contains: trimmedSearch, mode: 'insensitive' } } } },
                     { donor: { person: { englishName: { firstName: { contains: trimmedSearch, mode: 'insensitive' } } } } },
                     { donor: { person: { englishName: { lastName: { contains: trimmedSearch, mode: 'insensitive' } } } } },
+                    { donor: { person: { mainMobile: { contains: trimmedSearch } } } },
+                    { donor: { person: { phoneLandline: { contains: trimmedSearch } } } },
                 ];
 
                 // בדיקה אם החיפוש הוא מספר (סכום תרומה)
@@ -281,7 +283,9 @@ export async function GET(request) {
                                 { firstName: { contains: part, mode: 'insensitive' } },
                                 { lastName: { contains: part, mode: 'insensitive' } },
                                 { englishName: { firstName: { contains: part, mode: 'insensitive' } } },
-                                { englishName: { lastName: { contains: part, mode: 'insensitive' } } }
+                                { englishName: { lastName: { contains: part, mode: 'insensitive' } } },
+                                { mainMobile: { contains: part } },
+                                { phoneLandline: { contains: part } },
                             ]
                         }
                     }
@@ -580,7 +584,13 @@ export async function GET(request) {
             };
 
             // מיון לפי שדות מחושבים (totalAmount, expected, comparison)
-            if (sort === 'totalAmount') {
+            if (sort === 'lastDonationDate') {
+                groupedDonations.sort((a, b) => {
+                    const latestA = a.donations.length > 0 ? Math.max(...a.donations.map(d => new Date(d.created_at).getTime())) : 0;
+                    const latestB = b.donations.length > 0 ? Math.max(...b.donations.map(d => new Date(d.created_at).getTime())) : 0;
+                    return direction === 'asc' ? latestA - latestB : latestB - latestA;
+                });
+            } else if (sort === 'totalAmount') {
                 groupedDonations.sort((a, b) => {
                     if (direction === 'asc') {
                         return a.totalAmount - b.totalAmount;

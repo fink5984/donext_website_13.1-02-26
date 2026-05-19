@@ -196,6 +196,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   // Tags
   const [selectedTagIds, setSelectedTagIds] = useState([]);
 
+  // Traffic Light Colors
+  const [selectedTrafficColors, setSelectedTrafficColors] = useState([]);
+
   // Age
   const [ageFrom, setAgeFrom] = useState('');
   const [ageTo, setAgeTo] = useState('');
@@ -340,8 +343,11 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     if (ageFrom) filters.ageFrom = parseInt(ageFrom);
     if (ageTo) filters.ageTo = parseInt(ageTo);
 
+    // Traffic Light Colors
+    if (selectedTrafficColors.length > 0) filters.trafficColors = selectedTrafficColors;
+
     return filters;
-  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds]);
+  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, selectedTrafficColors]);
 
   // Apply filters
   const handleApply = () => {
@@ -398,6 +404,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedTagIds([]);
     setAgeFrom('');
     setAgeTo('');
+    setSelectedTrafficColors([]);
     if (onReset) onReset();
   };
 
@@ -447,6 +454,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setSelectedTagIds(storeFilters.tagIds || []);
     setAgeFrom(storeFilters.ageFrom ? String(storeFilters.ageFrom) : '');
     setAgeTo(storeFilters.ageTo ? String(storeFilters.ageTo) : '');
+    setSelectedTrafficColors(storeFilters.trafficColors || []);
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -508,7 +516,8 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       vsExpected.length +
       (isFundraiser ? 1 : 0) +
       (rating > 0 ? 1 : 0) +
-      selectedContactMethods.length,
+      selectedContactMethods.length +
+      selectedTrafficColors.length,
     additional:
       selectedFatherNames.length +
       selectedMotherNames.length +
@@ -519,7 +528,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       (ageFrom ? 1 : 0) +
       (ageTo ? 1 : 0) +
       selectedTagIds.length,
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds]);
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, selectedTrafficColors]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -902,6 +911,33 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                           onClick={() => toggleContactMethod(method)}
                         >
                           {contactMethodLabelMap[method]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Traffic Light Colors */}
+                <div className={styles.filterField}>
+                  <h4 className={styles.sectionHeading}>סינון לפי רמזור</h4>
+                  <div className={styles.trafficColorPills}>
+                    {[
+                      { value: 'green', color: '#22c55e' },
+                      { value: 'orange', color: '#f59e0b' },
+                      { value: 'red', color: '#ef4444' },
+                      { value: 'gray', color: '#9ca3af' },
+                    ].map(({ value, color }) => {
+                      const isSelected = selectedTrafficColors.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`${styles.trafficColorPill} ${isSelected ? styles.trafficColorPillSelected : ''}`}
+                          onClick={() => setSelectedTrafficColors(prev =>
+                            isSelected ? prev.filter(c => c !== value) : [...prev, value]
+                          )}
+                        >
+                          <span className={styles.trafficColorDot} style={{ backgroundColor: color }} />
                         </button>
                       );
                     })}

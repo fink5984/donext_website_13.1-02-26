@@ -773,7 +773,7 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
     }, [donationsStore.groupedDonations, activeTab, campaign, donationsStore.commitmentCurrentPage, donationsStore.allCommitmentsGrouped, donationsStore.pageSize]);
 
     const columns = [
-        { header: t('columns.date'), accessor: 'lastDonationDate', sortable: false, className: 'dateHeader' },
+        { header: t('columns.date'), accessor: 'lastDonationDate', sortable: true, className: 'dateHeader' },
         { header: t('columns.expectedDonation'), accessor: 'expected', sortable: true },
         { header: t('columns.comparison'), accessor: 'comparison', sortable: true },
         { header: activeTab === 'commitments' ? t('columns.commitmentAmount') : t('columns.actualDonation'), accessor: 'totalAmount', sortable: true },
