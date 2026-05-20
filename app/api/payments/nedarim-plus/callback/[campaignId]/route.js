@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
- * Nedarim Plus / Merkaz Hatzedaka Callback Endpoint (per-campaign)
+ * Nedarim Plus / Merkaz Hatzedaka Callback Endpoint (per-campaign) v2
  * 
  * Nedarim Plus sends JSON (application/json), not form data.
  * Expected IP: 18.194.219.73 (Nedarim Plus server)
