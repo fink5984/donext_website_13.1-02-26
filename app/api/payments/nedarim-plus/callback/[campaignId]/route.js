@@ -55,8 +55,8 @@ export async function POST(request, { params }) {
       Phone,
       Mail, Email,
       Amount,
-      // Installments: Nedarim sends 'Tashlumim', some older integrations 'Tashloumim'
-      Tashlumim, Tashloumim,
+      // Installments: Nedarim sends 'Tashlumim', some older integrations 'Tashloumim', HK uses 'Month'
+      Tashlumim, Tashloumim, Month,
       TransactionType,
       Param1,
       Param2,
@@ -88,7 +88,7 @@ export async function POST(request, { params }) {
     const resolvedMail = Mail || Email || '';
 
     console.log(`✅ Nedarim callback successful for campaign ${campaignId} (${resolvedPaymentMethod})`);
-    console.log(`   Transaction ID: ${rawTransactionId}, Amount: ${Amount}, Tashlumim: ${Tashlumim ?? Tashloumim}`);
+    console.log(`   Transaction ID: ${rawTransactionId}, Amount: ${Amount}, Month/Tashlumim: ${Tashlumim ?? Tashloumim ?? Month}`);  
 
     const nedarimId = rawTransactionId ? parseInt(rawTransactionId) : null;
 
@@ -141,7 +141,7 @@ export async function POST(request, { params }) {
     }
 
     // Create the donation record
-    const resolvedTashlumim = Tashlumim ?? Tashloumim;
+    const resolvedTashlumim = Tashlumim ?? Tashloumim ?? Month;
     const numberOfPayments = resolvedTashlumim ? parseInt(resolvedTashlumim) : 1;
     const isUnlimited = !resolvedTashlumim || resolvedTashlumim === '0';
 
