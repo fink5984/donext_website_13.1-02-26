@@ -80,6 +80,16 @@ export async function POST(request, { params }) {
       resolvedPaymentMethod = 'NEDARIM_PLUS';
     }
 
+    // Param1 carries `campaignId:<id>|source:<BACKOFFICE|LANDING_PAGE>`.
+    // When initiated from the admin form, the authenticated /api/donations call
+    // owns donation creation (so createdByUserId is set and the source displays
+    // as "admin user"). Skipping here avoids a race that strands the donation
+    // with createdInSystem='LANDING_PAGE' and no user attribution.
+    if (typeof Param1 === 'string' && Param1.includes('source:BACKOFFICE')) {
+      console.log('Nedarim callback - source=BACKOFFICE, skipping creation (frontend will save)');
+      return new NextResponse('OK', { status: 200 });
+    }
+
     // Resolve transaction ID across all known field name variants
     const rawTransactionId = ID || TransactionId || Id || NedarimId;
 

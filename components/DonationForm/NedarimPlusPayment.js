@@ -370,7 +370,7 @@ const NedarimPlusPayment = forwardRef(({
       Currency: currency,
       Groupe: `Campaign ${campaignId}`,
       Comment: '',
-      Param1: `campaignId:${campaignId}`,
+      Param1: `campaignId:${campaignId}|source:${usePublicApi ? 'LANDING_PAGE' : 'BACKOFFICE'}`,
       Param2: 'provider:NEDARIM_PLUS',
       CallBack: `${window.location.origin}/api/payments/nedarim-plus/callback/${campaignId}`,
       CallBackMailError: '',
