@@ -370,10 +370,22 @@ export async function GET(request, { params }) {
 
         // Format fundraisers with statistics
         const formattedFundraisers = fundraisers.map(fundraiser => {
+            // הסכום הכולל של המתרים מחושב מכל התרומות שלו - גם הנמוכות שמוסתרות ברשימה
+            // (כך שבכרטיסיית המתרים יוצג הסכום האמיתי שהביא, אבל הרשימה תציג רק את החריגות מהדרגה התחתונה).
+            let fundraiserTotalRaisedFull = 0;
+            let fundraiserMonthlyRaisedFull = 0;
+            fundraiser.donors.forEach(donor => {
+                donor.donations.forEach(donation => {
+                    const amounts = computeAmounts(donation);
+                    fundraiserTotalRaisedFull += amounts.gaugeContribution;
+                    fundraiserMonthlyRaisedFull += amounts.monthlyDisplay;
+                });
+            });
+
             const donorsWithDonations = fundraiser.donors.map(donor => {
-                // סינון תרומות נמוכות לפני הסיכום (כך שהן לא יופיעו תחת המתרים)
+                // סינון תרומות נמוכות לתצוגת רשימת התורמים שתחת המתרים
                 const visibleDonations = donor.donations.filter(d => !isLowDonation(d));
-                // Sum projected total, monthly, and gauge contribution across all donations for this donor
+                // סיכום על התרומות הנראות (מה שמוצג בכרטיסיית התורם בתוך המתרים)
                 const { totalAmount, monthlyAmount, gaugeContribution } = visibleDonations.reduce((acc, donation) => {
                     const amounts = computeAmounts(donation);
                     acc.totalAmount += amounts.totalAmount;
@@ -410,12 +422,11 @@ export async function GET(request, { params }) {
                 };
             });
 
-            // Sum the gauge contributions so the fundraiser's progress matches the campaign gauge math
-            const totalRaised = donorsWithDonations.reduce((sum, donor) => sum + (donor.gaugeContribution || 0), 0);
-            // Sum of per-donor monthly display values (already includes unlimited / one-time according to the rules)
-            const monthlyRaised = donorsWithDonations.reduce((sum, donor) => sum + (donor.monthlyAmount || 0), 0);
-            // Count only donors who actually donated (totalAmount > 0)
-            const donorCount = donorsWithDonations.filter(donor => donor.totalAmount > 0).length;
+            // הסיכומים של המתרים - על כל התרומות, גם הנמוכות
+            const totalRaised = fundraiserTotalRaisedFull;
+            const monthlyRaised = fundraiserMonthlyRaisedFull;
+            // ספירת תורמים שתרמו בפועל (גם אם כל תרומותיהם נמוכות מהדרגה התחתונה, נחשבים בסכום הכולל)
+            const donorCount = fundraiser.donors.filter(donor => donor.donations.length > 0).length;
             
             // Calculate expected sum (target) from all assigned donors
             const expectedSum = fundraiser.donors.reduce((sum, donor) => {
