@@ -44,31 +44,53 @@ export async function POST(request, { params }) {
 
     console.log('Callback data:', callbackData);
 
-    // Nedarim Plus JSON fields
+    // Nedarim Plus / Merkaz Hatzedaka callback fields.
+    // Field names vary by transaction type and platform version — handle all known variants.
     const {
       Status,
-      ID,               // Nedarim transaction ID
-      ClientName,       // Full name (not FirstName/LastName)
+      // Transaction ID: HK uses 'ID', Ragil uses 'TransactionId', older versions use 'Id'/'NedarimId'
+      ID, TransactionId, Id, NedarimId,
+      // Donor name: some versions send FirstName+LastName, others ClientName or FullName
+      FirstName, LastName, ClientName, FullName,
       Phone,
-      Mail,
+      Mail, Email,
       Amount,
-      Tashloumim,       // Number of payments (field name from Nedarim)
+      // Installments: Nedarim sends 'Tashlumim', some older integrations 'Tashloumim'
+      Tashlumim, Tashloumim,
       TransactionType,
       Param1,
+      Param2,
       Comments,
     } = callbackData;
 
     const isSuccess = Status === 'OK' || Status === 'Success';
 
     if (!isSuccess) {
-      console.log('Nedarim Plus callback - payment not successful, status:', Status);
+      console.log('Nedarim callback - payment not successful, status:', Status);
       return new NextResponse('OK', { status: 200 });
     }
 
-    console.log(`✅ Nedarim Plus payment successful for campaign ${campaignId}`);
-    console.log(`   Transaction ID: ${ID}, Amount: ${Amount}, Months: ${Tashloumim}`);
+    // Determine which payment provider sent this callback via Param2
+    // NedarimPlusPayment.js sends 'provider:NEDARIM_PLUS'
+    // MerkazHatzedakaPayment.js sends 'provider:MERKAZ_HATZEDAKA'
+    let resolvedPaymentMethod = 'NEDARIM_PLUS'; // safe default
+    if (Param2 && Param2.includes('provider:MERKAZ_HATZEDAKA')) {
+      resolvedPaymentMethod = 'MERKAZ_HATZEDAKA';
+    } else if (Param2 && Param2.includes('provider:NEDARIM_PLUS')) {
+      resolvedPaymentMethod = 'NEDARIM_PLUS';
+    }
 
-    const nedarimId = ID ? parseInt(ID) : null;
+    // Resolve transaction ID across all known field name variants
+    const rawTransactionId = ID || TransactionId || Id || NedarimId;
+
+    // Resolve donor contact fields
+    const resolvedPhone = Phone || '';
+    const resolvedMail = Mail || Email || '';
+
+    console.log(`✅ Nedarim callback successful for campaign ${campaignId} (${resolvedPaymentMethod})`);
+    console.log(`   Transaction ID: ${rawTransactionId}, Amount: ${Amount}, Tashlumim: ${Tashlumim ?? Tashloumim}`);
+
+    const nedarimId = rawTransactionId ? parseInt(rawTransactionId) : null;
 
     // Check if donation already exists for this Nedarim transaction
     if (nedarimId) {
@@ -85,8 +107,8 @@ export async function POST(request, { params }) {
     }
 
     // Try to find the donor by phone first; if no match, fall back to email.
-    const phoneDigits = (Phone || '').replace(/\D/g, '');
-    const normalizedMail = (Mail || '').trim().toLowerCase();
+    const phoneDigits = resolvedPhone.replace(/\D/g, '');
+    const normalizedMail = resolvedMail.trim().toLowerCase();
     let donorId = null;
 
     if (phoneDigits.length >= 9) {
@@ -114,13 +136,14 @@ export async function POST(request, { params }) {
     }
 
     if (!donorId) {
-      console.log('Donor not found by phone or email:', Phone, Mail, '— donation will be created by frontend');
+      console.log('Donor not found by phone or email:', resolvedPhone, resolvedMail, '— donation will be created by frontend');
       return new NextResponse('OK', { status: 200 });
     }
 
     // Create the donation record
-    const numberOfPayments = Tashloumim ? parseInt(Tashloumim) : 1;
-    const isUnlimited = !Tashloumim || Tashloumim === '0';
+    const resolvedTashlumim = Tashlumim ?? Tashloumim;
+    const numberOfPayments = resolvedTashlumim ? parseInt(resolvedTashlumim) : 1;
+    const isUnlimited = !resolvedTashlumim || resolvedTashlumim === '0';
 
     await prisma.donation.create({
       data: {
@@ -129,14 +152,14 @@ export async function POST(request, { params }) {
         numberOfPayments: isUnlimited ? null : numberOfPayments,
         isUnlimited,
         hasPaymentMethod: true,
-        paymentMethod: 'MERKAZ_HATZEDAKA',
+        paymentMethod: resolvedPaymentMethod,
         externalDonationId: nedarimId,
         note: Comments || null,
         createdInSystem: 'LANDING_PAGE',
       },
     });
 
-    console.log('✅ Donation created from callback for donor:', donorId);
+    console.log(`✅ Donation created from callback for donor ${donorId} via ${resolvedPaymentMethod}`);
 
   } catch (error) {
     console.error('Error processing Nedarim Plus callback:', error);

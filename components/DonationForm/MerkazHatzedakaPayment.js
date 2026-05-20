@@ -310,7 +310,7 @@ const MerkazHatzedakaPayment = forwardRef(({
       // Send the configured note as Comment
       Comment: merkazConfig.note || '',
       Param1: `campaignId:${campaignId}`,
-      Param2: '',
+      Param2: 'provider:MERKAZ_HATZEDAKA',
       CallBack: `${window.location.origin}/api/payments/nedarim-plus/callback/${campaignId}`,
       CallBackMailError: '',
       ForceUpdateMatching: '0',

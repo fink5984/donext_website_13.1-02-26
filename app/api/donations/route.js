@@ -731,7 +731,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, followUpDate, noteAssignee, isAnonymous, mode = 'add' } = body;
+        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, followUpDate, noteAssignee, isAnonymous, mode = 'add', transactionId } = body;
 
         // זיהוי המשתמש הנוכחי
         const currentUser = getCurrentUserFromRequest(request);
@@ -870,6 +870,26 @@ export async function POST(request) {
             });
         } else {
             // מצב הוספה - תמיד צור תרומה חדשה
+
+            // אם נשלח transactionId (מתשלום Nedarim/מרכז הצדקה), שמור כ-externalDonationId.
+            // זה מאפשר ל-callback לזהות שהתרומה כבר קיימת ולא ליצור כפילות.
+            const externalDonationId = transactionId
+                ? (Number.isFinite(parseInt(transactionId)) ? parseInt(transactionId) : null)
+                : null;
+
+            // בדיקת כפילות: אם תרומה עם אותו externalDonationId כבר קיימת - החזר אותה
+            if (externalDonationId) {
+                const existingDonation = await prisma.donation.findFirst({
+                    where: {
+                        externalDonationId,
+                        donor: { id: parseInt(donorId) }
+                    }
+                });
+                if (existingDonation) {
+                    return NextResponse.json({ success: true, data: existingDonation, duplicate: true });
+                }
+            }
+
             donation = await prisma.donation.create({
                 data: {
                     donorId: parseInt(donorId),
@@ -882,7 +902,8 @@ export async function POST(request) {
                     noteRead: note ? false : null,
                     followUpDate: followUpDate ? new Date(followUpDate) : null,
                     createdByUserId: currentUserId,
-                    updatedByUserId: currentUserId
+                    updatedByUserId: currentUserId,
+                    ...(externalDonationId && { externalDonationId })
                 },
                 include: {
                     donor: {
