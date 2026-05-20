@@ -137,7 +137,7 @@ const MerkazHatzedakaPayment = forwardRef(({
         handleTransactionResponse(data.Value || data);
       }
 
-      if (data.Status !== undefined && (data.TransactionId || data.Id || data.Transaction_Id || data.Confirmation)) {
+      if (data.Status !== undefined && (data.TransactionId || data.ID || data.Id || data.Transaction_Id || data.Confirmation)) {
         handleTransactionResponse(data);
       }
 

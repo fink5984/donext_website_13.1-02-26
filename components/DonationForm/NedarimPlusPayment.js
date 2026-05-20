@@ -145,7 +145,7 @@ const NedarimPlusPayment = forwardRef(({
       }
       
       // Handle direct response object (some versions send it this way)
-      if (data.Status !== undefined && (data.TransactionId || data.Id || data.Transaction_Id || data.Confirmation)) {
+      if (data.Status !== undefined && (data.TransactionId || data.ID || data.Id || data.Transaction_Id || data.Confirmation)) {
         handleTransactionResponse(data);
       }
 
