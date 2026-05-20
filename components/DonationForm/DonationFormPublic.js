@@ -41,6 +41,11 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const [existingDonor, setExistingDonor] = useState(null);
     const [isSearchingDonor, setIsSearchingDonor] = useState(false);
     const [phoneSearched, setPhoneSearched] = useState('');
+
+    // תפריט בחירת מתרים - מצב פתוח/סגור וטקסט חיפוש
+    const [fundraiserDropdownOpen, setFundraiserDropdownOpen] = useState(false);
+    const [fundraiserSearch, setFundraiserSearch] = useState('');
+    const fundraiserDropdownRef = useRef(null);
     
     // Payment state
     const [stripePublicKey, setStripePublicKey] = useState(null);
@@ -168,6 +173,19 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
         }
     }, [isOpen, campaignId, initialFundraiserId, initialAmount]);
 
+    // סגירת תפריט בחירת המתרים בקליק מחוץ אליו
+    useEffect(() => {
+        if (!fundraiserDropdownOpen) return;
+        const handleClickOutside = (event) => {
+            if (fundraiserDropdownRef.current && !fundraiserDropdownRef.current.contains(event.target)) {
+                setFundraiserDropdownOpen(false);
+                setFundraiserSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [fundraiserDropdownOpen]);
+
     const isMonthlyCampaign = campaign?.donationType === 'monthly';
     const isDefaultUnlimitedCampaign = isMonthlyCampaign && campaign?.defaultHokMonths === 0;
     const defaultNumberOfPayments = isMonthlyCampaign && !isDefaultUnlimitedCampaign ? (campaign?.defaultHokMonths ?? 12) : 1;
@@ -239,40 +257,49 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
         return digits.slice(-9);
     };
 
-    // Search for existing donor by phone
-    const searchDonorByPhone = async (phone) => {
+    // Search for existing donor by phone and/or email
+    // Server tries phone match first, falls back to email match.
+    const searchDonor = async ({ phone, email }) => {
         const phoneLast9 = getLast9Digits(phone);
-        
-        // Only search if we have at least 9 digits and phone changed
-        if (!phoneLast9 || phoneLast9.length < 9) {
+        const hasValidPhone = !!phoneLast9 && phoneLast9.length >= 9;
+        const normalizedEmail = (email || '').trim();
+        const hasValidEmail = normalizedEmail.length > 3 && normalizedEmail.includes('@');
+
+        if (!hasValidPhone && !hasValidEmail) {
             setExistingDonor(null);
             setPhoneSearched('');
             return;
         }
 
-        // Don't search again if same phone
-        if (phoneLast9 === getLast9Digits(phoneSearched)) {
+        // מפתח חיפוש מורכב מהטלפון והמייל - מונע חיפוש כפול על אותו ערך
+        const searchKey = `${phoneLast9 || ''}|${normalizedEmail.toLowerCase()}`;
+        if (searchKey === phoneSearched) {
             return;
         }
 
         setIsSearchingDonor(true);
-        setPhoneSearched(phone);
+        setPhoneSearched(searchKey);
 
         try {
-            const response = await fetch(`/api/campaigns/${campaignId}/find-donor-by-phone?phone=${encodeURIComponent(phone)}`);
+            const params = new URLSearchParams();
+            if (hasValidPhone) params.append('phone', phone);
+            if (hasValidEmail) params.append('email', normalizedEmail);
+
+            const response = await fetch(`/api/campaigns/${campaignId}/find-donor-by-phone?${params.toString()}`);
             const data = await response.json();
-            
+
             if (data.success && data.donor) {
                 setExistingDonor(data.donor);
-                // If donor found, use their fundraiser if they have one
-                if (data.donor.fundraiserId && !initialFundraiserId) {
+                // אם נמצא תורם קיים עם מתרים - נקבע אותו כברירת מחדל בתפריט הבחירה,
+                // אך רק אם המשתמש עוד לא בחר ידנית מתרים אחר (וגם לא הגיע דרך URL).
+                if (data.donor.fundraiserId && !initialFundraiserId && !selectedFundraiserId) {
                     setSelectedFundraiserId(data.donor.fundraiserId);
                 }
             } else {
                 setExistingDonor(null);
             }
         } catch (error) {
-            console.error('Error searching donor by phone:', error);
+            console.error('Error searching donor:', error);
             setExistingDonor(null);
         } finally {
             setIsSearchingDonor(false);
@@ -281,10 +308,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
 
     const handleDonorChange = (donor) => {
         setSelectedDonor(donor);
-        
-        // If phone changed, search for existing donor
-        if (donor?.phone) {
-            searchDonorByPhone(donor.phone);
+
+        if (donor?.phone || donor?.email) {
+            searchDonor({ phone: donor.phone, email: donor.email });
         } else {
             setExistingDonor(null);
             setPhoneSearched('');
@@ -351,10 +377,11 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
         // Determine which donor to use - existing donor from phone search or new donor
         const donorToUse = existingDonor ? existingDonor : selectedDonor;
         
-        // Determine fundraiser - if existing donor has one and no initial, use existing donor's
-        const fundraiserToUse = existingDonor?.fundraiserId && !initialFundraiserId 
-            ? existingDonor.fundraiserId 
-            : selectedFundraiserId;
+        // המתרים שייוחס לתרומה: זה שנבחר בתפריט/הגיע מ-URL/נטען מתורם קיים.
+        // אם המשתמש בחר ידנית - הבחירה שלו גוברת על המתרים השמור על תורם קיים (השרת יעדכן בהתאם).
+        const fundraiserToUse = selectedFundraiserId || (existingDonor?.fundraiserId && !initialFundraiserId
+            ? existingDonor.fundraiserId
+            : null);
 
         try {
             const response = await fetch(`/api/campaigns/${campaignId}/public-donation`, {
@@ -845,37 +872,93 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         )}
                     </PaymentMethodSelectPublic>
                     
-                    {/* Fundraiser Selection - only if:
-                        1. Not already selected via URL
-                        2. Fundraisers exist
-                        3. Phone was entered (at least 9 digits)
-                        4. No existing donor was found with that phone */}
-                    {!initialFundraiserId && 
-                     fundraisers.length > 0 && 
-                     selectedDonor?.phone && 
-                     getLast9Digits(selectedDonor.phone)?.length >= 9 &&
-                     !existingDonor && 
-                     !isSearchingDonor && (
-                        <div className={styles.paymentMethodSection}>
-                            <div className={styles.row}>
-                                <label className={`${styles.label} headline-3`}>
-                                    {t('donateViaFundraiser')}
-                                </label>
-                                <select
-                                    className={styles.select}
-                                    value={selectedFundraiserId || ''}
-                                    onChange={(e) => setSelectedFundraiserId(e.target.value ? parseInt(e.target.value) : null)}
-                                >
-                                    <option value="">{t('noFundraiserAssigned')}</option>
-                                    {fundraisers.map((fundraiser) => (
-                                        <option key={fundraiser.id} value={fundraiser.id}>
-                                            {fundraiser.name}
-                                        </option>
-                                    ))}
-                                </select>
+                    {/* בחירת מתרים - מופיע תמיד כשהגיעו לטופס ללא הפנייה ממתרים דרך ה-URL.
+                        אם נמצא תורם קיים עם מתרים, הערך הראשוני נקבע אוטומטית ב-searchDonor.
+                        תפריט מותאם עם חיפוש וגלילה פנימית כדי לא לגלוש מגבולות הטופס. */}
+                    {!initialFundraiserId && fundraisers.length > 0 && (() => {
+                        const selectedFundraiserName = fundraisers.find(f => f.id === selectedFundraiserId)?.name;
+                        const normalizedSearch = fundraiserSearch.trim().toLowerCase();
+                        const filteredFundraisers = normalizedSearch
+                            ? fundraisers.filter(f => (f.name || '').toLowerCase().includes(normalizedSearch))
+                            : fundraisers;
+                        return (
+                            <div className={styles.paymentMethodSection}>
+                                <div className={styles.row}>
+                                    <label className={`${styles.label} headline-3`}>
+                                        {t('donateViaFundraiser')}
+                                    </label>
+                                    <div className={styles.fundraiserDropdown} ref={fundraiserDropdownRef}>
+                                        <button
+                                            type="button"
+                                            className={styles.fundraiserDropdownButton}
+                                            onClick={() => setFundraiserDropdownOpen(prev => !prev)}
+                                            disabled={isSearchingDonor}
+                                            aria-expanded={fundraiserDropdownOpen}
+                                            aria-haspopup="listbox"
+                                        >
+                                            <span className={styles.fundraiserDropdownButtonLabel}>
+                                                {selectedFundraiserName || t('noFundraiserAssigned')}
+                                            </span>
+                                            <svg
+                                                className={`${styles.fundraiserDropdownChevron} ${fundraiserDropdownOpen ? styles.open : ''}`}
+                                                width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                aria-hidden="true"
+                                            >
+                                                <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                            </svg>
+                                        </button>
+                                        {fundraiserDropdownOpen && (
+                                            <div className={styles.fundraiserDropdownPanel} role="listbox">
+                                                <div className={styles.fundraiserDropdownList}>
+                                                    <button
+                                                        type="button"
+                                                        className={`${styles.fundraiserDropdownItem} ${!selectedFundraiserId ? styles.active : ''}`}
+                                                        onClick={() => {
+                                                            setSelectedFundraiserId(null);
+                                                            setFundraiserDropdownOpen(false);
+                                                            setFundraiserSearch('');
+                                                        }}
+                                                    >
+                                                        {t('noFundraiserAssigned')}
+                                                    </button>
+                                                    {filteredFundraisers.map(fundraiser => (
+                                                        <button
+                                                            key={fundraiser.id}
+                                                            type="button"
+                                                            className={`${styles.fundraiserDropdownItem} ${selectedFundraiserId === fundraiser.id ? styles.active : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedFundraiserId(fundraiser.id);
+                                                                setFundraiserDropdownOpen(false);
+                                                                setFundraiserSearch('');
+                                                            }}
+                                                        >
+                                                            {fundraiser.name}
+                                                        </button>
+                                                    ))}
+                                                    {filteredFundraisers.length === 0 && (
+                                                        <div className={styles.fundraiserDropdownEmpty}>
+                                                            {t('noResults')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className={styles.fundraiserDropdownSearchWrap}>
+                                                    <input
+                                                        type="text"
+                                                        autoFocus
+                                                        className={styles.fundraiserDropdownSearch}
+                                                        placeholder={t('search')}
+                                                        value={fundraiserSearch}
+                                                        onChange={(e) => setFundraiserSearch(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                     
                     {/* Show selected fundraiser name */}
                     {initialFundraiserId && fundraisers.length > 0 && (

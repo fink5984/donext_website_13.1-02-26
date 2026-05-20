@@ -44,7 +44,7 @@ export async function POST(request, { params }) {
 
         let donorRecord;
 
-        // If we have an existing donor ID from phone search, use it
+        // If we have an existing donor ID from phone/email search, use it
         if (existingDonorId) {
             donorRecord = await prisma.donor.findUnique({
                 where: { id: parseInt(existingDonorId) },
@@ -58,11 +58,20 @@ export async function POST(request, { params }) {
                 );
             }
 
-            // Update isAnonymous if changed
+            // אם התורם תרם דרך קישור של מתרים מסוים והוא משויך כעת למתרים אחר -
+            // לעדכן את השיוך למתרים שדרכו תרם בפועל. גם isAnonymous מתעדכן אם השתנה.
+            const incomingFundraiserId = fundraiserId ? parseInt(fundraiserId) : null;
+            const updates = {};
+            if (incomingFundraiserId && donorRecord.fundraiserId !== incomingFundraiserId) {
+                updates.fundraiserId = incomingFundraiserId;
+            }
             if (isAnonymous !== undefined && donorRecord.isAnonymous !== isAnonymous) {
+                updates.isAnonymous = isAnonymous;
+            }
+            if (Object.keys(updates).length > 0) {
                 donorRecord = await prisma.donor.update({
                     where: { id: donorRecord.id },
-                    data: { isAnonymous: isAnonymous }
+                    data: updates
                 });
             }
         } else {

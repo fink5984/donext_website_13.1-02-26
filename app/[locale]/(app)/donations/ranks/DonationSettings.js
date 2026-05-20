@@ -328,7 +328,8 @@ function DonationSettings({ campaignId }) {
         {
             value: 'SHOW_WITH_APPROVAL',
             icon: <Hand />,
-            label: t('lowDonationApproval')
+            label: t('lowDonationApproval'),
+            disabled: true
         },
         {
             value: 'SHOW_WITHOUT_APPROVAL',
@@ -363,9 +364,9 @@ function DonationSettings({ campaignId }) {
                             {lowDonationOptions.map((option) => (
                                 <button
                                     key={option.value}
-                                    className={`${styles.optionCard} ${lowDonationDisplay === option.value ? styles.active : ''} ${savingLowDonation ? styles.disabled : ''}`}
-                                    onClick={() => handleLowDonationDisplayChange(option.value)}
-                                    disabled={savingLowDonation}
+                                    className={`${styles.optionCard} ${lowDonationDisplay === option.value ? styles.active : ''} ${(savingLowDonation || option.disabled) ? styles.disabled : ''}`}
+                                    onClick={() => { if (!option.disabled) handleLowDonationDisplayChange(option.value); }}
+                                    disabled={savingLowDonation || option.disabled}
                                 >
                                     <div className={styles.cardIcon}>
                                         {option.icon}

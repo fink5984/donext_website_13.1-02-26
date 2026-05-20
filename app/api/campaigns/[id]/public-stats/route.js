@@ -66,7 +66,8 @@ export async function GET(request, { params }) {
                 goal: true,
                 hasGoal: true,
                 textOverTotal: true,
-                textUnderTotal: true
+                textUnderTotal: true,
+                lowDonationDisplay: true
             }
         });
 
@@ -145,6 +146,20 @@ export async function GET(request, { params }) {
                 monthlyDisplay: monthlyAmount,
                 gaugeContribution: projectTotal
             };
+        };
+
+        // הסתרת תרומות נמוכות מהדרגה התחתונה (לפי הגדרת lowDonationDisplay)
+        const hideLowDonations = screenSettings?.lowDonationDisplay === 'HIDE';
+        const rankAmounts = ranks
+            .map(r => Number(r.amount) || 0)
+            .filter(a => a > 0);
+        const minRankAmount = rankAmounts.length > 0 ? Math.min(...rankAmounts) : 0;
+        const isLowDonation = (donation) => {
+            if (!hideLowDonations || minRankAmount <= 0) return false;
+            const amounts = computeAmounts(donation);
+            // קמפיין חודשי - השוואה לערך החודשי. קמפיין פרויקט - השוואה לסה"כ.
+            const compareValue = isMonthlyCampaign ? amounts.monthlyDisplay : amounts.totalAmount;
+            return compareValue < minRankAmount;
         };
 
         // Total raised against the gauge — uses gauge contribution so one-time donations don't inflate a monthly goal
@@ -239,14 +254,16 @@ export async function GET(request, { params }) {
 
         // Calculate total per donor (using card-display amount) and sort
         const donorsWithTotals = topDonors.map(donor => {
-            const total = donor.donations.reduce((sum, donation) => {
+            // סינון תרומות נמוכות גם ברשימת ה-Top Donors
+            const visibleDonations = donor.donations.filter(d => !isLowDonation(d));
+            const total = visibleDonations.reduce((sum, donation) => {
                 return sum + computeAmounts(donation).totalAmount;
             }, 0);
 
             // Get the latest donation (first in sorted list)
-            const latestDonation = donor.donations[0];
+            const latestDonation = visibleDonations[0];
             const latestAmounts = latestDonation ? computeAmounts(latestDonation) : { monthlyDisplay: 0 };
-            const totalPayments = donor.donations.reduce((max, donation) => {
+            const totalPayments = visibleDonations.reduce((max, donation) => {
                 return Math.max(max, donation.numberOfPayments || 1);
             }, 1);
 
@@ -270,33 +287,35 @@ export async function GET(request, { params }) {
         const progressPercentage = targetAmount > 0 ? (progressBase / targetAmount) * 100 : 0;
         const remainingAmount = Math.max(targetAmount - progressBase, 0);
 
-        // Format recent donations for response
-        const formattedRecentDonations = recentDonations.map(donation => {
-            const monthlyAmount = Number(donation.monthlyAmount) || 0;
-            const payments = donation.numberOfPayments || 1;
+        // Format recent donations for response (סינון תרומות נמוכות מהדרגה התחתונה אם מוגדר HIDE)
+        const formattedRecentDonations = recentDonations
+            .filter(donation => !isLowDonation(donation))
+            .map(donation => {
+                const monthlyAmount = Number(donation.monthlyAmount) || 0;
+                const payments = donation.numberOfPayments || 1;
 
-            // Use the shared computation so display matches the gauge
-            const { totalAmount, monthlyDisplay } = computeAmounts(donation);
+                // Use the shared computation so display matches the gauge
+                const { totalAmount, monthlyDisplay } = computeAmounts(donation);
 
-            return {
-                id: donation.id,
-                donorId: donation.donor?.id || null,
-                donorName: `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim() || 'אנונימי',
-                donorFirstName: donation.donor?.person?.firstName || '',
-                donorLastName: donation.donor?.person?.lastName || '',
-                isAnonymous: donation.donor?.isAnonymous || false,
-                amount: monthlyAmount,
-                monthlyAmount: monthlyDisplay,
-                numberOfPayments: payments,
-                isUnlimited: donation.isUnlimited || false,
-                totalAmount: totalAmount,
-                dedication: donation.dedication,
-                fundraiserName: donation.donor?.fundraiser?.person
-                    ? `${donation.donor.fundraiser.person.firstName || ''} ${donation.donor.fundraiser.person.lastName || ''}`.trim()
-                    : (donation.donor?.fundraiser?.user?.name || donation.donor?.fundraiser?.user?.phone || null),
-                createdAt: donation.created_at
-            };
-        });
+                return {
+                    id: donation.id,
+                    donorId: donation.donor?.id || null,
+                    donorName: `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim() || 'אנונימי',
+                    donorFirstName: donation.donor?.person?.firstName || '',
+                    donorLastName: donation.donor?.person?.lastName || '',
+                    isAnonymous: donation.donor?.isAnonymous || false,
+                    amount: monthlyAmount,
+                    monthlyAmount: monthlyDisplay,
+                    numberOfPayments: payments,
+                    isUnlimited: donation.isUnlimited || false,
+                    totalAmount: totalAmount,
+                    dedication: donation.dedication,
+                    fundraiserName: donation.donor?.fundraiser?.person
+                        ? `${donation.donor.fundraiser.person.firstName || ''} ${donation.donor.fundraiser.person.lastName || ''}`.trim()
+                        : (donation.donor?.fundraiser?.user?.name || donation.donor?.fundraiser?.user?.phone || null),
+                    createdAt: donation.created_at
+                };
+            });
 
         // Get fundraisers with their statistics
         const fundraisers = await prisma.fundraiser.findMany({
@@ -352,8 +371,10 @@ export async function GET(request, { params }) {
         // Format fundraisers with statistics
         const formattedFundraisers = fundraisers.map(fundraiser => {
             const donorsWithDonations = fundraiser.donors.map(donor => {
+                // סינון תרומות נמוכות לפני הסיכום (כך שהן לא יופיעו תחת המתרים)
+                const visibleDonations = donor.donations.filter(d => !isLowDonation(d));
                 // Sum projected total, monthly, and gauge contribution across all donations for this donor
-                const { totalAmount, monthlyAmount, gaugeContribution } = donor.donations.reduce((acc, donation) => {
+                const { totalAmount, monthlyAmount, gaugeContribution } = visibleDonations.reduce((acc, donation) => {
                     const amounts = computeAmounts(donation);
                     acc.totalAmount += amounts.totalAmount;
                     acc.monthlyAmount += amounts.monthlyDisplay;
@@ -382,7 +403,7 @@ export async function GET(request, { params }) {
                     monthlyAmount: monthlyAmount,
                     numberOfPayments: totalPayments,
                     isUnlimited: hasUnlimited,
-                    donationCount: donor.donations.length,
+                    donationCount: visibleDonations.length,
                     gaugeContribution: gaugeContribution,
                     lastDonation: latestDonation?.created_at,
                     dedication: latestDonation?.dedication

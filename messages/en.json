@@ -1779,6 +1779,8 @@
     "noCreditCardProvider": "No credit card provider configured",
     "donateViaFundraiser": "Donate via fundraiser:",
     "noFundraiserAssigned": "Without fundraiser",
+    "search": "Search",
+    "noResults": "No results",
     "loadingCampaignData": "Loading campaign data...",
     "donationSavedButError": "Donation saved but an error occurred",
     "paymentProcessingError": "Error processing payment",

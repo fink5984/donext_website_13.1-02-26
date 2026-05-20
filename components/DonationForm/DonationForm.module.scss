@@ -716,6 +716,127 @@
       padding: 0 12px;
     }
 
+    // תפריט מותאם לבחירת מתרים: כפתור + פאנל עם חיפוש ורשימה גוללת
+    .fundraiserDropdown {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .fundraiserDropdownButton {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 40px;
+      border-radius: var(--Border-Radius-m);
+      border: 1px solid var(--Border-Default, #6E99EC);
+      background: var(--Bg-Button-disable, #FFF);
+      color: var(--Text-Default, #6E99EC);
+      padding: 0 12px;
+      cursor: pointer;
+      font-size: 14px;
+      text-align: inherit;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .fundraiserDropdownButtonLabel {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fundraiserDropdownChevron {
+      margin-inline-start: 8px;
+      flex-shrink: 0;
+      color: var(--Text-Default, #6E99EC);
+      transition: transform 0.2s ease;
+
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+
+    .fundraiserDropdownPanel {
+      // נפתח תמיד כלפי מעלה (מעל הכפתור) עם שדה החיפוש בתחתית, צמוד לכפתור
+      position: absolute;
+      bottom: calc(100% + 4px);
+      inset-inline-end: 0;
+      min-width: 100%;
+      max-width: 100%;
+      background: #FFF;
+      border: 1px solid var(--Border-Default, #6E99EC);
+      border-radius: var(--Border-Radius-m, 16px);
+      box-shadow: 0 -6px 20px rgba(110, 153, 236, 0.18);
+      z-index: 50;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fundraiserDropdownSearchWrap {
+      padding: 8px;
+      border-top: 1px solid #E5EAF3;
+      background: #F6F9FC;
+    }
+
+    .fundraiserDropdownSearch {
+      width: 100%;
+      height: 36px;
+      border-radius: var(--Border-Radius-m, 12px);
+      border: 1px solid var(--Border-Default, #6E99EC);
+      padding: 0 10px;
+      font-size: 14px;
+      color: var(--Text-Default, #6E99EC);
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #0C4AD5;
+      }
+    }
+
+    .fundraiserDropdownList {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fundraiserDropdownItem {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: var(--Text-Default, #6E99EC);
+      cursor: pointer;
+      font-size: 14px;
+      text-align: inherit;
+
+      &:hover {
+        background: #EDF5FD;
+        color: #0C4AD5;
+      }
+
+      &.active {
+        background: #DCEBFB;
+        color: #0C4AD5;
+        font-weight: 600;
+      }
+    }
+
+    .fundraiserDropdownEmpty {
+      padding: 12px;
+      text-align: center;
+      color: #9AA6BD;
+      font-size: 14px;
+    }
+
     .editPaymentMethodButton {
       display: flex;
       align-items: center;

@@ -1806,6 +1806,8 @@
     "noCreditCardProvider": "לא הוגדר ספק אשראי",
     "donateViaFundraiser": "תרומה דרך מתרים:",
     "noFundraiserAssigned": "ללא שיוך למתרים",
+    "search": "חיפוש",
+    "noResults": "לא נמצאו תוצאות",
     "loadingCampaignData": "טוען נתוני קמפיין...",
     "donationSavedButError": "התרומה נשמרה אך חלה שגיאה",
     "paymentProcessingError": "שגיאה בעיבוד התשלום",

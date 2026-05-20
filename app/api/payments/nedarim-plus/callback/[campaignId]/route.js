@@ -84,8 +84,9 @@ export async function POST(request, { params }) {
       }
     }
 
-    // Try to find the donor by phone in this campaign
+    // Try to find the donor by phone first; if no match, fall back to email.
     const phoneDigits = (Phone || '').replace(/\D/g, '');
+    const normalizedMail = (Mail || '').trim().toLowerCase();
     let donorId = null;
 
     if (phoneDigits.length >= 9) {
@@ -100,8 +101,20 @@ export async function POST(request, { params }) {
       if (donor) donorId = donor.id;
     }
 
+    if (!donorId && normalizedMail) {
+      const donor = await prisma.donor.findFirst({
+        where: {
+          campaignId,
+          person: {
+            email: { equals: normalizedMail, mode: 'insensitive' },
+          },
+        },
+      });
+      if (donor) donorId = donor.id;
+    }
+
     if (!donorId) {
-      console.log('Donor not found by phone:', Phone, '— donation will be created by frontend');
+      console.log('Donor not found by phone or email:', Phone, Mail, '— donation will be created by frontend');
       return new NextResponse('OK', { status: 200 });
     }
 
