@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 
+// 9 ספרות אחרונות של מספר טלפון - להשוואה עם המיקרו-פורמטים השונים שיכולים להישמר במסד
+function getLast9Digits(phone) {
+    if (!phone) return null;
+    const digits = String(phone).replace(/\D/g, '');
+    return digits.length >= 9 ? digits.slice(-9) : null;
+}
+
 export async function POST(request, { params }) {
     try {
         const { id: campaignId } = await params;
         const body = await request.json();
-        const { donor, existingDonorId, amount, numberOfPayments, isUnlimited, paymentMethod, note, fundraiserId, isAnonymous } = body;
+        const { donor, existingDonorId, amount, numberOfPayments, isUnlimited, paymentMethod, note, fundraiserId, isAnonymous, transactionId } = body;
 
         if (!campaignId) {
             return NextResponse.json(
@@ -44,10 +51,40 @@ export async function POST(request, { params }) {
 
         let donorRecord;
 
-        // If we have an existing donor ID from phone/email search, use it
-        if (existingDonorId) {
+        // אם הפרונטאנד לא העביר existingDonorId, נחפש בכל זאת בצד השרת תורם קיים
+        // לפי טלפון/מייל - בלי דרישה לזהות שם פרטי/משפחה (שם יכול להיות שונה מעט).
+        // זה מונע יצירה כפולה כשהשם הוקלד מעט שונה ממה ששמור במסד.
+        let resolvedDonorId = existingDonorId ? parseInt(existingDonorId) : null;
+        if (!resolvedDonorId && donor && (donor.phone || donor.email)) {
+            const phoneLast9 = getLast9Digits(donor.phone);
+            const normalizedEmail = (donor.email || '').trim().toLowerCase();
+            const campaignDonors = await prisma.donor.findMany({
+                where: { campaignId: parseInt(campaignId) },
+                include: { person: true }
+            });
+
+            let match = null;
+            // קודם לפי טלפון (כולל כל שדות הטלפון של ה-person)
+            if (phoneLast9) {
+                match = campaignDonors.find(cd => {
+                    const p = cd.person;
+                    if (!p) return false;
+                    const phones = [p.mainMobile, p.secondaryMobile, p.phoneLandline].filter(Boolean);
+                    return phones.some(ph => getLast9Digits(ph) === phoneLast9);
+                });
+            }
+            // אם לא נמצא לפי טלפון - לפי מייל
+            if (!match && normalizedEmail) {
+                match = campaignDonors.find(cd => cd.person?.email
+                    && cd.person.email.trim().toLowerCase() === normalizedEmail);
+            }
+            if (match) resolvedDonorId = match.id;
+        }
+
+        // If we have a resolved donor (either from frontend or from server-side search), use it
+        if (resolvedDonorId) {
             donorRecord = await prisma.donor.findUnique({
-                where: { id: parseInt(existingDonorId) },
+                where: { id: resolvedDonorId },
                 include: { person: true }
             });
 
@@ -75,73 +112,60 @@ export async function POST(request, { params }) {
                 });
             }
         } else {
-            // Create or find person first — only match by email/phone if provided
-            const matchConditions = [];
-            if (donor.email) matchConditions.push({ email: donor.email });
-            if (donor.phone) matchConditions.push({ mainMobile: donor.phone });
-
-            let personRecord = null;
-            if (matchConditions.length > 0) {
-                personRecord = await prisma.person.findFirst({
-                    where: {
-                        clientId: campaign.clientId,
-                        firstName: donor.firstName,
-                        lastName: donor.lastName || '',
-                        OR: matchConditions
-                    }
-                });
-            }
-
-            if (!personRecord) {
-                personRecord = await prisma.person.create({
-                    data: {
-                        clientId: campaign.clientId,
-                        firstName: donor.firstName,
-                        lastName: donor.lastName || '',
-                        email: donor.email || null,
-                        mainMobile: donor.phone || null
-                    }
-                });
-            } else if (!personRecord.clientId) {
-                // תיקון: person קיים ללא clientId — נעדכן
-                personRecord = await prisma.person.update({
-                    where: { id: personRecord.id },
-                    data: { clientId: campaign.clientId }
-                });
-            }
-
-            // Create or find donor linked to person
-            donorRecord = await prisma.donor.findFirst({
-                where: {
-                    campaignId: parseInt(campaignId),
-                    personId: personRecord.id
+            // אין תורם קיים תואם - יצירת תורם חדש לפי הפרטים מהטופס
+            let personRecord = await prisma.person.create({
+                data: {
+                    clientId: campaign.clientId,
+                    firstName: donor.firstName,
+                    lastName: donor.lastName || '',
+                    email: donor.email || null,
+                    mainMobile: donor.phone || null
                 }
             });
 
-            if (!donorRecord) {
-                donorRecord = await prisma.donor.create({
-                    data: {
-                        campaignId: parseInt(campaignId),
-                        personId: personRecord.id,
-                        fundraiserId: fundraiserId ? parseInt(fundraiserId) : null,
-                        isAnonymous: isAnonymous || false,
-                        active: true
+            donorRecord = await prisma.donor.create({
+                data: {
+                    campaignId: parseInt(campaignId),
+                    personId: personRecord.id,
+                    fundraiserId: fundraiserId ? parseInt(fundraiserId) : null,
+                    isAnonymous: isAnonymous || false,
+                    active: true
+                }
+            });
+        }
+
+        // אם הועבר transactionId (למשל מ-Nedarim Plus), נשמור אותו כ-externalDonationId כדי
+        // שה-callback של ספק התשלום יזהה שהתרומה כבר נוצרה ולא ייצר כפילות.
+        const externalDonationId = transactionId
+            ? (Number.isFinite(parseInt(transactionId)) ? parseInt(transactionId) : null)
+            : null;
+
+        // הגנה: אם תרומה עם אותו externalDonationId כבר קיימת לקמפיין, נחזיר אותה במקום ליצור חדשה.
+        if (externalDonationId) {
+            const existingDonation = await prisma.donation.findFirst({
+                where: {
+                    externalDonationId,
+                    donor: { campaignId: parseInt(campaignId) }
+                },
+                include: {
+                    donor: {
+                        include: {
+                            person: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true,
+                                    city: { select: { name: true } }
+                                }
+                            }
+                        }
                     }
-                });
-            } else if (fundraiserId && !donorRecord.fundraiserId) {
-                // Update donor with fundraiser if not already set
-                donorRecord = await prisma.donor.update({
-                    where: { id: donorRecord.id },
-                    data: { 
-                        fundraiserId: parseInt(fundraiserId),
-                        isAnonymous: isAnonymous !== undefined ? isAnonymous : donorRecord.isAnonymous
-                    }
-                });
-            } else if (isAnonymous !== undefined && donorRecord.isAnonymous !== isAnonymous) {
-                // Update isAnonymous if changed
-                donorRecord = await prisma.donor.update({
-                    where: { id: donorRecord.id },
-                    data: { isAnonymous: isAnonymous }
+                }
+            });
+            if (existingDonation) {
+                return NextResponse.json({
+                    success: true,
+                    data: { donation: existingDonation, donor: donorRecord },
+                    duplicate: true
                 });
             }
         }
@@ -156,7 +180,8 @@ export async function POST(request, { params }) {
                 paymentMethod: paymentMethod || null,
                 dedication: note || null,
                 hasPaymentMethod: paymentMethod ? true : false,
-                createdInSystem: 'PUBLIC_SCREEN'
+                createdInSystem: 'PUBLIC_SCREEN',
+                externalDonationId
             },
             include: {
                 donor: {
