@@ -66,7 +66,7 @@ export async function POST(request, { params }) {
     }
 
     console.log(`✅ Nedarim Plus payment successful for campaign ${campaignId}`);
-    console.log(`   Transaction ID: ${ID}, Amount: ${Amount}, Months: ${Month}`);
+    console.log(`   Transaction ID: ${ID}, Amount: ${Amount}, Months: ${Tashloumim}`);
 
     const nedarimId = ID ? parseInt(ID) : null;
 
