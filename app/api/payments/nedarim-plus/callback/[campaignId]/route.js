@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 /**
  * Nedarim Plus / Merkaz Hatzedaka Callback Endpoint (per-campaign)
@@ -52,7 +52,7 @@ export async function POST(request, { params }) {
       Phone,
       Mail,
       Amount,
-      Month,            // Number of monthly payments
+      Tashloumim,       // Number of payments (field name from Nedarim)
       TransactionType,
       Param1,
       Comments,
@@ -106,8 +106,8 @@ export async function POST(request, { params }) {
     }
 
     // Create the donation record
-    const numberOfPayments = Month ? parseInt(Month) : 1;
-    const isUnlimited = !Month || Month === '0';
+    const numberOfPayments = Tashloumim ? parseInt(Tashloumim) : 1;
+    const isUnlimited = !Tashloumim || Tashloumim === '0';
 
     await prisma.donation.create({
       data: {
