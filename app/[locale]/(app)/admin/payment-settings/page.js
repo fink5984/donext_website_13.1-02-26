@@ -960,16 +960,23 @@ export default function PaymentSettingsPage() {
                                 <div className={styles.webhookUrlsCompact}>
                                     <code>charge/{campaignId}</code>
                                     <code>schedule/{campaignId}</code>
+                                    <code>pledge/{campaignId}</code>
+                                    <code>void/{campaignId}</code>
                                     <button 
                                         className={styles.copyBtn}
                                         onClick={() => {
                                             const baseUrl = window.location.origin;
-                                            const urls = `Payment: ${baseUrl}/api/webhooks/donary/charge/${campaignId}\nSchedule: ${baseUrl}/api/webhooks/donary/schedule/${campaignId}`;
+                                            const urls = [
+                                                `Charge: ${baseUrl}/api/webhooks/donary/charge/${campaignId}`,
+                                                `Schedule: ${baseUrl}/api/webhooks/donary/schedule/${campaignId}`,
+                                                `Pledge: ${baseUrl}/api/webhooks/donary/pledge/${campaignId}`,
+                                                `Void: ${baseUrl}/api/webhooks/donary/void/${campaignId}`,
+                                            ].join('\n');
                                             navigator.clipboard.writeText(urls);
                                         }}
-                                        title="העתק"
+                                        title="העתק את כל הוובהוקים"
                                     >
-                                        העתק
+                                        העתק הכל
                                     </button>
                                 </div>
                             </details>
