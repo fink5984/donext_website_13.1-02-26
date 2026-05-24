@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
     try {
-        // הגדרת גופן עברית ל-pdfmake בתוך ה-handler כדי למנוע איפוס vfs
-        const pdfMake = require('pdfmake/build/pdfmake');
-        const alefFont = require('@/app/fonts/alef-pdfmake.js');
-        pdfMake.vfs = { 'Alef-normal.ttf': alefFont };
-        pdfMake.fonts = {
-            Alef: { normal: 'Alef-normal.ttf', bold: 'Alef-normal.ttf' }
-        };
+        // שימוש ב-PdfPrinter (server-side) שמקבל buffer ישירות — ללא VFS
+        const PdfPrinter = require('pdfmake/src/printer');
+        const alefFontBase64 = require('@/app/fonts/alef-pdfmake.js');
+        const alefBuffer = Buffer.from(alefFontBase64, 'base64');
+
+        const printer = new PdfPrinter({
+            Alef: { normal: alefBuffer, bold: alefBuffer }
+        });
 
         const body = await request.json();
         const { rows, columns, fileName = 'donors', currencySymbol = '₪' } = body;
@@ -75,10 +76,14 @@ export async function POST(request) {
             }
         };
 
-        // יצירת PDF
+        // יצירת PDF באמצעות PdfPrinter (server-side — ללא VFS)
         const pdfBuffer = await new Promise((resolve, reject) => {
-            const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-            pdfDocGenerator.getBuffer((buffer) => resolve(buffer));
+            const doc = printer.createPdfKitDocument(docDefinition);
+            const chunks = [];
+            doc.on('data', chunk => chunks.push(chunk));
+            doc.on('end', () => resolve(Buffer.concat(chunks)));
+            doc.on('error', reject);
+            doc.end();
         });
 
         return new NextResponse(pdfBuffer, {
