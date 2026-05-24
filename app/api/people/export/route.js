@@ -2,6 +2,99 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
+ * POST /api/people/export { clientId, personIds[] }
+ * ייצוא אנשי קשר לפי רשימת IDs מסוננת
+ */
+export async function POST(request) {
+    try {
+        const body = await request.json();
+        const { clientId, personIds } = body;
+
+        if (!clientId) {
+            return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
+        }
+
+        const where = { clientId: parseInt(clientId) };
+        if (personIds?.length > 0) {
+            where.id = { in: personIds.map(Number) };
+        }
+
+        const people = await prisma.person.findMany({
+            where,
+            include: {
+                city: true,
+                street: true,
+                country: true,
+                personTags: { include: { tag: true } },
+                customFieldValues: {
+                    include: { fieldDefinition: true },
+                    where: { fieldDefinition: { active: true } },
+                },
+                donors: {
+                    where: { active: true },
+                    include: {
+                        campaign: { select: { id: true, name: true } },
+                        donations: {
+                            where: { deleted_at: null },
+                            select: { monthlyAmount: true, numberOfPayments: true, isUnlimited: true },
+                        },
+                    },
+                },
+            },
+            orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+        });
+
+        const rows = people.map(person => {
+            let totalDonations = 0;
+            const campaignNames = [];
+            person.donors?.forEach(donor => {
+                if (donor.campaign?.name) campaignNames.push(donor.campaign.name);
+                donor.donations?.forEach(d => {
+                    const amount = Number(d.monthlyAmount) || 0;
+                    const payments = d.isUnlimited ? 12 : (d.numberOfPayments || 1);
+                    totalDonations += amount * payments;
+                });
+            });
+
+            const row = {
+                'שם פרטי': person.firstName || '',
+                'שם משפחה': person.lastName || '',
+                'תואר לפני': person.titleBefore || '',
+                'תואר אחרי': person.titleAfter || '',
+                'נייד': person.mainMobile || '',
+                'טלפון נייח': person.phoneLandline || '',
+                'אימייל': person.email || '',
+                'עיר': person.city?.name || '',
+                'רחוב': person.street?.name || '',
+                'מספר בית': person.houseNumber || '',
+                'מדינה': person.country?.name || '',
+                'בית כנסת': person.synagogue || '',
+                'שם האב': person.fatherName || '',
+                'שם האם': person.motherName || '',
+                'שם הסבא': person.grandfatherName || '',
+                'תאריך לידה': person.birthDate ? new Date(person.birthDate).toLocaleDateString('he-IL') : '',
+                'דירוג': person.rating || '',
+                'קמפיינים': campaignNames.join(', '),
+                'סה"כ תרומות': totalDonations,
+                'תגיות': person.personTags?.map(pt => pt.tag.name).join(', ') || '',
+                'מקור': person.importId ? 'ייבוא' : 'ידני',
+            };
+
+            person.customFieldValues?.forEach(cfv => {
+                row[cfv.fieldDefinition.fieldName] = cfv.value || '';
+            });
+
+            return row;
+        });
+
+        return NextResponse.json({ rows, total: rows.length });
+    } catch (error) {
+        console.error('Error exporting people (POST):', error);
+        return NextResponse.json({ error: 'Failed to export people' }, { status: 500 });
+    }
+}
+
+/**
  * GET /api/people/export?clientId=&search=&tagIds=&campaignIds=&active=
  * ייצוא אנשי קשר ל-Excel (JSON response — הלקוח בונה את ה-Excel)
  */

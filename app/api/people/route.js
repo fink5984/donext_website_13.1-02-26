@@ -481,28 +481,7 @@ export async function GET(request) {
 
         // סינון לפי טווח תרומה בפועל + סוג תרומה
         if (actualMinFilter !== null || actualMaxFilter !== null || donationAmountType) {
-            if (donationAmountType === 'total') {
-                // סה"כ תרומות: raw SQL כדי לסכם את כל התרומות
-                const campaignClause = campaignIds.length > 0
-                    ? `AND d.campaign_id IN (${campaignIds.map(Number).join(',')})`
-                    : '';
-                const havingParts = [];
-                if (actualMinFilter !== null) havingParts.push(`SUM(don.monthly_amount * COALESCE(don.number_of_payments, 1)) >= ${actualMinFilter}`);
-                if (actualMaxFilter !== null) havingParts.push(`SUM(don.monthly_amount * COALESCE(don.number_of_payments, 1)) <= ${actualMaxFilter}`);
-                const havingClause = havingParts.length > 0 ? `HAVING ${havingParts.join(' AND ')}` : '';
-                const totalRawSql = `
-                    SELECT DISTINCT d.person_id
-                    FROM donors d
-                    LEFT JOIN donations don ON don.donor_id = d.id AND don.deleted_at IS NULL
-                    WHERE d.active = true AND d.person_id IS NOT NULL
-                    ${campaignClause}
-                    GROUP BY d.person_id
-                    ${havingClause}
-                `;
-                const totalRows = await prisma.$queryRawUnsafe(totalRawSql);
-                const totalPersonIds = totalRows.map(r => Number(r.person_id));
-                addAndCondition({ id: { in: totalPersonIds } });
-            } else {
+            if (donationAmountType === 'monthly') {
                 // חודשי: תרומה עם מספר תשלומים >= default_hok_months של הקמפיין (או is_unlimited)
                 const campaignClause = campaignIds.length > 0
                     ? `AND d.campaign_id IN (${campaignIds.map(Number).join(',')})`
@@ -527,6 +506,27 @@ export async function GET(request) {
                 const monthlyRows = await prisma.$queryRawUnsafe(monthlyRawSql);
                 const monthlyPersonIds = monthlyRows.map(r => Number(r.person_id));
                 addAndCondition({ id: { in: monthlyPersonIds } });
+            } else {
+                // סה"כ תרומות (ברירת מחדל): raw SQL כדי לסכם את כל התרומות כולל התחייבויות
+                const campaignClause = campaignIds.length > 0
+                    ? `AND d.campaign_id IN (${campaignIds.map(Number).join(',')})`
+                    : '';
+                const havingParts = [];
+                if (actualMinFilter !== null) havingParts.push(`SUM(don.monthly_amount * COALESCE(don.number_of_payments, 1)) >= ${actualMinFilter}`);
+                if (actualMaxFilter !== null) havingParts.push(`SUM(don.monthly_amount * COALESCE(don.number_of_payments, 1)) <= ${actualMaxFilter}`);
+                const havingClause = havingParts.length > 0 ? `HAVING ${havingParts.join(' AND ')}` : '';
+                const totalRawSql = `
+                    SELECT DISTINCT d.person_id
+                    FROM donors d
+                    LEFT JOIN donations don ON don.donor_id = d.id AND don.deleted_at IS NULL
+                    WHERE d.active = true AND d.person_id IS NOT NULL
+                    ${campaignClause}
+                    GROUP BY d.person_id
+                    ${havingClause}
+                `;
+                const totalRows = await prisma.$queryRawUnsafe(totalRawSql);
+                const totalPersonIds = totalRows.map(r => Number(r.person_id));
+                addAndCondition({ id: { in: totalPersonIds } });
             }
         }
 

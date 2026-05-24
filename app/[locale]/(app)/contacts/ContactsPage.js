@@ -803,10 +803,16 @@ const ContactsPage = observer(function ContactsPage() {
                     setShowExportMenu(false);
                     try {
                       const data = await contactsStore.exportContacts();
-                      if (data?.rows) {
-                        const headers = Object.keys(data.rows[0] || {});
-                        const csvContent = [headers.join(','), ...data.rows.map(row => headers.map(h => `"${(row[h] || '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
-                        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                      if (data?.rows && data.rows.length > 0) {
+                        const headers = Object.keys(data.rows[0]);
+                        const columns = headers.map(h => ({ header: h, accessor: h }));
+                        const res = await fetchWithAuth('/api/donors/export-pdf-server', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ rows: data.rows, columns, fileName: `contacts_${new Date().toISOString().slice(0, 10)}` }),
+                        });
+                        if (!res?.ok) throw new Error('PDF generation failed');
+                        const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a'); a.href = url; a.download = `contacts_${new Date().toISOString().slice(0, 10)}.pdf`; a.click();
                         URL.revokeObjectURL(url);

@@ -694,18 +694,23 @@ class ContactsStore {
         if (!this.clientId) return;
 
         try {
-            const params = new URLSearchParams({ clientId: String(this.clientId) });
+            // אם יש IDs מסוננים — נשתמש בהם ישירות כדי לשמר את כל הסינונים
+            const filteredIds = this.allFilteredIds || [];
 
+            if (filteredIds.length > 0) {
+                const res = await fetchWithAuth('/api/people/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientId: this.clientId, personIds: filteredIds }),
+                });
+                if (!res?.ok) throw new Error('Failed to export contacts');
+                return await res.json();
+            }
+
+            // Fallback — אין סינון, ייצוא הכל
+            const params = new URLSearchParams({ clientId: String(this.clientId) });
             if (this.search) params.set('search', this.search);
-            if (this.filters.tagIds?.length) {
-                this.filters.tagIds.forEach(id => params.append('tagIds', String(id)));
-            }
-            if (this.filters.campaignIds?.length) {
-                this.filters.campaignIds.forEach(id => params.append('campaignIds', String(id)));
-            }
-            if (this.filters.active !== undefined) {
-                params.set('active', String(this.filters.active));
-            }
+            if (this.filters.active !== undefined) params.set('active', String(this.filters.active));
 
             const res = await fetchWithAuth(`/api/people/export?${params.toString()}`);
             if (!res?.ok) throw new Error('Failed to export contacts');

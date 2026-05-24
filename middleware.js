@@ -100,7 +100,8 @@ export async function middleware(request) {
       '/api/contacts-settings', // contacts column settings — uses clientId
       '/api/custom-fields',    // contacts page custom fields — uses clientId
       '/api/tags',             // contacts page tags — uses clientId
-      '/api/admin'             // admin routes do their own JWT auth internally
+      '/api/admin',            // admin routes do their own JWT auth internally
+      '/api/donors/export-pdf-server', // PDF export — used from contacts page (no campaignId in token)
     ];
 
     // בדיקה אם זה endpoint ציבורי

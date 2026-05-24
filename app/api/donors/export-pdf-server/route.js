@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
 
-const pdfMake = require('pdfmake/build/pdfmake');
-const alefFont = require('@/app/fonts/alef-pdfmake.js');
-
-// הגדרת גופן עברית ל-pdfmake
-pdfMake.vfs = { 'Alef-normal.ttf': alefFont };
-pdfMake.fonts = {
-    Alef: { normal: 'Alef-normal.ttf', bold: 'Alef-normal.ttf' }
-};
-
 export async function POST(request) {
     try {
+        // הגדרת גופן עברית ל-pdfmake בתוך ה-handler כדי למנוע איפוס vfs
+        const pdfMake = require('pdfmake/build/pdfmake');
+        const alefFont = require('@/app/fonts/alef-pdfmake.js');
+        pdfMake.vfs = { 'Alef-normal.ttf': alefFont };
+        pdfMake.fonts = {
+            Alef: { normal: 'Alef-normal.ttf', bold: 'Alef-normal.ttf' }
+        };
+
         const body = await request.json();
         const { rows, columns, fileName = 'donors', currencySymbol = '₪' } = body;
 
