@@ -20,20 +20,17 @@ import UpIcon from '@/app/icons/up.svg';
 import DownIcon from '@/app/icons/down.svg';
 import styles from './contactsCashFlow.module.scss';
 
-// Register Chart.js components only once
-if (typeof window !== 'undefined') {
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler,
-  );
-}
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+);
 
 const FORECAST_MONTHS = 12;
 
@@ -780,9 +777,9 @@ export default function ContactsCashFlow({ clientId }) {
               aria-label="previous"
             >‹</button>
             <span className={styles.cashFlowChartRange}>
-              {granularity === 'yearly'
+              {periods.length > 0 && (granularity === 'yearly'
                 ? `${periods[0]?.year} – ${periods[periods.length - 1]?.year}`
-                : `${shortMonthLabel(periods[0].year, periods[0].month, locale)} – ${shortMonthLabel(periods[periods.length - 1].year, periods[periods.length - 1].month, locale)}`}
+                : `${shortMonthLabel(periods[0]?.year, periods[0]?.month, locale)} – ${shortMonthLabel(periods[periods.length - 1]?.year, periods[periods.length - 1]?.month, locale)}`)}
             </span>
             <button
               type="button"

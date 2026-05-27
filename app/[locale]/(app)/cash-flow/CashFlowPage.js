@@ -1,25 +1,13 @@
 "use client";
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { useAppContext } from '@/app/components/AppContext';
-import dynamic from 'next/dynamic';
 import contactsStyles from '../contacts/contacts.module.scss';
 import styles from './cashFlow.module.scss';
 
-const ContactsCashFlow = dynamic(() => import('../contacts/ContactsCashFlow'), {
-    ssr: false,
-    loading: () => (
-        <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: '400px',
-            fontSize: '14px',
-            color: '#5A78B0'
-        }}>
-            טוען תזרים מזומנים...
-        </div>
-    ),
-});
+// Chart.js needs a browser `canvas`, which doesn't exist in the SSR step.
+// Load the cash-flow component dynamically with ssr: false to avoid runtime errors.
+const ContactsCashFlow = dynamic(() => import('../contacts/ContactsCashFlow'), { ssr: false });
 
 export default function CashFlowPage() {
     const t = useTranslations('contactsPage');
