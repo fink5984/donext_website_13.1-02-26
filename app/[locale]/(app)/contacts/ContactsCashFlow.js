@@ -20,17 +20,20 @@ import UpIcon from '@/app/icons/up.svg';
 import DownIcon from '@/app/icons/down.svg';
 import styles from './contactsCashFlow.module.scss';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-);
+// Register Chart.js components only once
+if (typeof window !== 'undefined') {
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler,
+  );
+}
 
 const FORECAST_MONTHS = 12;
 
