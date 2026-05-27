@@ -31,6 +31,7 @@ import LanguageSwitcher from "@/app/components/LanguageSwitcher/LanguageSwitcher
 import { getAllowedUserTypesForPath } from "@/lib/accessRules";
 import { loadSession, isTokenValid, clearSession } from "@/lib/auth";
 import ContactsIcon from "@/app/icons/contacts.svg";
+import CashFlowIcon from "@/app/icons/cashFlow.svg";
 
 // Sidebar for contacts page — icon sidebar + sub-sidebar with title & logout (like campaign selection page)
 const ContactsSidebar = observer(function ContactsSidebar({ locale, isRTL, onLogout }) {
@@ -43,6 +44,9 @@ const ContactsSidebar = observer(function ContactsSidebar({ locale, isRTL, onLog
                     </div>
                     <div className={`${styles.contactsSidebarItem} ${styles.active}`}>
                         <IconTooltip icon={<ContactsIcon />} text="אנשי קשר" />
+                    </div>
+                    <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/cash-flow`; }}>
+                        <IconTooltip icon={<CashFlowIcon />} text="תזרים" />
                     </div>
                     <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/tags`; }}>
                         <IconTooltip icon={<Settings />} text="הגדרות" />
@@ -83,6 +87,9 @@ const TagsSidebar = observer(function TagsSidebar({ locale, isRTL, onLogout }) {
                     <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/contacts`; }}>
                         <IconTooltip icon={<ContactsIcon />} text="אנשי קשר" />
                     </div>
+                    <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/cash-flow`; }}>
+                        <IconTooltip icon={<CashFlowIcon />} text="תזרים" />
+                    </div>
                     <div className={`${styles.contactsSidebarItem} ${styles.active}`}>
                         <IconTooltip icon={<Settings />} text="הגדרות" />
                     </div>
@@ -97,6 +104,43 @@ const TagsSidebar = observer(function TagsSidebar({ locale, isRTL, onLogout }) {
                 <div className={styles.contactsSubSidebarMenu}>
                     <span className={`${styles.contactsSubSidebarItem} ${styles.active} table-2`}>
                         הוספת תגיות
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+
+// Sidebar for cash-flow page — same layout as contacts sidebar
+const CashFlowSidebar = observer(function CashFlowSidebar({ locale, isRTL, onLogout }) {
+    return (
+        <div className={`${styles.contactsSidebarWrapper} ${isRTL ? styles.rtl : ''}`}>
+            <nav className={styles.contactsSidebarNav}>
+                <div className={styles.contactsSidebarSection}>
+                    <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/login?showCampaigns=true`; }}>
+                        <IconTooltip icon={<Dashboard />} text="קמפיינים" />
+                    </div>
+                    <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/contacts`; }}>
+                        <IconTooltip icon={<ContactsIcon />} text="אנשי קשר" />
+                    </div>
+                    <div className={`${styles.contactsSidebarItem} ${styles.active}`}>
+                        <IconTooltip icon={<CashFlowIcon />} text="תזרים" />
+                    </div>
+                    <div className={styles.contactsSidebarItem} onClick={() => { window.location.href = `/${locale}/tags`; }}>
+                        <IconTooltip icon={<Settings />} text="הגדרות" />
+                    </div>
+                </div>
+            </nav>
+            <div className={styles.contactsSubSidebar}>
+                {onLogout && (
+                    <button onClick={onLogout} className={styles.contactsLogoutButton}>
+                        יציאה מהמערכת
+                    </button>
+                )}
+                <div className={styles.contactsSubSidebarMenu}>
+                    <span className={`${styles.contactsSubSidebarItem} ${styles.active} table-2`}>
+                        תזרים מזומנים
                     </span>
                 </div>
             </div>
@@ -615,6 +659,7 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
     const isDonationScreen = pathname?.includes('/donation-screen');
     const isContactsPage = pathname?.includes('/contacts');
     const isTagsPage = pathname?.includes('/tags');
+    const isCashFlowPage = pathname?.includes('/cash-flow');
     const isRTL = locale === 'he';
 
     return (
@@ -637,6 +682,17 @@ const DashLayoutContent = observer(function DashLayoutContent({ children }) {
                 // בדף תגיות - אותו סיידבר כמו אנשי קשר, עם ניווט לקמפיינים/אנשי קשר/הגדרות
                 <div className={`${styles.contactsLayoutWrapper} ${isRTL ? styles.rtl : ''}`}>
                     <TagsSidebar locale={locale} isRTL={isRTL} onLogout={() => {
+                        setGlobalLoading(true);
+                        handleLogout();
+                    }} />
+                    <main className={styles.contactsMain}>
+                        {children}
+                    </main>
+                </div>
+            ) : isCashFlowPage ? (
+                // בדף תזרים - אותו סיידבר כמו אנשי קשר, עם תזרים פעיל
+                <div className={`${styles.contactsLayoutWrapper} ${isRTL ? styles.rtl : ''}`}>
+                    <CashFlowSidebar locale={locale} isRTL={isRTL} onLogout={() => {
                         setGlobalLoading(true);
                         handleLogout();
                     }} />

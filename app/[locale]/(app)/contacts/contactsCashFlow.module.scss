@@ -1,0 +1,496 @@
+// Contacts Cash Flow — monthly forecast chart with layered comparisons
+
+.cashFlowWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.cashFlowLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: var(--Gray-Blue-300, #6E99EC);
+  font-family: var(--font-ping);
+  font-size: 14px;
+}
+
+// ---- Header — three side-by-side cards (year selector + two metric cards) ----
+.cashFlowHeader {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+}
+
+.cashFlowYearCard,
+.cashFlowMetricCard {
+  background: var(--Surface-02, #edf5fd);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.cashFlowYearCard {
+  padding: 12px 18px;
+}
+
+.cashFlowMetricCard {
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 22px;
+  min-width: 200px;
+}
+
+.cashFlowYearSelector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.cashFlowYearArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  transition: all 0.15s ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover {
+    background: #fff;
+    color: var(--Gray-Blue-700, #1B3879);
+  }
+}
+
+.cashFlowYearValue {
+  font-family: var(--font-ping);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--Gray-Blue-700, #1B3879);
+  line-height: 1;
+  padding: 2px 0;
+}
+
+.cashFlowSummaryLabel {
+  font-family: var(--font-ping);
+  font-size: 12px;
+  color: var(--Gray-Blue-400, #5A78B0);
+}
+
+.cashFlowSummaryValue {
+  font-family: var(--font-ping);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--Gray-Blue-700, #1B3879);
+}
+
+// ---- Layers row (single line, scrollable, with fixed controls at end) ----
+.cashFlowLayersRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.cashFlowLayersListScroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  // Hide native scrollbar so the chip row aligns perfectly with the fixed controls.
+  // Horizontal scroll still works with shift+wheel, trackpad or touch.
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+.cashFlowFixedControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cashFlowLayerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  border-radius: 999px;
+  font-family: var(--font-ping);
+  font-size: 13px;
+  color: var(--Gray-Blue-700, #1B3879);
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(27, 56, 121, 0.08);
+  }
+}
+
+.cashFlowLayerDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cashFlowLayerLabel {
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cashFlowLayerTotal {
+  font-weight: 600;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  padding-inline-start: 6px;
+  border-inline-start: 1px solid var(--Gray-Blue-100, #E2EAF7);
+}
+
+.cashFlowLayerRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--Gray-Blue-100, #E2EAF7);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  padding: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--Gray-Blue-300, #6E99EC);
+    color: #fff;
+  }
+}
+
+// ---- Add Layer button + popup ----
+.cashFlowAddLayerWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.cashFlowAddLayerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--Surface-02, #edf5fd);
+  border: 1px dashed var(--Gray-Blue-300, #6E99EC);
+  border-radius: 999px;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  font-family: var(--font-ping);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #fff;
+    border-style: solid;
+    color: var(--Gray-Blue-700, #1B3879);
+  }
+}
+
+.cashFlowAddLayerMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  z-index: 50;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(27, 56, 121, 0.12);
+}
+
+.cashFlowAddLayerTitle {
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--Gray-Blue-700, #1B3879);
+}
+
+.cashFlowAddLayerLabel {
+  font-family: var(--font-ping);
+  font-size: 12px;
+  color: var(--Gray-Blue-400, #5A78B0);
+  margin-top: 4px;
+}
+
+.cashFlowSelect {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  border-radius: 8px;
+  background: var(--Surface-01, #F6F9FC);
+  font-family: var(--font-ping);
+  font-size: 13px;
+  color: var(--Gray-Blue-700, #1B3879);
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--Gray-Blue-300, #6E99EC);
+  }
+}
+
+.cashFlowAddLayerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cashFlowAddLayerCancel,
+.cashFlowAddLayerConfirm {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: var(--font-ping);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.cashFlowAddLayerCancel {
+  background: var(--Surface-02, #edf5fd);
+  color: var(--Gray-Blue-500, #3F5D9E);
+
+  &:hover { background: var(--Gray-Blue-100, #E2EAF7); }
+}
+
+.cashFlowAddLayerConfirm {
+  background: var(--Gray-Blue-700, #1B3879);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #0C4AD5;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// ---- Chart type switcher (segmented control) ----
+.cashFlowChartTypeSwitcher {
+  display: inline-flex;
+  background: var(--Surface-02, #edf5fd);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.cashFlowChartTypeBtn {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-family: var(--font-ping);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover:not(.cashFlowChartTypeBtnActive) {
+    color: var(--Gray-Blue-700, #1B3879);
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.cashFlowChartTypeBtnActive {
+  background: #fff;
+  color: var(--Gray-Blue-700, #1B3879);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(27, 56, 121, 0.08);
+}
+
+// ---- Chart navigation ----
+.cashFlowChartNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 0;
+  flex-wrap: wrap;
+}
+
+.cashFlowGranularitySwitcher {
+  display: inline-flex;
+  background: var(--Surface-02, #edf5fd);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  margin-inline-end: 8px;
+}
+
+.cashFlowGranularityBtn {
+  padding: 5px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  font-family: var(--font-ping);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--Gray-Blue-500, #3F5D9E);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover:not(.cashFlowGranularityBtnActive) {
+    color: var(--Gray-Blue-700, #1B3879);
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.cashFlowGranularityBtnActive {
+  background: #fff;
+  color: var(--Gray-Blue-700, #1B3879);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(27, 56, 121, 0.08);
+}
+
+.cashFlowChartNavBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--Surface-02, #edf5fd);
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  color: var(--Gray-Blue-700, #1B3879);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #fff;
+    border-color: var(--Gray-Blue-300, #6E99EC);
+    color: #0C4AD5;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.cashFlowChartRange {
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--Gray-Blue-700, #1B3879);
+  min-width: 160px;
+  text-align: center;
+}
+
+.cashFlowChartNavToday {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  color: var(--Gray-Blue-500, #3F5D9E);
+  font-family: var(--font-ping);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--Surface-02, #edf5fd);
+    color: var(--Gray-Blue-700, #1B3879);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+// ---- Chart ----
+.cashFlowChartContainer {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
+  border-radius: 16px;
+  cursor: grab;
+  touch-action: pan-y; // allow vertical page scroll but capture horizontal drag
+  user-select: none;
+
+  canvas {
+    user-select: none;
+  }
+}
+
+.cashFlowChartDragging {
+  cursor: grabbing;
+}
+
+.cashFlowEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  background: var(--Surface-02, #edf5fd);
+  border-radius: 16px;
+  color: var(--Gray-Blue-400, #5A78B0);
+  font-family: var(--font-ping);
+  font-size: 14px;
+}

@@ -735,6 +735,17 @@
   transition: all 0.2s;
   cursor: pointer;
 
+  // Normalise icon size — small-viewBox SVGs (24×24) need to be rendered larger
+  // so their visible content matches the 36×36 icons.
+  & > div > svg {
+    width: 36px;
+    height: 36px;
+  }
+  & > div > svg[viewBox="0 0 24 24"] {
+    width: 44px;
+    height: 44px;
+  }
+
   &:hover {
     color: var(--Icon-able-Icon, #0C4AD5);
   }

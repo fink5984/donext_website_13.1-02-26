@@ -102,6 +102,7 @@ export async function middleware(request) {
       '/api/tags',             // contacts page tags — uses clientId
       '/api/admin',            // admin routes do their own JWT auth internally
       '/api/donors/export-pdf-server', // PDF export — used from contacts page (no campaignId in token)
+      '/api/donations/cash-flow',      // cash-flow forecast — used from contacts page (per client, not campaign)
     ];
 
     // בדיקה אם זה endpoint ציבורי

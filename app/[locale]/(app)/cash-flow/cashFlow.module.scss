@@ -1,0 +1,15 @@
+// Cash-flow page-level layout overrides.
+// The shared contacts wrapper uses flex: 1 to fill the viewport (so the
+// contacts table can scroll). On the cash-flow page the content has a
+// finite height, so we let the white card grow to its content only.
+
+.contentWrapper {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 24px;
+  margin: 0 32px;
+  background: var(--button-disable, #ffffff);
+  border-radius: 40px 0 0 0;
+  display: flex;
+  flex-direction: column;
+}
