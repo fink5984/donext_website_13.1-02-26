@@ -52,6 +52,21 @@ export async function POST(request) {
                     where: { id: { in: personIdsToSoftDelete } },
                     data: { active: false }
                 });
+
+                // Delete Donor records WITHOUT donations (campaign connections with no history to preserve)
+                const donorsWithoutDonations = await tx.donor.findMany({
+                    where: {
+                        personId: { in: personIdsToSoftDelete },
+                        donations: { none: {} }
+                    },
+                    select: { id: true }
+                });
+                const donorIdsWithoutDonations = donorsWithoutDonations.map(d => d.id);
+                if (donorIdsWithoutDonations.length > 0) {
+                    await tx.donorNote.deleteMany({ where: { donorId: { in: donorIdsWithoutDonations } } });
+                    await tx.questionAnswer.deleteMany({ where: { donorId: { in: donorIdsWithoutDonations } } });
+                    await tx.donor.deleteMany({ where: { id: { in: donorIdsWithoutDonations } } });
+                }
             }
 
             if (personIdsToHardDelete.length > 0) {

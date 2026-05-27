@@ -179,9 +179,23 @@ export async function DELETE(request, { params }) {
 
         if (donorWithDonations) {
             // Has donations + force=true → soft delete only
-            await prisma.person.update({
-                where: { id: personId },
-                data: { active: false },
+            await prisma.$transaction(async (tx) => {
+                await tx.person.update({
+                    where: { id: personId },
+                    data: { active: false },
+                });
+
+                // Delete Donor records WITHOUT donations (no history to preserve)
+                const donorsWithoutDonations = await tx.donor.findMany({
+                    where: { personId, donations: { none: {} } },
+                    select: { id: true }
+                });
+                const donorIdsWithoutDonations = donorsWithoutDonations.map(d => d.id);
+                if (donorIdsWithoutDonations.length > 0) {
+                    await tx.donorNote.deleteMany({ where: { donorId: { in: donorIdsWithoutDonations } } });
+                    await tx.questionAnswer.deleteMany({ where: { donorId: { in: donorIdsWithoutDonations } } });
+                    await tx.donor.deleteMany({ where: { id: { in: donorIdsWithoutDonations } } });
+                }
             });
         } else {
             // No donations → hard delete with full cascade
