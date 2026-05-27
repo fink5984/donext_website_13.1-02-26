@@ -18,6 +18,8 @@ import {
 } from 'chart.js';
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import DoNextLoader from '@/app/components/DoNextLoader';
+import { useAppContext } from '@/app/components/AppContext';
+import { getCampaignCurrencySymbol } from '@/lib/currencies';
 import UpIcon from '@/app/icons/up.svg';
 import DownIcon from '@/app/icons/down.svg';
 import styles from './contactsCashFlow.module.scss';
@@ -54,17 +56,11 @@ const LAYER_PALETTE = [
   { stroke: '#10B981', fill: 'rgba(16, 185, 129, 0.12)' },
 ];
 
-function formatCurrency(value, locale) {
-  const n = Number(value) || 0;
-  try {
-    return new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-      style: 'currency',
-      currency: 'ILS',
-      maximumFractionDigits: 0,
-    }).format(n);
-  } catch {
-    return `₪${Math.round(n).toLocaleString()}`;
-  }
+function formatCurrency(value, locale, symbol = '₪') {
+  const n = Math.round(Number(value) || 0);
+  const formatted = n.toLocaleString(locale === 'he' ? 'he-IL' : 'en-US');
+  // In Hebrew (RTL) the symbol goes after the number; in English it goes before.
+  return locale === 'he' ? `${formatted} ${symbol}` : `${symbol}${formatted}`;
 }
 
 function shortMonthLabel(year, month, locale) {
@@ -297,6 +293,8 @@ export default function ContactsCashFlow({ clientId }) {
   const tPayment = useTranslations('donations.paymentMethods');
   const locale = useLocale();
   const isRTL = locale === 'he';
+  const { campaign } = useAppContext();
+  const currencySymbol = getCampaignCurrencySymbol(campaign);
 
   const translatePaymentMethod = useCallback((key) => {
     if (!key) return '';
@@ -493,7 +491,7 @@ export default function ContactsCashFlow({ clientId }) {
         ticks: {
           font: { family: 'var(--font-ping)', size: 11 },
           color: '#5A78B0',
-          callback: (v) => formatCurrency(v, locale),
+          callback: (v) => formatCurrency(v, locale, currencySymbol),
         },
       },
     };
@@ -565,7 +563,7 @@ export default function ContactsCashFlow({ clientId }) {
                 const ds = ctx.dataset;
                 const value = ctx.parsed.y || 0;
                 const count = ds.counts?.[ctx.dataIndex] || 0;
-                const amount = formatCurrency(value, locale);
+                const amount = formatCurrency(value, locale, currencySymbol);
                 const donationsLabel = t('cashFlowTooltipDonations', { count });
                 return `${ds.label}: ${amount}  •  ${donationsLabel}`;
               },
@@ -576,7 +574,7 @@ export default function ContactsCashFlow({ clientId }) {
         scales: commonScales,
       },
     };
-  }, [chartType, granularity, periods, layerProjections, isRTL, locale, t]);
+  }, [chartType, granularity, periods, layerProjections, isRTL, locale, currencySymbol, t]);
 
   // Year stats use the "total" layer (all matching donations)
   const yearStats = useMemo(() => {
@@ -654,11 +652,11 @@ export default function ContactsCashFlow({ clientId }) {
         </div>
         <div className={styles.cashFlowMetricCard}>
           <span className={styles.cashFlowSummaryLabel}>{t('cashFlowTotalYear')}</span>
-          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.total, locale)}</span>
+          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.total, locale, currencySymbol)}</span>
         </div>
         <div className={styles.cashFlowMetricCard}>
           <span className={styles.cashFlowSummaryLabel}>{t('cashFlowBalance')}</span>
-          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.balance, locale)}</span>
+          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.balance, locale, currencySymbol)}</span>
         </div>
       </div>
 
@@ -673,11 +671,11 @@ export default function ContactsCashFlow({ clientId }) {
             <div
               key={lp.layer.id}
               className={styles.cashFlowLayerChip}
-              title={`${lp.label}: ${formatCurrency(lp.chipTotal, locale)}`}
+              title={`${lp.label}: ${formatCurrency(lp.chipTotal, locale, currencySymbol)}`}
             >
               <span className={styles.cashFlowLayerDot} style={{ background: lp.palette.stroke }} />
               <span className={styles.cashFlowLayerLabel}>{lp.label}</span>
-              <span className={styles.cashFlowLayerTotal}>{formatCurrency(lp.chipTotal, locale)}</span>
+              <span className={styles.cashFlowLayerTotal}>{formatCurrency(lp.chipTotal, locale, currencySymbol)}</span>
               {lp.layer.id !== 'total' && (
                 <button
                   type="button"
