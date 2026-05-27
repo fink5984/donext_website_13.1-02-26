@@ -20,17 +20,21 @@ import UpIcon from '@/app/icons/up.svg';
 import DownIcon from '@/app/icons/down.svg';
 import styles from './contactsCashFlow.module.scss';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-);
+// Register Chart.js components only in the browser — `canvas` is not
+// available during SSR/build, so importing/registering on the server crashes.
+if (typeof window !== 'undefined') {
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler,
+  );
+}
 
 const FORECAST_MONTHS = 12;
 
