@@ -9,6 +9,8 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  LineController,
+  BarController,
   Title,
   Tooltip,
   Legend,
@@ -29,6 +31,9 @@ if (typeof window !== 'undefined') {
     PointElement,
     LineElement,
     BarElement,
+    // Controllers are required when using the generic <Chart type="..."> component
+    LineController,
+    BarController,
     Title,
     Tooltip,
     Legend,
