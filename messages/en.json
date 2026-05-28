@@ -261,6 +261,7 @@
     "cashFlowChartLine": "Line",
     "cashFlowChartBar": "Bar",
     "cashFlowBalance": "Balance",
+    "cashFlowLifetimeTotal": "Total Donations",
     "cashFlowToday": "Today",
     "cashFlowGranularity": "Granularity",
     "cashFlowGranularityMonthly": "Monthly",

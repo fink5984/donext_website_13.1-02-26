@@ -206,15 +206,16 @@ function computeDonationsYearRange(donations) {
   return { minOffset: minYear ?? 0, maxOffset: maxYear ?? 0 };
 }
 
-// Total + remaining-balance for a target calendar year.
-// Total rules:
-//   current year → annualized: monthly × min(12, numberOfPayments or 12 for unlimited)
-//                  (treats every active donation as if it ran for the full year)
-//   future/past year → createdAt-based: count months that actually fall inside that year
-// Balance rules (from the user):
-//   past year   → balance = 0
-//   current year → balance = current month to Dec (limited by donation active range)
-//   future year → balance = total for that year
+// Total + remaining-balance for a target calendar year — depends only on the
+// selectedYear param, not on the chart window. Uses each donation's actual
+// active range (createdAt + numberOfPayments / 99-month horizon for unlimited).
+//
+// Total: monthly × months of the donation that fall inside the target year
+//        (Jan–Dec of targetYear).
+// Balance:
+//   past year   → 0
+//   current year → only months from the current month to Dec
+//   future year → equal to the year's total (everything is still ahead)
 function computeYearStats(donations, targetYear) {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -230,27 +231,22 @@ function computeYearStats(donations, targetYear) {
     if (monthly <= 0) continue;
     const { startOffset, endOffset } = donationActiveRange(d, now);
 
-    if (targetYear === currentYear) {
-      // Annualized total: independent of createdAt — assumes donation runs full year (or its plan length)
-      const planLength = d.isUnlimited ? 12 : (Number(d.numberOfPayments) || 12);
-      total += monthly * Math.min(12, planLength);
+    // Months of this donation that land inside the target calendar year
+    const aStart = Math.max(startOffset, yearStartOffset);
+    const aEnd = Math.min(endOffset - 1, yearEndOffset);
+    const activeMonths = Math.max(0, aEnd - aStart + 1);
+    total += monthly * activeMonths;
 
-      // Balance: createdAt-aware, current month to Dec
+    if (targetYear > currentYear) {
+      balance += monthly * activeMonths;
+    } else if (targetYear === currentYear) {
+      // Balance: only months from current month (offset 0) to Dec
       const balStart = Math.max(startOffset, 0);
       const balEnd = Math.min(endOffset - 1, 11 - currentMonth);
       const balanceMonths = Math.max(0, balEnd - balStart + 1);
       balance += monthly * balanceMonths;
-    } else {
-      // Past or future year — createdAt-based, count actual active months in that year
-      const aStart = Math.max(startOffset, yearStartOffset);
-      const aEnd = Math.min(endOffset - 1, yearEndOffset);
-      const activeMonths = Math.max(0, aEnd - aStart + 1);
-      total += monthly * activeMonths;
-      if (targetYear > currentYear) {
-        balance += monthly * activeMonths;
-      }
-      // past year → balance stays 0
     }
+    // past year → balance stays 0
   }
   return { total, balance };
 }
@@ -449,10 +445,10 @@ export default function ContactsCashFlow({ clientId }) {
       const { series, counts } = granularity === 'yearly'
         ? projectDonationsForYearWindow(filtered, chartWindowStart, WINDOW_SIZE)
         : projectDonationsForWindow(filtered, chartWindowStart, WINDOW_SIZE);
-      const windowTotal = series.reduce((s, v) => s + v, 0);
-      // For the fixed "total" chip we show lifetime expected amount (all years);
-      // other layer chips show the current chart-window total so the chip matches what's visible.
-      const chipTotal = layer.type === 'total' ? computeLifetimeTotal(filtered) : windowTotal;
+      // All layer chips — including the fixed "total" — show the sum of the
+      // periods currently visible in the chart, so chip values stay consistent
+      // with the lines/bars on screen.
+      const chipTotal = series.reduce((s, v) => s + v, 0);
       const label = layer.label || (layer.type === 'total' ? t('cashFlowTotal') : '');
       return { layer, palette, series, counts, chipTotal, label, filtered };
     });
@@ -581,6 +577,9 @@ export default function ContactsCashFlow({ clientId }) {
     return computeYearStats(donations, selectedYear);
   }, [donations, selectedYear]);
 
+  // Lifetime total — sum across all donations from first to last (independent of year)
+  const lifetimeTotal = useMemo(() => computeLifetimeTotal(donations), [donations]);
+
   const hasAnyData = donations.length > 0;
   const currentYear = new Date().getFullYear();
 
@@ -629,34 +628,42 @@ export default function ContactsCashFlow({ clientId }) {
   return (
     <div className={styles.cashFlowWrapper} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={styles.cashFlowHeader}>
-        <div className={styles.cashFlowYearCard}>
-          <div className={styles.cashFlowYearSelector}>
-            <button
-              type="button"
-              className={styles.cashFlowYearArrow}
-              onClick={() => setSelectedYear(y => y + 1)}
-              aria-label="next year"
-            >
-              <UpIcon width={14} height={14} />
-            </button>
-            <span className={styles.cashFlowYearValue}>{selectedYear}</span>
-            <button
-              type="button"
-              className={styles.cashFlowYearArrow}
-              onClick={() => setSelectedYear(y => y - 1)}
-              aria-label="previous year"
-            >
-              <DownIcon width={14} height={14} />
-            </button>
+        <div className={styles.cashFlowSummaryCard}>
+          <div className={styles.cashFlowSummarySection}>
+            <div className={styles.cashFlowYearSelector}>
+              <button
+                type="button"
+                className={styles.cashFlowYearArrow}
+                onClick={() => setSelectedYear(y => y + 1)}
+                aria-label="next year"
+              >
+                <UpIcon width={14} height={14} />
+              </button>
+              <span className={styles.cashFlowYearValue}>{selectedYear}</span>
+              <button
+                type="button"
+                className={styles.cashFlowYearArrow}
+                onClick={() => setSelectedYear(y => y - 1)}
+                aria-label="previous year"
+              >
+                <DownIcon width={14} height={14} />
+              </button>
+            </div>
+          </div>
+          <div className={styles.cashFlowSummaryDivider} />
+          <div className={styles.cashFlowSummarySection}>
+            <span className={styles.cashFlowSummaryLabel}>{t('cashFlowTotalYear')}</span>
+            <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.total, locale, currencySymbol)}</span>
+          </div>
+          <div className={styles.cashFlowSummaryDivider} />
+          <div className={styles.cashFlowSummarySection}>
+            <span className={styles.cashFlowSummaryLabel}>{t('cashFlowBalance')}</span>
+            <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.balance, locale, currencySymbol)}</span>
           </div>
         </div>
-        <div className={styles.cashFlowMetricCard}>
-          <span className={styles.cashFlowSummaryLabel}>{t('cashFlowTotalYear')}</span>
-          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.total, locale, currencySymbol)}</span>
-        </div>
-        <div className={styles.cashFlowMetricCard}>
-          <span className={styles.cashFlowSummaryLabel}>{t('cashFlowBalance')}</span>
-          <span className={styles.cashFlowSummaryValue}>{formatCurrency(yearStats.balance, locale, currencySymbol)}</span>
+        <div className={styles.cashFlowLifetimeCard}>
+          <span className={styles.cashFlowSummaryLabel}>{t('cashFlowLifetimeTotal')}</span>
+          <span className={styles.cashFlowSummaryValue}>{formatCurrency(lifetimeTotal, locale, currencySymbol)}</span>
         </div>
       </div>
 

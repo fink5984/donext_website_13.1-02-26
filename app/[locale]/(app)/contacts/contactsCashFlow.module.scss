@@ -21,35 +21,51 @@
   font-size: 14px;
 }
 
-// ---- Header — three side-by-side cards (year selector + two metric cards) ----
+// ---- Header — unified summary card (year + annual + balance) and a separate lifetime card ----
 .cashFlowHeader {
   display: flex;
   align-items: stretch;
+  justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
   padding-bottom: 8px;
 }
 
-.cashFlowYearCard,
-.cashFlowMetricCard {
+.cashFlowSummaryCard {
+  display: inline-flex;
+  align-items: stretch;
   background: var(--Surface-02, #edf5fd);
   border-radius: 16px;
+  padding: 6px 4px;
+  gap: 0;
+}
+
+.cashFlowSummarySection {
   display: flex;
-  align-items: center;
-}
-
-.cashFlowYearCard {
-  padding: 12px 18px;
-}
-
-.cashFlowMetricCard {
-  flex: 1;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 6px;
-  padding: 14px 22px;
-  min-width: 200px;
+  gap: 2px;
+  padding: 6px 14px;
+}
+
+.cashFlowSummaryDivider {
+  width: 1px;
+  background: rgba(110, 153, 236, 0.25);
+  align-self: stretch;
+  flex-shrink: 0;
+  margin: 6px 0;
+}
+
+.cashFlowLifetimeCard {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 16px;
+  background: var(--Surface-02, #edf5fd);
+  border-radius: 16px;
 }
 
 .cashFlowYearSelector {
@@ -213,106 +229,152 @@
 }
 
 .cashFlowAddLayerButton {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: var(--Surface-02, #edf5fd);
-  border: 1px dashed var(--Gray-Blue-300, #6E99EC);
-  border-radius: 999px;
-  color: var(--Gray-Blue-500, #3F5D9E);
+  height: 32px;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border: 1px dashed #6E99EC;
+  border-radius: 24px;
+  color: #6E99EC;
   font-family: var(--font-ping);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
 
   &:hover {
-    background: #fff;
     border-style: solid;
-    color: var(--Gray-Blue-700, #1B3879);
+    border-color: #0C4AD5;
+    color: #0C4AD5;
   }
 }
 
+// Matches the system's chip-dropdown panel (FilterChipDropdown)
 .cashFlowAddLayerMenu {
+  box-sizing: border-box;
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 4px);
   inset-inline-end: 0;
-  z-index: 50;
+  z-index: 100;
   width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  background: #fff;
-  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(27, 56, 121, 0.12);
+  gap: 12px;
+  padding: 16px 14px 12px;
+  background: #FFFFFF;
+  border: 1px solid #0C4AD5;
+  border-radius: 16px;
+  box-shadow:
+    0px 4px 12px rgba(168, 188, 230, 0.15),
+    0px 2px 6px rgba(168, 188, 230, 0.10);
 }
 
 .cashFlowAddLayerTitle {
   font-family: var(--font-ping);
   font-size: 14px;
   font-weight: 600;
-  color: var(--Gray-Blue-700, #1B3879);
+  line-height: 1.2;
+  color: #0C4AD5;
+  text-align: center;
 }
 
 .cashFlowAddLayerLabel {
   font-family: var(--font-ping);
   font-size: 12px;
-  color: var(--Gray-Blue-400, #5A78B0);
-  margin-top: 4px;
+  font-weight: 400;
+  color: #6E99EC;
+  margin-top: 2px;
 }
 
 .cashFlowSelect {
+  box-sizing: border-box;
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--Gray-Blue-100, #E2EAF7);
-  border-radius: 8px;
-  background: var(--Surface-01, #F6F9FC);
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #6E99EC;
+  border-radius: 24px;
+  background: #FFFFFF;
   font-family: var(--font-ping);
-  font-size: 13px;
-  color: var(--Gray-Blue-700, #1B3879);
+  font-size: 14px;
+  color: #0C4AD5;
   cursor: pointer;
+  appearance: none;
+  // Custom dropdown caret in brand blue
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='%236E99EC' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: left 14px center;
+  padding-inline-start: 14px;
+  padding-inline-end: 32px;
+
+  :global([dir="ltr"]) & {
+    background-position: right 14px center;
+  }
 
   &:focus {
     outline: none;
-    border-color: var(--Gray-Blue-300, #6E99EC);
+    border-color: #0C4AD5;
   }
 }
 
 .cashFlowAddLayerActions {
+  box-sizing: border-box;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.cashFlowAddLayerCancel,
-.cashFlowAddLayerConfirm {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-family: var(--font-ping);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #C5D7F8;
 }
 
 .cashFlowAddLayerCancel {
-  background: var(--Surface-02, #edf5fd);
-  color: var(--Gray-Blue-500, #3F5D9E);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #FFFFFF;
+  border: 1px solid #6E99EC;
+  border-radius: 24px;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: #6E99EC;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 
-  &:hover { background: var(--Gray-Blue-100, #E2EAF7); }
+  &:hover {
+    border-color: #0C4AD5;
+    color: #0C4AD5;
+  }
 }
 
 .cashFlowAddLayerConfirm {
-  background: var(--Gray-Blue-700, #1B3879);
-  color: #fff;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #0C4AD5;
+  border: none;
+  border-radius: 24px;
+  font-family: var(--font-ping);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: #0C4AD5;
+    background: #0a3eb3;
   }
 
   &:disabled {
