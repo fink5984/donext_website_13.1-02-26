@@ -542,6 +542,21 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
 
     const fulfillCommitmentInDB = async ({ isPartial, fulfillAmt, remainingAmount, paymentMethod, transactionId }) => {
         try {
+            // Preserve the number of payments from the form (initialized from the original
+            // commitment and editable by the user via PaymentFrequency).
+            // CASH always collapses to a single payment.
+            const fulfillIsUnlimited = paymentMethod === 'CASH' ? false : Boolean(formData.isUnlimited);
+            const fulfillNumberOfPayments = fulfillIsUnlimited
+                ? null
+                : (paymentMethod === 'CASH' ? 1 : (parseInt(formData.numberOfPayments) || 1));
+            // In monthly campaigns fulfillAmt already represents the monthly amount.
+            // In project campaigns fulfillAmt is the total — split it across the installments.
+            const fulfillMonthlyAmount = isMonthlyCampaign
+                ? fulfillAmt
+                : (fulfillNumberOfPayments && fulfillNumberOfPayments > 0
+                    ? fulfillAmt / fulfillNumberOfPayments
+                    : fulfillAmt);
+
             // Step 1 (partial only): Update the original commitment to the remaining amount
             if (isPartial) {
                 await fetchWithAuth('/api/donations', {
@@ -567,9 +582,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 body: JSON.stringify({
                     donorId: selectedDonor.id,
                     donationId: isPartial ? undefined : donation.id,
-                    monthlyAmount: fulfillAmt,
-                    numberOfPayments: 1,
-                    isUnlimited: false,
+                    monthlyAmount: fulfillMonthlyAmount,
+                    numberOfPayments: fulfillNumberOfPayments,
+                    isUnlimited: fulfillIsUnlimited,
                     paymentMethod: paymentMethod,
                     hasPaymentMethod: true,
                     transactionId: transactionId || null,
