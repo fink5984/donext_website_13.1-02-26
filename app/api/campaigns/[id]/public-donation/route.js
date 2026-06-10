@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
+import { toBigIntOrNull } from '@/lib/utils/bigint';
 
 // 9 ספרות אחרונות של מספר טלפון - להשוואה עם המיקרו-פורמטים השונים שיכולים להישמר במסד
 function getLast9Digits(phone) {
@@ -136,9 +137,7 @@ export async function POST(request, { params }) {
 
         // אם הועבר transactionId (למשל מ-Nedarim Plus), נשמור אותו כ-externalDonationId כדי
         // שה-callback של ספק התשלום יזהה שהתרומה כבר נוצרה ולא ייצר כפילות.
-        const externalDonationId = transactionId
-            ? (Number.isFinite(parseInt(transactionId)) ? parseInt(transactionId) : null)
-            : null;
+        const externalDonationId = toBigIntOrNull(transactionId);
 
         // הגנה: אם תרומה עם אותו externalDonationId כבר קיימת לקמפיין, נחזיר אותה במקום ליצור חדשה.
         if (externalDonationId) {

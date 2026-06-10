@@ -10,7 +10,7 @@ const pixelArtWebhookSchema = z.object({
     monthly_amount: z.number().positive('monthly_amount חייב להיות מספר חיובי'),
     num_of_months: z.number().positive('num_of_months חייב להיות מספר חיובי'),
     event: z.enum(['created', 'updated'], { message: 'event חייב להיות created או updated' }),
-    external_donation_id: z.number().positive('external_donation_id חייב להיות מספר חיובי')
+    external_donation_id: z.number().int('external_donation_id חייב להיות מספר שלם').positive('external_donation_id חייב להיות מספר חיובי')
 });
 
 /**
@@ -73,7 +73,7 @@ export async function POST(request) {
                     numberOfPayments: num_of_months,
                     isUnlimited: false,
                     hasPaymentMethod: true, // כיון שהתשלום מטופל דרך PixelArt
-                    externalDonationId: external_donation_id,
+                    externalDonationId: BigInt(external_donation_id),
                     createdInSystem: 'LANDING_PAGE' // מסמן שהתרומה מגיעה מדף נחיתה
                 },
                 include: {
@@ -111,7 +111,7 @@ export async function POST(request) {
             // עדכון תרומה קיימת
             const existingDonation = await prisma.donation.findFirst({
                 where: {
-                    externalDonationId: external_donation_id,
+                    externalDonationId: BigInt(external_donation_id),
                     donorId: donor.id,
                     deleted_at: null
                 }

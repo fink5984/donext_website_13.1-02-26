@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { toBigIntOrNull } from '@/lib/utils/bigint';
 
 /**
  * Nedarim Plus / Merkaz Hatzedaka Callback Endpoint (per-campaign) v2
@@ -100,7 +101,7 @@ export async function POST(request, { params }) {
     console.log(`✅ Nedarim callback successful for campaign ${campaignId} (${resolvedPaymentMethod})`);
     console.log(`   Transaction ID: ${rawTransactionId}, Amount: ${Amount}, Month/Tashlumim: ${Tashlumim ?? Tashloumim ?? Month}`);  
 
-    const nedarimId = rawTransactionId ? parseInt(rawTransactionId) : null;
+    const nedarimId = toBigIntOrNull(rawTransactionId);
 
     // Check if donation already exists for this Nedarim transaction
     if (nedarimId) {

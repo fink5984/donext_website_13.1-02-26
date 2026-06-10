@@ -5,6 +5,7 @@ import { getCampaignId, getCurrentUserFromRequest, getOperatorId } from '@/lib/a
 import { z } from 'zod';
 import { sendToPixelArt } from './pixelart';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
+import { toBigIntOrNull } from '@/lib/utils/bigint';
 
 // פונקציה לקיבוץ תרומות לפי תורמים עם חישוב נכון לפי סוג קמפיין
 function groupDonationsByDonor(donations, campaign) {
@@ -873,9 +874,7 @@ export async function POST(request) {
 
             // אם נשלח transactionId (מתשלום Nedarim/מרכז הצדקה), שמור כ-externalDonationId.
             // זה מאפשר ל-callback לזהות שהתרומה כבר קיימת ולא ליצור כפילות.
-            const externalDonationId = transactionId
-                ? (Number.isFinite(parseInt(transactionId)) ? parseInt(transactionId) : null)
-                : null;
+            const externalDonationId = toBigIntOrNull(transactionId);
 
             // בדיקת כפילות: אם תרומה עם אותו externalDonationId כבר קיימת - החזר אותה
             if (externalDonationId) {
@@ -1109,7 +1108,7 @@ export async function POST(request) {
                     await prisma.donation.update({
                         where: { id: donation.id },
                         data: {
-                            externalDonationId: parseInt(pixelArtResult.donation.id)
+                            externalDonationId: toBigIntOrNull(pixelArtResult.donation.id)
                         }
                     });
                     console.log(`Successfully sent donation to PixelArt: ${campaign.pixelArtId}, donation_id: ${pixelArtResult.donation.id}`);

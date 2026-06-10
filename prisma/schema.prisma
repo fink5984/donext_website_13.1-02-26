@@ -349,7 +349,7 @@ model Donation {
   followUpDate       DateTime?             @map("follow_up_date") @db.Timestamp(6)
   dedication         String?               @map("dedication")
   paymentMethod      payment_method_enum?  @map("payment_method")
-  externalDonationId Int?                  @map("external_donation_id")
+  externalDonationId BigInt?               @map("external_donation_id")
   // Bevel payment tracking
   bevelCustKey       String?               @map("bevel_cust_key")
   bevelScheduleId    String?               @map("bevel_schedule_id")
