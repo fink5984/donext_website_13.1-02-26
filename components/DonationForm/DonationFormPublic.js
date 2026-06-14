@@ -813,6 +813,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                                     amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
                                     campaignId={campaignId}
                                     donorName={getDonorFullName()}
+                                    donorFirstName={selectedDonor?.firstName || ''}
+                                    donorLastName={selectedDonor?.lastName || ''}
                                     donorEmail={selectedDonor?.email || ''}
                                     donorPhone={selectedDonor?.phone || ''}
                                     numberOfPayments={formData.numberOfPayments}

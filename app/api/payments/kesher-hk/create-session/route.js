@@ -53,11 +53,14 @@ export async function POST(request) {
       campaignId,
       amount,
       donorName = '',
+      donorFirstName = '',
+      donorLastName = '',
       donorEmail = '',
       donorPhone = '',
       numberOfPayments,
       isMonthlyCampaign = false,
       source = 'BACKOFFICE',
+      returnOrigin,
     } = body;
 
     const campaignIdNum = parseInt(campaignId);
@@ -94,12 +97,20 @@ export async function POST(request) {
       paymentType: campaign.kesherHkPaymentType || 'Ragil',
     });
 
-    // Split donor name into first / last
+    // Prefer the donor's first/last name exactly as stored; only fall back to
+    // splitting the combined name when the separate fields are not provided
+    // (splitting mis-attributes multi-word first or last names).
     const nameParts = (donorName || '').trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const firstName = (donorFirstName || '').trim() || nameParts[0] || '';
+    const lastName = (donorLastName || '').trim() || nameParts.slice(1).join(' ') || '';
 
-    const origin = new URL(request.url).origin;
+    // The browser-supplied origin is the reliable public URL. Behind a reverse
+    // proxy new URL(request.url).origin can resolve to http://localhost:3000,
+    // which would point Kesher's success/failed redirects at the wrong host.
+    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = returnOrigin
+      || (forwardedHost ? `${forwardedProto}://${forwardedHost}` : new URL(request.url).origin);
     const returnBase = `${origin}/api/payments/kesher-hk/return`;
     // addactiondata round-trips back to us on success/failure so the bridge can
     // attribute the transaction to the right campaign / provider / source.

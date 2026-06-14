@@ -19,6 +19,8 @@ import styles from './NedarimPlusPayment.module.scss';
 const KesherHkPayment = forwardRef(({
   amount,
   donorName,
+  donorFirstName,
+  donorLastName,
   donorEmail,
   donorPhone,
   campaignId,
@@ -83,11 +85,14 @@ const KesherHkPayment = forwardRef(({
           campaignId,
           amount,
           donorName,
+          donorFirstName,
+          donorLastName,
           donorEmail,
           donorPhone,
           numberOfPayments,
           isMonthlyCampaign,
           source: usePublicApi ? 'LANDING_PAGE' : 'BACKOFFICE',
+          returnOrigin: typeof window !== 'undefined' ? window.location.origin : undefined,
         }),
       };
       const response = usePublicApi
@@ -104,7 +109,7 @@ const KesherHkPayment = forwardRef(({
       console.error('Error creating Kesher HK session:', error);
       setErrorMessage('שגיאה ביצירת דף התשלום');
     }
-  }, [isConfigured, campaignId, amount, donorName, donorEmail, donorPhone, numberOfPayments, isMonthlyCampaign, usePublicApi]);
+  }, [isConfigured, campaignId, amount, donorName, donorFirstName, donorLastName, donorEmail, donorPhone, numberOfPayments, isMonthlyCampaign, usePublicApi]);
 
   useEffect(() => {
     buildSession();
