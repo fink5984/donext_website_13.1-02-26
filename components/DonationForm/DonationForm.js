@@ -1107,6 +1107,11 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     // iframe, so when the payment succeeds we save the donation directly (the
     // charge already happened — no form-submit / validation gate needed).
     const kesherHkSavingRef = useRef(false);
+    // The form stays mounted between donations (only isOpen toggles), so reset the
+    // auto-save guard on each open — otherwise a successful save blocks the next one.
+    useEffect(() => {
+        if (isOpen) kesherHkSavingRef.current = false;
+    }, [isOpen]);
     const handleKesherHkSuccess = async (paymentResult) => {
         // In payment-method-edit (commitment fulfillment) the outer button stays
         // and drives the fulfill flow, so skip auto-save here.
