@@ -29,6 +29,9 @@ export async function middleware(request) {
       '/api/payments/pledger',
       '/api/payments/matbia',
       '/api/payments/ojc',
+      // Kesher HK: create-session (public donations) + return bridge (hit by
+      // Kesher's redirect with no auth token)
+      '/api/payments/kesher-hk',
       '/api/stripe/create-payment-intent',
       '/api/purim-landing',
       '/api/contact',
