@@ -252,6 +252,10 @@ model Campaign {
   merkazHatzedakaPaymentType String?          @default("Ragil") @map("merkaz_hatzedaka_payment_type")
   merkazHatzedakaHkDay     Int?               @default(1) @map("merkaz_hatzedaka_hk_day")
   merkazHatzedakaNote      String?            @map("merkaz_hatzedaka_note")
+  kesherHkPageId           String?            @map("kesher_hk_page_id")
+  kesherHkPaymentType      String?            @default("Ragil") @map("kesher_hk_payment_type") // Ragil or HK
+  kesherHkHkDay            Int?               @default(1) @map("kesher_hk_hk_day") // Day of month for HK (1-28)
+  kesherHkCurrency         Int?               @default(1) @map("kesher_hk_currency") // 1=ILS, 2=USD, 826=GBP, 978=EUR
   paymentMethodAccessLevels Json?             @map("payment_method_access_levels")
   showInvitationColumn Boolean?               @default(false) @map("show_invitation_column")
   dailyTasksEmailEnabled Boolean?             @default(false) @map("daily_tasks_email_enabled")
@@ -736,6 +740,7 @@ enum payment_method_enum {
   OJC           @map("OJC")
   NEDARIM_PLUS     @map("Nedarim Plus")
   MERKAZ_HATZEDAKA @map("Merkaz Hatzedaka")
+  KESHER_HK        @map("Kesher HK")
   COMMITMENT       @map("התחייבות")
 }
 

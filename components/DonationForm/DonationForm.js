@@ -9,6 +9,7 @@ import MatbiaPayment from './MatbiaPayment';
 import OJCPayment from './OJCPayment';
 import NedarimPlusPayment from './NedarimPlusPayment';
 import MerkazHatzedakaPayment from './MerkazHatzedakaPayment';
+import KesherHkPayment from './KesherHkPayment';
 import { observer } from 'mobx-react-lite';
 import { useAppContext } from '@/app/components/AppContext';
 import { AlertDialog, AlertDialogContent, AlertDialogPortal, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
@@ -182,7 +183,10 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     
     // Merkaz Hatzedaka ref
     const merkazHatzedakaPaymentRef = useRef(null);
-    
+
+    // Kesher HK ref
+    const kesherHkPaymentRef = useRef(null);
+
     // Context stored when fulfilling a commitment (used by payment callbacks)
     const fulfillmentContextRef = useRef(null);
 
@@ -786,6 +790,14 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         setIsLoading(false);
                     }
                     return;
+                } else if (actualProvider === 'KESHER_HK') {
+                    if (kesherHkPaymentRef.current) {
+                        const paymentResult = await kesherHkPaymentRef.current.handlePayment();
+                        await fulfillCommitmentInDB({ isPartial, fulfillAmt, remainingAmount, paymentMethod: 'KESHER_HK', transactionId: paymentResult?.transactionId || null });
+                    } else {
+                        setIsLoading(false);
+                    }
+                    return;
                 } else if (actualProvider === 'PLEDGER') {
                     if (pledgerPaymentRef.current) {
                         const success = await pledgerPaymentRef.current.handlePayment();
@@ -1044,6 +1056,35 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 setIsLoading(false);
                 return;
             }
+        } else if (actualProvider === 'KESHER_HK') {
+            // If Kesher HK is selected (via CREDIT with kesher_hk provider)
+            if (kesherHkPaymentRef.current) {
+                try {
+                    const paymentResult = await kesherHkPaymentRef.current.handlePayment();
+
+                    await saveDonation({
+                        donorId: selectedDonor.id,
+                        donationId: donation?.id,
+                        monthlyAmount: monthlyAmount,
+                        numberOfPayments: numberOfPayments,
+                        isUnlimited: formData.isUnlimited,
+                        paymentMethod: 'KESHER_HK',
+                        note: formData.note || null,
+                        followUpDate: formData.followUpDate || null,
+                        noteAssignee: formData.noteAssignee || null,
+                        hasPaymentMethod: true,
+                        mode: mode,
+                        transactionId: paymentResult?.transactionId || null
+                    });
+                } catch (error) {
+                    console.error('Kesher HK payment error:', error);
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                setIsLoading(false);
+                return;
+            }
         } else {
             // Regular donation without Stripe or Bevel
             await saveDonation({
@@ -1059,6 +1100,47 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 hasPaymentMethod: Boolean(formData.paymentMethod),
                 mode: mode
             });
+        }
+    };
+
+    // Auto-save for Kesher HK: the donor pays via Kesher's own button inside the
+    // iframe, so when the payment succeeds we save the donation directly (the
+    // charge already happened — no form-submit / validation gate needed).
+    const kesherHkSavingRef = useRef(false);
+    const handleKesherHkSuccess = async (paymentResult) => {
+        // In payment-method-edit (commitment fulfillment) the outer button stays
+        // and drives the fulfill flow, so skip auto-save here.
+        if (isEditingPaymentMethod) return;
+        if (kesherHkSavingRef.current) return;
+        if (!selectedDonor || !campaign) return;
+        kesherHkSavingRef.current = true;
+
+        const amount = formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount;
+        const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
+        const monthlyAmount = isMonthlyCampaign
+            ? amount
+            : (numberOfPayments && numberOfPayments > 0 ? amount / numberOfPayments : amount);
+
+        setIsLoading(true);
+        try {
+            await saveDonation({
+                donorId: selectedDonor.id,
+                donationId: donation?.id,
+                monthlyAmount,
+                numberOfPayments,
+                isUnlimited: formData.isUnlimited,
+                paymentMethod: 'KESHER_HK',
+                note: formData.note || null,
+                followUpDate: formData.followUpDate || null,
+                noteAssignee: formData.noteAssignee || null,
+                hasPaymentMethod: true,
+                mode: mode,
+                transactionId: paymentResult?.transactionId || null
+            });
+        } catch (error) {
+            console.error('Kesher HK auto-save error:', error);
+            setIsLoading(false);
+            kesherHkSavingRef.current = false;
         }
     };
 
@@ -1434,6 +1516,24 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                             />
                         )}
 
+                        {/* Show Kesher HK payment when CREDIT is selected and provider is kesher_hk */}
+                        {((formData.paymentMethod === 'KESHER_HK') || (formData.paymentMethod === 'CREDIT' && creditCardProvider === 'kesher_hk')) && (
+                            <KesherHkPayment
+                                ref={kesherHkPaymentRef}
+                                amount={paymentAmount}
+                                campaignId={campaign?.id}
+                                donorName={selectedDonor ? `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim() : ''}
+                                donorEmail={selectedDonor?.email || ''}
+                                donorPhone={selectedDonor?.phone || ''}
+                                numberOfPayments={formData.numberOfPayments}
+                                isMonthlyCampaign={isMonthlyCampaign}
+                                onSuccess={handleKesherHkSuccess}
+                                onError={(error) => {
+                                    console.error('Kesher HK payment error:', error);
+                                }}
+                            />
+                        )}
+
                         {/* Show Merkaz Hatzedaka payment when MERKAZ_HATZEDAKA is selected */}
                         {formData.paymentMethod === 'MERKAZ_HATZEDAKA' && (
                             <MerkazHatzedakaPayment
@@ -1662,6 +1762,10 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     </ValidationWrapper>
                     )}
                     
+                    {/* Kesher HK has its own "בצע עסקה" button inside the iframe and
+                        auto-saves on success, so the outer confirm button is hidden
+                        (except in edit mode, which is not a card-charging flow). */}
+                    {!(mode !== 'edit' && !isEditingPaymentMethod && ((formData.paymentMethod === 'KESHER_HK') || (formData.paymentMethod === 'CREDIT' && creditCardProvider === 'kesher_hk'))) && (
                     <Button
                         text={isLoading ? t('saving') : (isEditingPaymentMethod ? (t('updatePaymentMethod') || 'עדכן אמצעי תשלום') : (mode === 'edit' ? (t('updateDonor') || 'עדכן תורם') : t('confirmDonation')))}
                         primary
@@ -1680,6 +1784,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         disabledClick={isEditingPaymentMethod ? (isLoading || !formData.paymentMethod || formData.paymentMethod === 'COMMITMENT') : (mode === 'edit' ? (!selectedDonor || isLoading) : (!validationState.isValid || isLoading))}
                         loading={isLoading}
                     />
+                    )}
                 </AlertDialogContent>
             </AlertDialogPortal>
         </AlertDialog>

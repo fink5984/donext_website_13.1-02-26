@@ -142,6 +142,8 @@ export default function PaymentSettingsPage() {
     const [showNedarimPlusModal, setShowNedarimPlusModal] = useState(false);
     const [merkazHatzedakaKeys, setMerkazHatzedakaKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, note: '' });
     const [showMerkazHatzedakaModal, setShowMerkazHatzedakaModal] = useState(false);
+    const [kesherHkKeys, setKesherHkKeys] = useState({ pageId: '', paymentType: 'Ragil', hkDay: 1, currency: 1 });
+    const [showKesherHkModal, setShowKesherHkModal] = useState(false);
     const [methodAccessLevels, setMethodAccessLevels] = useState({});
     
     // Donary Integration State
@@ -244,6 +246,16 @@ export default function PaymentSettingsPage() {
                     });
                 }
                 
+                // Load Kesher HK keys if they exist
+                if (data.kesher_hk_page_id) {
+                    setKesherHkKeys({
+                        pageId: data.kesher_hk_page_id || '',
+                        paymentType: data.kesher_hk_payment_type || 'Ragil',
+                        hkDay: data.kesher_hk_hk_day || 1,
+                        currency: data.kesher_hk_currency || 1
+                    });
+                }
+
                 // Load Donary settings if they exist
                 if (data.donary_enabled || data.donary_api_key || data.donary_org_guid) {
                     setDonarySettings({
@@ -378,6 +390,14 @@ export default function PaymentSettingsPage() {
                 requestBody.bevel_api_pin = bevelKeys.apiPin || '';
             }
             
+            // Include Kesher HK keys if Kesher HK is the credit card provider
+            if (creditCardProvider === 'kesher_hk' && kesherHkKeys.pageId) {
+                requestBody.kesher_hk_page_id = kesherHkKeys.pageId || '';
+                requestBody.kesher_hk_payment_type = kesherHkKeys.paymentType || 'Ragil';
+                requestBody.kesher_hk_hk_day = kesherHkKeys.hkDay || 1;
+                requestBody.kesher_hk_currency = kesherHkKeys.currency || 1;
+            }
+
             // Include Nedarim Plus keys if Nedarim Plus is the credit card provider
             if (creditCardProvider === 'nedarim_plus' && nedarimPlusKeys.mosad) {
                 requestBody.nedarim_plus_mosad = nedarimPlusKeys.mosad || '';
@@ -613,6 +633,7 @@ export default function PaymentSettingsPage() {
                                                         if (creditCardProvider === 'stripe') setShowStripeModal(true);
                                                         else if (creditCardProvider === 'bevel') setShowBevelModal(true);
                                                         else if (creditCardProvider === 'nedarim_plus') setShowNedarimPlusModal(true);
+                                                        else if (creditCardProvider === 'kesher_hk') setShowKesherHkModal(true);
                                                     }}
                                                 >
                                                     <SettingsIcon className={styles.inlineSettingsIcon} style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }} />
@@ -631,6 +652,8 @@ export default function PaymentSettingsPage() {
                                                             setShowBevelModal(true);
                                                         } else if (provider === 'nedarim_plus' && !nedarimPlusKeys.mosad) {
                                                             setShowNedarimPlusModal(true);
+                                                        } else if (provider === 'kesher_hk' && !kesherHkKeys.pageId) {
+                                                            setShowKesherHkModal(true);
                                                         }
                                                     } else {
                                                         setEnabledMethods(prev => ({ ...prev, credit_card: false }));
@@ -642,6 +665,7 @@ export default function PaymentSettingsPage() {
                                                 <option value="stripe">Stripe</option>
                                                 <option value="bevel">Bevel / USAePay</option>
                                                 <option value="nedarim_plus">נדרים פלוס</option>
+                                                <option value="kesher_hk">קשר הו"ק</option>
                                             </select>
                                         </div>
                                     </div>
@@ -1406,6 +1430,105 @@ export default function PaymentSettingsPage() {
                 </div>
             )}
             
+            {/* Kesher HK Modal */}
+            {showKesherHkModal && (
+                <div className={styles.modal}>
+                    <div className={styles.modalContent}>
+                        <h3>הגדרת קשר הו"ק</h3>
+                        <p>כדי להפעיל את קשר הו"ק, יש להזין את פרטי דף התשלום:</p>
+
+                        <div className={styles.formGroup}>
+                            <label>מזהה דף תשלום (Page ID):</label>
+                            <input
+                                type="text"
+                                value={kesherHkKeys.pageId}
+                                onChange={(e) => setKesherHkKeys(prev => ({ ...prev, pageId: e.target.value }))}
+                                placeholder="לדוגמה: 12345"
+                                className={styles.input}
+                            />
+                            <small className={styles.helpText}>
+                                מזהה דף התשלום שקיבלת מקשר הו"ק. טוקן האבטחה נוצר אוטומטית לכל תשלום — אין צורך להזין אותו.
+                            </small>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>סוג תשלום:</label>
+                            <select
+                                value={kesherHkKeys.paymentType}
+                                onChange={(e) => setKesherHkKeys(prev => ({ ...prev, paymentType: e.target.value }))}
+                                className={styles.input}
+                            >
+                                <option value="Ragil">רגיל - תשלום בודד / תשלומים</option>
+                                <option value="HK">הו"ק - הוראת קבע (חיוב חודשי קבוע)</option>
+                            </select>
+                            <small className={styles.helpText}>
+                                רגיל: חיוב בודד או פריסה לתשלומים | הו"ק: חיוב חודשי קבוע
+                            </small>
+                        </div>
+
+                        {kesherHkKeys.paymentType === 'HK' && (
+                            <div className={styles.formGroup}>
+                                <label>יום חיוב בחודש:</label>
+                                <select
+                                    value={kesherHkKeys.hkDay}
+                                    onChange={(e) => setKesherHkKeys(prev => ({ ...prev, hkDay: parseInt(e.target.value) }))}
+                                    className={styles.input}
+                                >
+                                    {[...Array(28)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                    ))}
+                                </select>
+                                <small className={styles.helpText}>
+                                    באיזה יום בחודש לחייב את הכרטיס (1-28)
+                                </small>
+                            </div>
+                        )}
+
+                        <div className={styles.formGroup}>
+                            <label>מטבע:</label>
+                            <select
+                                value={kesherHkKeys.currency}
+                                onChange={(e) => setKesherHkKeys(prev => ({ ...prev, currency: parseInt(e.target.value) }))}
+                                className={styles.input}
+                            >
+                                <option value={1}>₪ שקל (ILS)</option>
+                                <option value={2}>$ דולר (USD)</option>
+                                <option value={978}>€ אירו (EUR)</option>
+                                <option value={826}>£ ליש"ט (GBP)</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.modalActions}>
+                            <button
+                                className={styles.cancelButton}
+                                onClick={() => {
+                                    setShowKesherHkModal(false);
+                                    if (!kesherHkKeys.pageId) {
+                                        setCreditCardProvider('');
+                                        setEnabledMethods(prev => ({ ...prev, credit_card: false }));
+                                    }
+                                }}
+                            >
+                                ביטול
+                            </button>
+                            <button
+                                className={styles.confirmButton}
+                                onClick={() => {
+                                    if (kesherHkKeys.pageId) {
+                                        setEnabledMethods(prev => ({ ...prev, credit_card: true }));
+                                        setShowKesherHkModal(false);
+                                    } else {
+                                        alert('יש למלא את מזהה דף התשלום');
+                                    }
+                                }}
+                            >
+                                שמור
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Donary Modal */}
             {showDonaryModal && (
                 <div className={styles.modal}>

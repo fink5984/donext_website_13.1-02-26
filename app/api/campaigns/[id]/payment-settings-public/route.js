@@ -47,6 +47,11 @@ export async function GET(request, context) {
                 merkazHatzedakaPaymentType: true,
                 merkazHatzedakaHkDay: true,
                 merkazHatzedakaNote: true,
+                // Kesher HK settings (public — page id only, NEVER the token)
+                kesherHkPageId: true,
+                kesherHkPaymentType: true,
+                kesherHkHkDay: true,
+                kesherHkCurrency: true,
                 paymentMethodAccessLevels: true
             }
         });
@@ -87,6 +92,11 @@ export async function GET(request, context) {
             merkaz_hatzedaka_payment_type: campaign.merkazHatzedakaPaymentType || 'Ragil',
             merkaz_hatzedaka_hk_day: campaign.merkazHatzedakaHkDay || 1,
             merkaz_hatzedaka_note: campaign.merkazHatzedakaNote || null,
+            // Kesher HK settings (public — page id only, token stays server-side)
+            kesher_hk_page_id: campaign.kesherHkPageId || null,
+            kesher_hk_payment_type: campaign.kesherHkPaymentType || 'Ragil',
+            kesher_hk_hk_day: campaign.kesherHkHkDay || 1,
+            kesher_hk_currency: campaign.kesherHkCurrency || 1,
             payment_method_access_levels: campaign.paymentMethodAccessLevels || {}
         });
 

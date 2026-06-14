@@ -19,6 +19,7 @@ import MatbiaPayment from './MatbiaPayment';
 import OJCPayment from './OJCPayment';
 import NedarimPlusPayment from './NedarimPlusPayment';
 import MerkazHatzedakaPayment from './MerkazHatzedakaPayment';
+import KesherHkPayment from './KesherHkPayment';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { StripeCardFields } from './StripeCardFields';
@@ -62,6 +63,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const ojcPaymentRef = useRef(null);
     const nedarimPlusPaymentRef = useRef(null);
     const merkazHatzedakaPaymentRef = useRef(null);
+    const kesherHkPaymentRef = useRef(null);
     
     // Memoize Stripe promise
     const stripePromise = useMemo(() => {
@@ -538,6 +540,27 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                 setIsLoading(false);
                 return;
             }
+        } else if (actualProvider === 'KESHER_HK') {
+            if (kesherHkPaymentRef.current) {
+                try {
+                    const paymentResult = await kesherHkPaymentRef.current.handlePayment();
+                    if (paymentResult) {
+                        await saveDonation({
+                            paymentMethod: 'KESHER_HK',
+                            hasPaymentMethod: true,
+                            transactionId: paymentResult.transactionId,
+                            authCode: paymentResult.authCode
+                        });
+                    }
+                } catch (error) {
+                    console.error('Kesher HK payment error:', error);
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                setIsLoading(false);
+                return;
+            }
         } else if (formData.paymentMethod === 'PLEDGER') {
             if (pledgerPaymentRef.current) {
                 try {
@@ -782,6 +805,29 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             </div>
                         )}
                         
+                        {/* Preload Kesher HK - hidden until selected */}
+                        {creditCardProvider === 'kesher_hk' && (
+                            <div style={{ display: formData.paymentMethod === 'CREDIT' ? 'block' : 'none' }}>
+                                <KesherHkPayment
+                                    ref={kesherHkPaymentRef}
+                                    amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                    campaignId={campaignId}
+                                    donorName={getDonorFullName()}
+                                    donorEmail={selectedDonor?.email || ''}
+                                    donorPhone={selectedDonor?.phone || ''}
+                                    numberOfPayments={formData.numberOfPayments}
+                                    isMonthlyCampaign={isMonthlyCampaign}
+                                    onSuccess={(result) => {
+                                    }}
+                                    onError={(error) => {
+                                        console.error('Kesher HK payment error:', error);
+                                    }}
+                                    usePublicApi={true}
+                                    preloadedConfig={paymentSettings}
+                                />
+                            </div>
+                        )}
+
                         {/* Preload Pledger - hidden until selected */}
                         <div style={{ display: formData.paymentMethod === 'PLEDGER' ? 'block' : 'none' }}>
                             <PledgerPayment

@@ -51,6 +51,7 @@ export const paymentMethodLabels = {
     'MATBIA': 'Matbia',
     'OJC': 'OJC Charity Card',
     'NEDARIM_PLUS': 'נדרים פלוס',
+    'KESHER_HK': 'קשר הו"ק',
     'COMMITMENT': 'התחייבות',
     'OTHER': 'אחר'
 };
@@ -74,8 +75,8 @@ export function getPaymentMethodIcon(method) {
 }
 
 export function getPaymentMethodLabel(method) {
-    // STRIPE, BEVEL, NEDARIM_PLUS יוצגו כ"כרטיס אשראי"
-    if (method === 'STRIPE' || method === 'BEVEL' || method === 'NEDARIM_PLUS') {
+    // STRIPE, BEVEL, NEDARIM_PLUS, KESHER_HK יוצגו כ"כרטיס אשראי"
+    if (method === 'STRIPE' || method === 'BEVEL' || method === 'NEDARIM_PLUS' || method === 'KESHER_HK') {
         return 'כרטיס אשראי';
     }
     return paymentMethodLabels[method] || method;
