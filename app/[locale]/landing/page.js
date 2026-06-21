@@ -128,13 +128,18 @@ export default function LandingPage() {
   const [orgLogos, setOrgLogos] = useState([]);
   const [stats, setStats] = useState({ organizations: 0, campaigns: 0, donations: 0, raised: '₪0' });
   const [roiAmount, setRoiAmount] = useState('');
+  const [roiGapDir, setRoiGapDir] = useState(''); // 'missed' | 'reached'
+  const [roiGapAmount, setRoiGapAmount] = useState('');
+  const [roiExtra, setRoiExtra] = useState('');
+  const [roiExtraUnknown, setRoiExtraUnknown] = useState(false);
+  const [roiUncollected, setRoiUncollected] = useState('');
   const [openFaq, setOpenFaq] = useState(null);
   const [checklistChecked, setChecklistChecked] = useState([false, false, false]);
+  const [diagnosisOpen, setDiagnosisOpen] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
   const [animatedStats, setAnimatedStats] = useState({ campaigns: 0, donations: 0, raisedNum: 0, satisfaction: 0 });
 
   const featuresRef = useRef(null);
-  const howItWorksRef = useRef(null);
   const aboutRef = useRef(null);
   const contactRef = useRef(null);
   const statsRef = useRef(null);
@@ -254,6 +259,14 @@ export default function LandingPage() {
 
   const goToLogin = () => router.push(`/${locale}/login`);
 
+  // WhatsApp contact (Gershon)
+  const WHATSAPP_NUMBER = '972525902082';
+  const openWhatsApp = () => {
+    setMobileMenuOpen(false);
+    const text = encodeURIComponent('היי, אשמח לשמוע עוד על DoNext');
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, '_blank', 'noopener,noreferrer');
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -271,7 +284,24 @@ export default function LandingPage() {
     }
   };
 
-  const roiResult = roiAmount ? Math.round(Number(roiAmount.replace(/[^\d]/g, '')) * 0.4) : 0;
+  // ── Potential calculator ──
+  // 1) 40% of last campaign amount
+  // 2) gap to target: missed → add the gap; exceeded → subtract 50% of the gap
+  // 3) "effortless extra" → add (unless "don't know")
+  // 4) uncollected % → add that % of the running total
+  const num = (v) => Number(String(v).replace(/[^\d]/g, '')) || 0;
+  const roiQ1 = num(roiAmount);
+  const roiResult = (() => {
+    if (!roiQ1) return 0;
+    let total = roiQ1 * 0.4;
+    const gap = num(roiGapAmount);
+    if (roiGapDir === 'missed') total += gap;
+    else if (roiGapDir === 'reached') total -= gap * 0.5;
+    if (!roiExtraUnknown) total += num(roiExtra);
+    const pct = Math.min(num(roiUncollected), 100);
+    total += total * (pct / 100);
+    return Math.max(0, Math.round(total));
+  })();
 
   const toggleChecklist = (idx) => {
     setChecklistChecked(prev => {
@@ -280,6 +310,9 @@ export default function LandingPage() {
       return next;
     });
   };
+
+  // Build diagnosis variant key from selected checklist items: "1", "13", "123"...
+  const diagnosisKey = checklistChecked.map((c, i) => (c ? i + 1 : '')).join('');
 
   return (
     <div className={styles.landingPage} dir={dir}>
@@ -292,14 +325,13 @@ export default function LandingPage() {
 
         <div className={styles.navLinks}>
           <button className={styles.navLink} onClick={() => scrollTo(featuresRef)}>{t('nav.features')}</button>
-          <button className={styles.navLink} onClick={() => scrollTo(howItWorksRef)}>{t('nav.howItWorks')}</button>
           <button className={styles.navLink} onClick={() => scrollTo(aboutRef)}>{t('nav.about')}</button>
           <button className={styles.navLink} onClick={() => scrollTo(contactRef)}>{t('nav.contact')}</button>
         </div>
 
         <div className={styles.navActions}>
           <button className={styles.btnOutline} onClick={goToLogin}>{t('nav.login')}</button>
-          <button className={styles.btnPrimary} onClick={goToLogin}>{t('nav.startFree')}</button>
+          <button className={styles.btnPrimary} onClick={() => scrollTo(contactRef)}>{t('nav.startFree')}</button>
         </div>
 
         <button className={styles.mobileMenuBtn} onClick={() => setMobileMenuOpen(true)}>
@@ -312,12 +344,11 @@ export default function LandingPage() {
         <div className={styles.mobileMenuContent} onClick={(e) => e.stopPropagation()}>
           <button className={styles.mobileMenuClose} onClick={() => setMobileMenuOpen(false)}>×</button>
           <button className={styles.mobileNavLink} onClick={() => scrollTo(featuresRef)}>{t('nav.features')}</button>
-          <button className={styles.mobileNavLink} onClick={() => scrollTo(howItWorksRef)}>{t('nav.howItWorks')}</button>
           <button className={styles.mobileNavLink} onClick={() => scrollTo(aboutRef)}>{t('nav.about')}</button>
           <button className={styles.mobileNavLink} onClick={() => scrollTo(contactRef)}>{t('nav.contact')}</button>
           <div className={styles.mobileMenuActions}>
             <button className={styles.btnOutline} onClick={goToLogin}>{t('nav.login')}</button>
-            <button className={styles.btnPrimary} onClick={goToLogin}>{t('nav.startFree')}</button>
+            <button className={styles.btnPrimary} onClick={() => scrollTo(contactRef)}>{t('nav.startFree')}</button>
           </div>
         </div>
       </div>
@@ -376,7 +407,7 @@ export default function LandingPage() {
       <section className={`${styles.solutionTrinity} ${styles.revealOnScroll}`}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>{t('solution.title')}</h2>
-          <p className={styles.sectionSubtitle}>{t('solution.subtitle')}</p>
+          {t('solution.subtitle') && <p className={styles.sectionSubtitle}>{t('solution.subtitle')}</p>}
         </div>
         <div className={styles.trinityGrid}>
           {[
@@ -393,37 +424,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== FEATURES ===== */}
-      <section className={`${styles.features} ${styles.revealOnScroll}`} ref={featuresRef}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTag}>{t('features.tag')}</span>
-          <h2 className={styles.sectionTitle}>{t('features.title')}</h2>
-          <p className={styles.sectionSubtitle}>{t('features.subtitle')}</p>
-        </div>
-
-        <div className={styles.featuresGrid}>
-          {[
-            { color: 'Blue', key: 'dashboard' },
-            { color: 'Green', key: 'payments' },
-            { color: 'Purple', key: 'donors' },
-            { color: 'Orange', key: 'mobile' },
-            { color: 'Cyan', key: 'analytics' },
-            { color: 'Pink', key: 'integrations' },
-          ].map((f) => {
-            const FeatureIcon = featureIcons[f.key];
-            return (
-              <div key={f.key} className={styles.featureCard}>
-                <div className={`${styles.featureIcon} ${styles[`featureIcon${f.color}`]}`}>
-                  <FeatureIcon />
-                </div>
-                <h3 className={styles.featureTitle}>{t(`features.${f.key}.title`)}</h3>
-                <p className={styles.featureDesc}>{t(`features.${f.key}.desc`)}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* ===== ROI CALCULATOR + CHECKLIST ===== */}
       <section className={`${styles.roiCheckSection} ${styles.revealOnScroll}`}>
         <div className={styles.roiCheckGrid}>
@@ -432,6 +432,7 @@ export default function LandingPage() {
             <span className={styles.sectionTag}>{t('roiCalc.tag')}</span>
             <h3 className={styles.roiCalcTitle}>{t('roiCalc.title')}</h3>
             <div className={styles.roiCalcBox}>
+              {/* Q1 - amount raised */}
               <label className={styles.roiLabel}>{t('roiCalc.inputLabel')}</label>
               <div className={styles.roiInputWrap}>
                 <span className={styles.roiCurrency}>₪</span>
@@ -444,6 +445,76 @@ export default function LandingPage() {
                   onChange={(e) => setRoiAmount(e.target.value.replace(/[^\d]/g, ''))}
                 />
               </div>
+
+              {/* Q2 - distance from target */}
+              <label className={styles.roiLabel}>{t('roiCalc.q2Label')}</label>
+              <div className={styles.roiToggle}>
+                <button
+                  type="button"
+                  className={`${styles.roiToggleBtn} ${roiGapDir === 'missed' ? styles.roiToggleBtnActive : ''}`}
+                  onClick={() => setRoiGapDir(roiGapDir === 'missed' ? '' : 'missed')}
+                >
+                  {t('roiCalc.q2Missed')}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.roiToggleBtn} ${roiGapDir === 'reached' ? styles.roiToggleBtnActive : ''}`}
+                  onClick={() => setRoiGapDir(roiGapDir === 'reached' ? '' : 'reached')}
+                >
+                  {t('roiCalc.q2Reached')}
+                </button>
+              </div>
+              {roiGapDir && (
+                <div className={styles.roiInputWrap}>
+                  <span className={styles.roiCurrency}>₪</span>
+                  <input
+                    className={styles.roiInput}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder={t('roiCalc.q2AmountPlaceholder')}
+                    value={roiGapAmount}
+                    onChange={(e) => setRoiGapAmount(e.target.value.replace(/[^\d]/g, ''))}
+                  />
+                </div>
+              )}
+
+              {/* Q3 - effortless extra */}
+              <label className={styles.roiLabel}>{t('roiCalc.q3Label')}</label>
+              <div className={styles.roiInputWrap}>
+                <span className={styles.roiCurrency}>₪</span>
+                <input
+                  className={styles.roiInput}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={t('roiCalc.q3AmountPlaceholder')}
+                  value={roiExtra}
+                  onChange={(e) => { setRoiExtra(e.target.value.replace(/[^\d]/g, '')); setRoiExtraUnknown(false); }}
+                  disabled={roiExtraUnknown}
+                />
+              </div>
+              <label className={styles.roiUnknown}>
+                <input
+                  type="checkbox"
+                  checked={roiExtraUnknown}
+                  onChange={(e) => setRoiExtraUnknown(e.target.checked)}
+                />
+                <span>{t('roiCalc.q3Unknown')}</span>
+              </label>
+
+              {/* Q4 - uncollected percentage */}
+              <label className={styles.roiLabel}>{t('roiCalc.q4Label')}</label>
+              <div className={styles.roiInputWrap}>
+                <span className={styles.roiCurrency}>%</span>
+                <input
+                  className={styles.roiInput}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={t('roiCalc.q4Placeholder')}
+                  value={roiUncollected}
+                  onChange={(e) => setRoiUncollected(e.target.value.replace(/[^\d]/g, '').slice(0, 3))}
+                />
+              </div>
+
               {roiResult > 0 && (
                 <div className={styles.roiResult}>
                   <p className={styles.roiResultIntro}>{t('roiCalc.resultIntro')}</p>
@@ -476,10 +547,16 @@ export default function LandingPage() {
                 </label>
               ))}
               {checklistChecked.some(Boolean) && (
-                <div className={styles.checklistResult}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <span>{t('checklist.result')}</span>
-                </div>
+                <>
+                  <div className={styles.checklistResult}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>{t('checklist.result')}</span>
+                  </div>
+                  <button className={styles.diagnosisTrigger} onClick={() => setDiagnosisOpen(true)}>
+                    {t('checklist.diagnosis.trigger')}
+                    <IconArrow dir={dir} />
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -524,14 +601,14 @@ export default function LandingPage() {
         </div>
         <div className={styles.trafficLightGrid}>
           {[
-            { key: 'metric1', color: '#22c55e' },
-            { key: 'metric2', color: '#3b82f6' },
-            { key: 'metric3', color: '#f59e0b' },
-            { key: 'metric4', color: '#ef4444' },
-          ].map((m, idx) => (
-            <div key={m.key} className={styles.trafficMetric}>
-              <div className={styles.trafficMetricDot} style={{ background: m.color }} />
-              <span className={styles.trafficMetricLabel}>{t(`trafficLight.${m.key}`)}</span>
+            { key: 'green', color: '#22c55e' },
+            { key: 'orange', color: '#f59e0b' },
+            { key: 'red', color: '#ef4444' },
+          ].map((m) => (
+            <div key={m.key} className={styles.trafficCard}>
+              <div className={styles.trafficCardDot} style={{ background: m.color, color: m.color }} />
+              <h3 className={styles.trafficCardTitle}>{t(`trafficLight.${m.key}.title`)}</h3>
+              <p className={styles.trafficCardDesc}>{t(`trafficLight.${m.key}.desc`)}</p>
             </div>
           ))}
         </div>
@@ -547,25 +624,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== HOW IT WORKS ===== */}
-      <section className={`${styles.howItWorks} ${styles.revealOnScroll}`} ref={howItWorksRef}>
+      {/* ===== FEATURES ===== */}
+      <section className={`${styles.features} ${styles.revealOnScroll}`} ref={featuresRef}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionTag}>{t('howItWorks.tag')}</span>
-          <h2 className={styles.sectionTitle}>{t('howItWorks.title')}</h2>
-          <p className={styles.sectionSubtitle}>{t('howItWorks.subtitle')}</p>
+          <span className={styles.sectionTag}>{t('features.tag')}</span>
+          <h2 className={styles.sectionTitle}>{t('features.title')}</h2>
+          <p className={styles.sectionSubtitle}>{t('features.subtitle')}</p>
         </div>
 
-        <div className={styles.stepsContainer}>
-          <div className={styles.stepsLine} />
-          {[1, 2, 3, 4].map((num) => (
-            <div key={num} className={styles.step}>
-              <div className={styles.stepNumber}>{num}</div>
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepTitle}>{t(`howItWorks.step${num}.title`)}</h3>
-                <p className={styles.stepDesc}>{t(`howItWorks.step${num}.desc`)}</p>
+        <div className={styles.featuresGrid}>
+          {[
+            { color: 'Blue', key: 'dashboard' },
+            { color: 'Green', key: 'payments' },
+            { color: 'Purple', key: 'donors' },
+            { color: 'Orange', key: 'mobile' },
+            { color: 'Cyan', key: 'analytics' },
+            { color: 'Pink', key: 'integrations' },
+          ].map((f) => {
+            const FeatureIcon = featureIcons[f.key];
+            return (
+              <div key={f.key} className={styles.featureCard}>
+                <div className={`${styles.featureIcon} ${styles[`featureIcon${f.color}`]}`}>
+                  <FeatureIcon />
+                </div>
+                <h3 className={styles.featureTitle}>{t(`features.${f.key}.title`)}</h3>
+                <p className={styles.featureDesc}>{t(`features.${f.key}.desc`)}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -688,10 +774,6 @@ export default function LandingPage() {
                   <div className={styles.aboutStatNum}>{t('about.stat1Num')}</div>
                   <div className={styles.aboutStatLabel}>{t('about.stat1Label')}</div>
                 </div>
-                <div className={styles.aboutStat}>
-                  <div className={styles.aboutStatNum}>{t('about.stat2Num')}</div>
-                  <div className={styles.aboutStatLabel}>{t('about.stat2Label')}</div>
-                </div>
               </div>
             </div>
           </div>
@@ -729,8 +811,8 @@ export default function LandingPage() {
           <h2 className={styles.ctaTitle}>{t('cta.title')}</h2>
           <p className={styles.ctaSubtitle}>{t('cta.subtitle')}</p>
           <div className={styles.ctaActions}>
-            <button className={styles.btnHero} onClick={goToLogin}>{t('cta.button')}</button>
-            <button className={styles.btnHeroOutline} onClick={() => scrollTo(contactRef)}>
+            <button className={styles.btnHero} onClick={() => scrollTo(contactRef)}>{t('cta.button')}</button>
+            <button className={styles.btnHeroOutline} onClick={openWhatsApp}>
               {t('cta.contact')}
             </button>
           </div>
@@ -750,7 +832,7 @@ export default function LandingPage() {
                 <div className={styles.contactIcon}><IconMail /></div>
                 <div>
                   <div className={styles.contactLabel}>{t('contact.emailLabel')}</div>
-                  <div className={styles.contactValue}>info@donext.co.il</div>
+                  <div className={styles.contactValue} dir="ltr">donext.info@gmail.com</div>
                 </div>
               </div>
               <div className={styles.contactItem}>
@@ -839,7 +921,6 @@ export default function LandingPage() {
           <div className={styles.footerColumn}>
             <span className={styles.footerColumnTitle}>{t('footer.product')}</span>
             <button className={styles.footerLink} onClick={() => scrollTo(featuresRef)}>{t('nav.features')}</button>
-            <button className={styles.footerLink} onClick={() => scrollTo(howItWorksRef)}>{t('nav.howItWorks')}</button>
             <button className={styles.footerLink} onClick={goToLogin}>{t('nav.login')}</button>
           </div>
 
@@ -863,6 +944,29 @@ export default function LandingPage() {
           <span>{t('footer.copyright', { year: new Date().getFullYear() })}</span>
         </div>
       </footer>
+
+      {/* ===== DIAGNOSIS MODAL ===== */}
+      {diagnosisOpen && diagnosisKey && (
+        <div className={styles.modalOverlay} onClick={() => setDiagnosisOpen(false)}>
+          <div className={styles.modalCard} dir={dir} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setDiagnosisOpen(false)}>×</button>
+            <span className={`${styles.sectionTag} ${styles.tagRed}`}>{t('checklist.diagnosis.badge')}</span>
+            <h3 className={styles.modalTitle}>{t('checklist.diagnosis.fixedTitle')}</h3>
+            <h4 className={styles.modalSubtitle}>{t(`checklist.diagnosis.variants.${diagnosisKey}.subtitle`)}</h4>
+            <div className={styles.modalMeaningLabel}>{t('checklist.diagnosis.meaningLabel')}</div>
+            <p className={styles.modalBody}>{t(`checklist.diagnosis.variants.${diagnosisKey}.body`)}</p>
+            <p className={styles.modalHighlight}>{t(`checklist.diagnosis.variants.${diagnosisKey}.highlight`)}</p>
+            <p className={styles.modalClosing}>{t('checklist.diagnosis.closing')}</p>
+            <button
+              className={styles.modalCta}
+              onClick={() => { setDiagnosisOpen(false); scrollTo(contactRef); }}
+            >
+              {t('checklist.diagnosis.cta')}
+              <IconArrow dir={dir} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

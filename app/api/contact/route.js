@@ -18,6 +18,8 @@ export async function POST(request) {
     // If Resend is configured, send email notification
     const resendApiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.FROM_EMAIL;
+    // Inbox that should receive landing-page contact submissions
+    const contactInbox = process.env.CONTACT_TO_EMAIL || 'donext.info@gmail.com';
 
     if (resendApiKey && fromEmail) {
       try {
@@ -29,7 +31,8 @@ export async function POST(request) {
           },
           body: JSON.stringify({
             from: fromEmail,
-            to: fromEmail, // Send to ourselves
+            to: contactInbox, // Landing-page contact inbox
+            reply_to: email,
             subject: `[Donext] הודעה חדשה מ-${name}`,
             html: `
               <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

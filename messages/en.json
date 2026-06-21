@@ -3,14 +3,12 @@
     "profile": "Personal Profile",
     "completeProfile": "Complete Profile",
     "personalDetails": "Personal Details and Preferences",
-
     "campaign": "Campaign",
     "activeCampaign": "Active Campaign",
     "emailMessages": "Email and Voice Messages",
     "videosSettings": "Videos and Additional Settings",
     "reports": "Reports and Summaries",
     "newCampaign": "Create New Campaign",
-
     "fundraisers": "Fundraisers",
     "allFundraisers": "All Fundraisers",
     "fundraiserForecast": "Donation Forecast per Fundraiser",
@@ -18,13 +16,11 @@
     "smartForecast": "Smart Forecast Process",
     "backupFundraisers": "Backup Field Fundraisers",
     "addFundraiser": "Add New Fundraiser",
-
     "operators": "Operators",
     "allOperators": "All Operators",
     "addOperator": "Add Operator",
     "operatorExpectedRanks": "Operator Expected Ranks",
     "operatorForecast": "Operator Forecast",
-
     "donors": "Donors",
     "allDonors": "All Donors (Community Members)",
     "namesToFix": "Names to Fix",
@@ -32,26 +28,21 @@
     "millionQuestionnaire": "Million Questionnaire",
     "addDonor": "Add New Donor",
     "excludedNames": "Excluded Names Report",
-
     "donations": "Donations",
     "allCommitments": "All Commitments",
     "allDonations": "All Donations",
     "newDonation": "New Donation",
     "paymentClearing": "Payment Clearing",
     "donationRanks": "Donation Tier Settings",
-
     "donationScreen": "Donation Screen Settings",
     "screenSettings": "Screen Settings",
     "donationScreenView": "Donation Screen",
     "donationScreenRankView": "Rank Screen",
     "approveDonations": "Approve Donations",
-
     "settings": "Settings",
     "generalSettings": "General Campaign Settings",
     "calendar": "Calendar and Schedule",
-
     "search": "Search",
-
     "admin": "System Management",
     "clientManagement": "Client Management",
     "excelImport": "Excel File Upload",
@@ -60,7 +51,6 @@
     "additionalSettings": "Additional Settings",
     "paymentSettings": "Payment Settings",
     "webhook": "Webhook",
-
     "publicScreen": "Public Screen",
     "publicScreenView": "Public Screen",
     "sendLinks": "Send Links",
@@ -68,11 +58,9 @@
     "greeting": "Hello {name}",
     "logout": "Logout",
     "fundraiserDefault": "Fundraiser",
-
     "contacts": "Contacts",
     "allContacts": "All Contacts"
   },
-
   "publicScreen": {
     "donate": "Donate",
     "share": "Share",
@@ -142,7 +130,6 @@
     "monthly": "Monthly",
     "showDonations": "Show Donations"
   },
-
   "forms": {
     "donation": {
       "selectDonor": "Select Donor",
@@ -172,7 +159,6 @@
       "placeholder": "Enter value"
     }
   },
-
   "campaignSelection": {
     "greeting": "Hello {name}, good to see you again :)",
     "whichCampaign": "Which campaign are we entering today?",
@@ -190,7 +176,6 @@
     "searchPlaceholder": "Still can't find it? You can also search here!",
     "goToLobby": "Go to Lobby"
   },
-
   "campaignSelectionSidebar": {
     "campaigns": "Campaigns",
     "newCampaign": "New Campaign",
@@ -203,7 +188,6 @@
     "comingSoon": "Coming Soon",
     "logout": "Logout"
   },
-
   "tagsPage": {
     "pageTitle": "Tags",
     "youHaveTags": "You have {count} tags",
@@ -225,7 +209,6 @@
     "loading": "Loading...",
     "saveError": "Error saving"
   },
-
   "contactsPage": {
     "title": "Contacts",
     "subtitle": "All Donors - Community",
@@ -284,7 +267,7 @@
     "sourcePhone": "Telephone",
     "sourceVows": "Vows",
     "sourceCredit": "Credit",
-    "typeCommunity": "Community Member",
+    "typeCommunity": "Community",
     "typeAdded": "Added Donor",
     "typeRegular": "Regular Unknown Donor",
     "typeOneTime": "One-time Donor",
@@ -409,7 +392,6 @@
     "roleFundraiser": "Fundraiser",
     "roleLabel": "Role",
     "typeCrowdfunding": "Crowdfunding",
-    "typeCommunity": "Community",
     "noCampaignsAvailable": "No campaigns available",
     "contactCount": "Number of contacts",
     "next": "Next",
@@ -484,7 +466,6 @@
     "af_close": "Close",
     "af_resetFilters": "Reset Filters"
   },
-
   "addFromContacts": {
     "title": "Add from Contacts",
     "searchPlaceholder": "Search by name, mobile or email...",
@@ -501,7 +482,6 @@
     "addButton": "Add ({count})",
     "addError": "Error adding contacts"
   },
-
   "admin": {
     "clients": {
       "title": "Client Management",
@@ -966,7 +946,6 @@
       "description": "Payment method settings"
     }
   },
-
   "table": {
     "noData": "No data to display",
     "loading": "Loading...",
@@ -979,7 +958,6 @@
     "filters": "Filters",
     "export": "Export"
   },
-
   "common": {
     "showMore": "Show More",
     "searchPlaceholder": "Looking for something?",
@@ -1022,12 +1000,10 @@
     "more": "More",
     "less": "Less"
   },
-
   "metadata": {
     "title": "Donext",
     "description": "Campaign and Donation Management System"
   },
-
   "accessibility": {
     "openMenu": "Open accessibility menu",
     "closeMenu": "Close accessibility menu",
@@ -1042,7 +1018,6 @@
     "textSize": "Text size",
     "accessibilityStatement": "Accessibility Statement"
   },
-
   "login": {
     "title": "Login",
     "welcome": "Welcome!",
@@ -1088,7 +1063,6 @@
     "resetSuccess": "Password changed successfully",
     "backToLogin": "Back to Login"
   },
-
   "donors": {
     "pageTitle": "Donors - All Donors",
     "allCommunity": "All Community - All Donors",
@@ -1175,7 +1149,6 @@
     "sendSms": "Send SMS",
     "sendEmailAction": "Send email"
   },
-
   "donorNameHeader": {
     "selectDonor": "Select donor",
     "loading": "Loading...",
@@ -1184,7 +1157,6 @@
     "donorNameLabel": "Donor name",
     "showAnonymous": "Show as anonymous on public page"
   },
-
   "fundraiserManagement": {
     "questionnaireStatus": "Questionnaire Status",
     "expectedDonationStatus": "Expected Donation Status",
@@ -1400,7 +1372,6 @@
     "cancel": "Cancel",
     "enterRankName": "Please enter a rank name"
   },
-  
   "ranksPage": {
     "pageTitle": "Donation Rank Settings",
     "addRank": "Add Rank",
@@ -1463,7 +1434,6 @@
     "minMonthsForMonthlyQuestion": "What is the minimum number of months to qualify as a recurring donation?",
     "minMonthsHint": "Donations with fewer payments will be split over the configured number of months and applied to the overall target."
   },
-
   "operatorRanksPage": {
     "pageTitle": "Operator Expected Ranks",
     "addRank": "Add Rank",
@@ -1497,7 +1467,6 @@
     "rankDefault": "Rank",
     "comingSoon": "Coming soon! Smart process for defining operator expected ranks"
   },
-
   "operatorForecast": {
     "pageTitle": "Operator Forecast",
     "loading": "Loading...",
@@ -1535,14 +1504,12 @@
     "finishTotal": "Total forecast",
     "backToOperators": "Back to Operators"
   },
-
   "invitationProgress": {
     "notYetSent": "Not yet sent",
     "invitationSent": "Invitation sent",
     "invitationConfirmed": "Invitation sent & confirmed",
     "actuallyArrived": "Actually arrived"
   },
-
   "questionnaire": {
     "noDonorsAssigned": "No donors assigned",
     "noDonorsMessage": "No donors are assigned to this fundraiser.",
@@ -1598,7 +1565,6 @@
     "nextQuestion": "Next question",
     "questionXofY": "Question {current} of {total}"
   },
-
   "addEdit": {
     "existingContactsFound": "Existing contacts found",
     "existingContactSelected": "Existing contact selected - details auto-filled",
@@ -1705,7 +1671,6 @@
       "matbia": "Matbia"
     }
   },
-
   "donationForm": {
     "externalSystemError": "External system error",
     "donationSavedWithError": "Donation completed but there was an issue saving to the system",
@@ -1733,7 +1698,7 @@
     "threeYears": "3 years",
     "months": "months",
     "selectPaymentMethod": "Select payment method",
-    "noPaymentMethodsAvailable": "No payment methods available - please configure in payment settings",
+    "noPaymentMethodsAvailable": "No payment methods available",
     "noteLabel": "Note",
     "taskDone": "Done",
     "markAsDone": "Mark as done",
@@ -1839,17 +1804,12 @@
     "phone": "Phone",
     "email": "Email",
     "showAnonymous": "Show as anonymous on public page",
-    "paymentMethod": "Payment Method",
-    "selectPaymentMethod": "Select payment method",
-    "noPaymentMethodsAvailable": "No payment methods available",
-    "loadingPaymentMethods": "Loading payment methods...",
     "creditCard": "Credit Card",
     "dedication": "Dedication",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
     "phoneRequired": "Phone number is required"
   },
-  
   "donary": {
     "title": "Donary Integration",
     "description": "Sync donors and receive donations from Donary devices",
@@ -1880,7 +1840,6 @@
     "confirmSync": "Sync {count} donors to Donary? This may take a few minutes.",
     "syncCompleted": "Sync completed! {count} donors synced successfully"
   },
-
   "donorsCards": {
     "donorAssignment": "Donor Assignment",
     "invitationsAndConfirmations": "Invitations and Confirmations",
@@ -1934,7 +1893,6 @@
     "warningExpectedHigherThanTarget": "Note: The forecast created by fundraisers is higher than your campaign target",
     "warningNeedMoreDonations": "At this stage of the campaign, you should have reached an additional $15,000 in revenue. Time to hurry!!"
   },
-
   "alerts": {
     "deleteDonor": {
       "confirmDeletePart1": "Are you sure you want to delete",
@@ -2079,7 +2037,6 @@
       "confirm": "Yes, thanks"
     }
   },
-
   "donations": {
     "pageTitle": "Donations - All Donations",
     "loading": "Loading...",
@@ -2302,7 +2259,6 @@
       "gapOf": "Gap of:"
     }
   },
-
   "operatorsPage": {
     "pageTitle": "Operators - All Operators",
     "allOperatorsTitle": "All Operators",
@@ -2592,7 +2548,6 @@
       "noInvitation": "No invitation:"
     }
   },
-
   "questionnaireSettings": {
     "pageTitle": "Million Questionnaire Settings",
     "loadingData": "Loading data...",
@@ -2632,7 +2587,6 @@
     "noFundraisersFound": "No fundraisers found",
     "goBackChoose": "Go back, I want to choose something else"
   },
-
   "donorForecast": {
     "pageTitle": "Donor Forecast",
     "welcomeTitle": "Welcome to our smart forecast process!",
@@ -2754,7 +2708,6 @@
     "finishButtonFirstDonation": "Shall we go create your first donation?",
     "finishButtonViewDonors": "Shall we go see your donors?"
   },
-
   "landing": {
     "nav": {
       "features": "Our Edge",
@@ -2768,7 +2721,7 @@
       "badge": "The Operating System for Fundraising",
       "titleLine1": "Enough guessing.",
       "titleHighlight": "Start raising.",
-      "subtitle": "The operating system that makes every campaign predictable, measurable, and profitable. Don't lose 40% of your potential — switch to Predictive Philanthropy management.",
+      "subtitle": "The operating system that makes every campaign predictable, measurable, and profitable. Don't lose 40% of your potential - switch to Predictive Philanthropy management.",
       "cta": "Discover where your money is hiding",
       "secondary": "See the prediction engine",
       "trust": "<strong>500+</strong> organizations already use DoNext",
@@ -2787,6 +2740,15 @@
       "title": "How much money are you leaving on the floor?",
       "inputLabel": "How much did you raise in your last campaign?",
       "inputPlaceholder": "Enter amount",
+      "q2Label": "How far was it from the target you planned?",
+      "q2Missed": "We missed the target",
+      "q2Reached": "We exceeded the target",
+      "q2AmountPlaceholder": "Gap amount",
+      "q3Label": "Hand on heart - how much more could you have raised without too much effort?",
+      "q3AmountPlaceholder": "Amount",
+      "q3Unknown": "Don't know",
+      "q4Label": "What percentage did you not actually manage to collect? (say 12% never paid their pledge)",
+      "q4Placeholder": "Uncollected %",
       "resultIntro": "Did you know? Based on DoNext performance averages, the potential you didn't utilize is:",
       "resultSuffix": "",
       "closing": "We don't cost money, we return the money you're currently losing."
@@ -2794,11 +2756,57 @@
     "checklist": {
       "tag": "Status Check",
       "title": "Are you suffering from the \"Black Hole\"?",
-      "subtitle": "Check — does any of this sound familiar?",
+      "subtitle": "Check - does any of this sound familiar?",
       "q1": "Do you only find out you're short on money in the last two days of the campaign?",
       "q2": "Do your fundraisers feel they have \"no one to turn to\" and start burning out?",
       "q3": "Is your goal set based on the organization's needs rather than field potential?",
-      "result": "If you answered \"yes\" to even one — you're not managing the campaign, it's managing you."
+      "result": "If you answered \"yes\" to even one - you're not managing the campaign, it's managing you.",
+      "diagnosis": {
+        "trigger": "What does this mean for your campaign?",
+        "badge": "Status Check",
+        "fixedTitle": "Your diagnosis points to a critical failure point in the campaign",
+        "meaningLabel": "What it means:",
+        "closing": "DONEXT was built to turn this point from a source of pressure into a clear, precise and managed workflow.",
+        "cta": "Let's see how it works for you",
+        "none": "Select at least one item above to get a diagnosis.",
+        "variants": {
+          "1": {
+            "subtitle": "Money runs short only in the final days of the campaign",
+            "body": "If you discover the gaps only at the end - it means you never had a real picture along the way.\n\nIn a well-managed campaign, you don't wait for the last day to realize money is missing. You need to know in motion what advanced, what got stuck, which donors are still open, and which fundraiser can close the gap.\n\nDONEXT gives you real-time control: where the campaign stands, what's missing to the goal, which significant donors haven't been handled yet, and where to intervene now.",
+            "highlight": "Instead of discovering the problem at the end - you manage it in time."
+          },
+          "2": {
+            "subtitle": "Fundraisers feel they have no one to turn to",
+            "body": "Usually the problem isn't that there's no one to turn to. The problem is a lack of order, prioritization and guidance.\n\nWhen a fundraiser gets a list of names without understanding who's warm, who fits them, who has high potential and where to start - they burn out fast and feel there's nothing to do.\n\nDONEXT turns a donor list into an action map: who matters, who's ready, who needs a personal touch, and which fundraiser is best for the approach.",
+            "highlight": "When the fundraiser knows who to call and why - they start bringing results."
+          },
+          "3": {
+            "subtitle": "The goal was set by the organization's needs, not field potential",
+            "body": "A goal not built from field data may stay a nice number on paper.\n\nAn organization can know how much it needs to raise, but that's not the same question as how much can actually be raised now, from whom, through whom, and in what order.\n\nDONEXT helps turn a general goal into an execution plan: understanding the real potential, where the money sources are, who the key donors are, and what needs to happen to reach the number.",
+            "highlight": "A good goal is not just an aspiration. It's a precise field plan."
+          },
+          "12": {
+            "subtitle": "Money runs short at the end + fundraisers don't know who to turn to",
+            "body": "This is a sign the campaign is advancing without a real navigation system.\n\nThe financial gap is discovered late, and fundraisers don't know who to turn to - because there's no clear link between the goal, the donor list, the progress status and the actions that need to happen now.\n\nDONEXT connects all the pieces into one map: who can close the gap, which fundraiser fits them, what's already done, and what must happen now so you don't reach the end with a surprise shortfall.",
+            "highlight": "Instead of last-minute pressure - you get ongoing management that drives the campaign forward."
+          },
+          "13": {
+            "subtitle": "Money runs short at the end + the goal isn't tied to field potential",
+            "body": "Here the problem starts before the campaign - and is only discovered at its end.\n\nWhen a goal is set by need alone, without a real potential picture, it's hard to know in advance whether it's realistic, where the money should come from, and what's missing to reach it.\n\nDONEXT builds a live status picture connecting goal and field: donor lists, potential level, progress status and the gaps to close in motion.",
+            "highlight": "This way you don't wait for the end to realize the goal was never tied to reality."
+          },
+          "23": {
+            "subtitle": "Fundraisers don't know who to turn to + the goal isn't tied to field potential",
+            "body": "This is a situation with a goal, with fundraisers, with good will - but a missing action map.\n\nWhen the goal isn't translated into donors, prioritization and clear tasks, fundraisers are left feeling they have to \"figure it out alone.\" And then even a high-potential campaign can stall.\n\nDONEXT translates the goal into the field: who the relevant donors are, who has high potential, in what order to approach, and how each fundraiser knows exactly what their task is.",
+            "highlight": "When the goal turns into clear actions - the campaign stops being a guess and starts being managed."
+          },
+          "123": {
+            "subtitle": "Money runs short at the end + fundraisers stuck + the goal isn't tied to the field",
+            "body": "If you marked all three - the campaign isn't really managed. It just happens.\n\nThere's a goal, fundraisers, lists, activity - but no single system connecting it all into a clear picture: the real potential, who should approach whom, what already advanced, where it's stuck, and the next action that brings you closer to the goal.\n\nDONEXT was built exactly for this point: to turn a campaign based on pressure, gut feeling and spreadsheets - into a managed, smart and precise campaign.\n\nThe system connects goal, donors, fundraisers and field actions - and shows at every moment what's happening, what's missing, and who needs to take the next step.",
+            "highlight": "That's the difference between a campaign that manages you - and a campaign you manage."
+          }
+        }
+      }
     },
     "comparison": {
       "tag": "The Revolution",
@@ -2810,26 +2818,46 @@
         "donext": "DoNext System"
       },
       "rows": {
-        "r1": { "feature": "Response Time", "old": "History: Shows what was already donated.", "donext": "Future: Predicts what will be donated and where the risk is." },
-        "r2": { "feature": "Tool Essence", "old": "Data storage: A \"cemetery\" for names.", "donext": "Action engine: Strategic advisor guiding execution." },
-        "r3": { "feature": "Fundraiser Mgmt", "old": "Static: Fundraiser updates when convenient.", "donext": "Dynamic: Work app with gamification." },
-        "r4": { "feature": "Decision Making", "old": "Gut feeling: \"I think we'll reach the goal.\"", "donext": "Data-driven: \"We need 3 more green fundraisers.\"" },
-        "r5": { "feature": "Money Loss", "old": "Waste: ~40% of potential is missed.", "donext": "Maximum use: Flagging forgotten donors in real-time." }
+        "r1": {
+          "feature": "Response Time",
+          "old": "History: Shows what was already donated.",
+          "donext": "Future: Predicts what will be donated and where the risk is."
+        },
+        "r2": {
+          "feature": "Tool Essence",
+          "old": "Data storage: A \"cemetery\" for names.",
+          "donext": "Action engine: Strategic advisor guiding execution."
+        },
+        "r3": {
+          "feature": "Fundraiser Mgmt",
+          "old": "Static: Fundraiser updates when convenient.",
+          "donext": "Dynamic: Work app with gamification."
+        },
+        "r4": {
+          "feature": "Decision Making",
+          "old": "Gut feeling: \"I think we'll reach the goal.\"",
+          "donext": "Data-driven: \"We need 3 more green fundraisers.\""
+        },
+        "r5": {
+          "feature": "Money Loss",
+          "old": "Waste: ~40% of potential is missed.",
+          "donext": "Maximum use: Flagging forgotten donors in real-time."
+        }
       }
     },
     "solution": {
       "tag": "The Solution",
-      "title": "The Holy Trinity — Calm, Precision & Confidence",
-      "subtitle": "Each role gets exactly what they need",
+      "title": "The Professional Trinity - Calm, Precision & Confidence",
+      "subtitle": "",
       "s1": {
         "role": "For the CEO",
         "title": "Peace of Mind",
-        "desc": "Real-time anomaly dashboard. The system monitors activity and alerts only when you're needed. Sleep well — data has your back."
+        "desc": "Real-time anomaly dashboard. The system monitors activity and alerts you when you're needed. Sleep well - data has your back."
       },
       "s2": {
         "role": "For the Strategist",
         "title": "Precision",
-        "desc": "Smart prediction engine (Bottom-Up). Build a solid financial forecast based on probabilities and field data — before the campaign even starts."
+        "desc": "Smart prediction engine (Bottom-Up). Build a solid financial forecast based on probabilities and field data - before the campaign even starts."
       },
       "s3": {
         "role": "For the Fundraiser",
@@ -2838,18 +2866,26 @@
       }
     },
     "trafficLight": {
-      "tag": "Core Technology",
-      "title": "Traffic Light Questionnaire — AI That Knows Who to Call",
-      "desc": "Our AI algorithm analyzes 4 depth metrics: financial capacity, personal closeness, influence level and mental readiness. The result: the system tells you exactly who to talk to now, and about how much.",
-      "metric1": "Financial Capacity",
-      "metric2": "Personal Closeness",
-      "metric3": "Influence Level",
-      "metric4": "Mental Readiness"
+      "tag": "A Smart Questionnaire for Donor Prioritization",
+      "title": "The Traffic Light Questionnaire - From scattered data to an action plan",
+      "desc": "Instead of working with a long list of names and guessing where to start, the DONEXT questionnaire turns field data into a clear ranking. Every donor gets a traffic-light status showing the fundraiser the potential level, the readiness to approach, and how best to move forward.",
+      "green": {
+        "title": "High potential to approach now",
+        "desc": "A donor with a connection, a fit and a real chance of progressing to a donation."
+      },
+      "orange": {
+        "title": "Needs warming up or preparation",
+        "desc": "There's potential, but it needs the right approach, connection or more precise timing."
+      },
+      "red": {
+        "title": "Don't invest effort right now",
+        "desc": "A name that's less right to open with at this stage, or that needs different handling before an approach."
+      }
     },
     "dataAsset": {
       "tag": "Data Asset",
       "title": "Your Strategic CRM",
-      "desc": "DoNext isn't just for campaigns — it's your organizational memory.",
+      "desc": "DoNext isn't just for campaigns - it's your organizational memory.",
       "content": "Every campaign feeds the system with psychological ratings and donor intel. Over time, DoNext becomes the smart CRM of your organization, so your next campaign always starts from a much higher starting point."
     },
     "founder": {
@@ -2864,40 +2900,40 @@
       "subtitle": "Everything your organization needs to raise more, faster, and smarter",
       "dashboard": {
         "title": "Real-time Dashboard",
-        "desc": "See exactly where your campaign stands — how much raised, how many donors, where to push. All live."
+        "desc": "See exactly where your campaign stands - how much raised, how many donors, where to push. All live."
       },
       "payments": {
         "title": "Automatic Collection",
-        "desc": "Stripe, standing orders, credit cards — donors choose how to pay, you simply receive. Zero friction."
+        "desc": "Stripe, standing orders, credit cards - donors choose how to pay, you simply receive. Zero friction."
       },
       "donors": {
         "title": "Full Donor CRM",
-        "desc": "Donor profiles with full history, commitments, notes, and segmentation — know exactly who to reach and when."
+        "desc": "Donor profiles with full history, commitments, notes, and segmentation - know exactly who to reach and when."
       },
       "mobile": {
         "title": "Access From Any Device",
-        "desc": "An interface that works from mobile just like desktop — manage fundraisers, view data, and get alerts on the go."
+        "desc": "An interface that works from mobile just like desktop - manage fundraisers, view data, and get alerts on the go."
       },
       "analytics": {
         "title": "Reports That Drive Decisions",
-        "desc": "Not just charts — reports that help you understand what's working, what's not, and where the next opportunity is."
+        "desc": "Not just charts - reports that help you understand what's working, what's not, and where the next opportunity is."
       },
       "integrations": {
         "title": "Connect All Your Systems",
-        "desc": "Pledger, Bevel, Matbia, OJC — seamless integration with systems you already use, zero manual work."
+        "desc": "Direct connection to 36 payment systems around the world and to the systems you already use, with no duplicate work."
       }
     },
     "howItWorks": {
       "tag": "Getting Started",
       "title": "From signup to fundraising in 4 steps",
-      "subtitle": "A simple process that takes minutes — and you'll start seeing results",
+      "subtitle": "A simple process that takes minutes - and you'll start seeing results",
       "step1": {
         "title": "Open a free account",
         "desc": "Sign up in one minute. No credit card, no commitment."
       },
       "step2": {
         "title": "Build your campaign",
-        "desc": "Set a goal, design your donation page, connect payment methods — and your campaign is live."
+        "desc": "Set a goal, design your donation page, connect payment methods - and your campaign is live."
       },
       "step3": {
         "title": "Recruit your team",
@@ -2909,10 +2945,22 @@
       }
     },
     "stats": {
-      "campaigns": { "number": "500+", "label": "Active Campaigns" },
-      "donations": { "number": "50K+", "label": "Donations Made" },
-      "raised": { "number": "$7M+", "label": "Raised" },
-      "satisfaction": { "number": "99%", "label": "Satisfaction" }
+      "campaigns": {
+        "number": "500+",
+        "label": "Active Campaigns"
+      },
+      "donations": {
+        "number": "50K+",
+        "label": "Donations Made"
+      },
+      "raised": {
+        "number": "$7M+",
+        "label": "Raised"
+      },
+      "satisfaction": {
+        "number": "99%",
+        "label": "Satisfaction"
+      }
     },
     "testimonials": {
       "tag": "Proven Success",
@@ -2920,49 +2968,56 @@
       "subtitle": "Real results from real organizations",
       "t1": {
         "text": "We went from 'firefighting' management to precision business management. We reached 140% of our goal.",
-        "avatar": "M",
-        "name": "Fundraising Manager",
-        "role": "National Organization"
+        "avatar": "L",
+        "name": "Rabbi Yehuda Landau",
+        "role": "CEO, 'Tzedakat Eretz HaKodesh'"
       },
       "t2": {
         "text": "The peace of mind knowing two weeks before the campaign how much money will come in is irreplaceable.",
-        "avatar": "D",
-        "name": "Organization Director",
-        "role": "Educational Institution"
+        "avatar": "Y",
+        "name": "Rabbi Menachem Yakovovitch",
+        "role": "Yeshivat Chochmat Yehuda"
       },
       "t3": {
         "text": "The gamification in the app made our fundraisers fight for every donation with joy.",
-        "avatar": "T",
-        "name": "Fundraiser Manager",
-        "role": "Major Yeshiva"
+        "avatar": "S",
+        "name": "Rabbi Yosef Shor",
+        "role": "'Bechartanu' Organization"
       },
       "t4": {
         "text": "DoNext isn't software, it's strategy in a box. It prevented us from wasting time on 'red' donors.",
-        "avatar": "A",
-        "name": "Fundraising Advisor",
-        "role": "Relief Organization"
+        "avatar": "C",
+        "name": "Rabbi Moshe Cohen",
+        "role": "Dushinsky Community"
       }
     },
     "faq": {
       "tag": "FAQ",
       "title": "Got questions? We've got answers",
-      "q1": { "q": "Does it replace my CRM?", "a": "Initially, DoNext layers on top of your data as an intelligence layer. Over time, as strategic data accumulates, it becomes your organization's central and smartest CRM." },
-      "q2": { "q": "Does it require complex training?", "a": "Not at all. The system was built specifically for non-technical users. It's simple, intuitive, and warm." },
-      "q3": { "q": "When should I start?", "a": "As early as possible. The sooner you begin the prediction and scoring process, the higher your certainty level and the lower your stress." }
+      "q1": {
+        "q": "Does it replace my CRM?",
+        "a": "Initially, DoNext layers on top of your data as an intelligence layer. Over time, as strategic data accumulates, it becomes your organization's central and smartest CRM."
+      },
+      "q2": {
+        "q": "Does it require complex training?",
+        "a": "Not at all. The system was built specifically for non-technical users. It's simple, intuitive, and warm."
+      },
+      "q3": {
+        "q": "When should I start?",
+        "a": "As early as possible. The sooner you begin the prediction and scoring process, the higher your certainty level and the lower your stress."
+      }
     },
     "about": {
       "tag": "Our Story",
-      "title": "Born from the problem — built as the solution",
-      "desc": "DoNext was created when we saw that the Israeli market lacked a modern fundraising tool that truly understands local needs. We built a platform that combines advanced technology with deep understanding of the community — so every organization can raise more with less effort.",
-      "value1": "Full Hebrew interface — complete RTL",
+      "title": "Born from the problem - built as the solution",
+      "desc": "DoNext was created when we saw that the Israeli market lacked a modern fundraising tool that truly understands local needs. We built a platform that combines advanced technology with deep understanding of the community - so every organization can raise more with less effort.",
+      "value1": "Full Hebrew interface - complete RTL",
       "value2": "Highest level data security",
       "value3": "Fast and personal Israeli support",
       "value4": "Weekly updates and continuous improvements",
-      "cardText": "The fundraising market in Israel is worth ~500M NIS per year. We're here to help you take your share.",
+      "cardText": "The donation fundraising market in Israel and the US is worth ~$600M per year! We're here to help you take your share.",
       "stat1Num": "24/6",
-      "stat1Label": "Support",
-      "stat2Num": "500+",
-      "stat2Label": "Organizations"
+      "stat1Label": "Support"
     },
     "cta": {
       "title": "Let's close the black hole in your donation management",
@@ -2973,7 +3028,7 @@
     "contact": {
       "tag": "Talk to Us",
       "title": "Want to see DoNext in action?",
-      "desc": "Book a personal demo or send us a question — we'll get back to you within hours.",
+      "desc": "Book a personal demo or send us a question - we'll get back to you within hours.",
       "emailLabel": "Email",
       "phoneLabel": "Phone",
       "locationLabel": "Address",
@@ -2992,7 +3047,7 @@
       }
     },
     "footer": {
-      "brandText": "DoNext — The operating system for smart fundraising.",
+      "brandText": "DoNext - The operating system for smart fundraising.",
       "product": "Product",
       "company": "Company",
       "legal": "Legal",
