@@ -41,7 +41,9 @@ export default function AdditionalSettingsPage() {
         unitLabel: '',
         unitLabelPlural: '',
         unitPrice: '',
-        minDonationAmount: ''
+        minDonationAmount: '',
+        gaugeRaisedOnly: false,
+        showOnlyProgressCircle: false
     });
 
     // State for copied link notification
@@ -119,7 +121,9 @@ export default function AdditionalSettingsPage() {
                     unitLabel: data.unitLabel || '',
                     unitLabelPlural: data.unitLabelPlural || '',
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
-                    minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : ''
+                    minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
+                    gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
+                    showOnlyProgressCircle: data.showOnlyProgressCircle ?? false
                 });
             }
         } catch (error) {
@@ -587,6 +591,48 @@ export default function AdditionalSettingsPage() {
                                 className={styles.input}
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* תצוגת עיגול ההתקדמות במסך הציבורי */}
+                <div className={styles.settingsSection}>
+                    <h2><ScreensIcon className={styles.sectionTitleIcon} />תצוגת עיגול ההתקדמות</h2>
+                    <p className={styles.sectionDesc}>
+                        שליטה על מה שמוצג בעיגול ההתקדמות במסך הציבורי ועל שאר העיגולים (זמן וסטטיסטיקות).
+                    </p>
+
+                    <div className={styles.toggleContainer}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.gaugeRaisedOnly}
+                                onChange={(e) => handleInputChange('gaugeRaisedOnly', e.target.checked)}
+                                className={styles.toggleInput}
+                            />
+                            <span className={styles.toggleSwitch}></span>
+                            <span className={styles.toggleText}>
+                                {formData.gaugeRaisedOnly
+                                    ? 'מציג רק "עד כה נתרם" (ללא אחוזים וללא היעד)'
+                                    : 'מציג אחוזים, סכום שנאסף ומתוך כמה (ברירת מחדל)'}
+                            </span>
+                        </label>
+                    </div>
+
+                    <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.showOnlyProgressCircle}
+                                onChange={(e) => handleInputChange('showOnlyProgressCircle', e.target.checked)}
+                                className={styles.toggleInput}
+                            />
+                            <span className={styles.toggleSwitch}></span>
+                            <span className={styles.toggleText}>
+                                {formData.showOnlyProgressCircle
+                                    ? 'מציג רק את עיגול ההתקדמות (ללא זמן וסטטיסטיקות)'
+                                    : 'מציג את כל שלושת העיגולים (ברירת מחדל)'}
+                            </span>
+                        </label>
                     </div>
                 </div>
 

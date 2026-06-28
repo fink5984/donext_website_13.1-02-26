@@ -474,7 +474,11 @@ export async function GET(request, { params }) {
                     unitLabel: publicScreenSettings?.unitLabel || null,
                     unitLabelPlural: publicScreenSettings?.unitLabelPlural || null,
                     unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,
-                    minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null
+                    minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null,
+                    // Gauge display: show only the raised amount (no % / no goal line)
+                    gaugeRaisedOnly: publicScreenSettings?.gaugeRaisedOnly ?? false,
+                    // Hide the time + statistics circles, leaving only the progress gauge
+                    showOnlyProgressCircle: publicScreenSettings?.showOnlyProgressCircle ?? false
                 },
                 statistics: {
                     totalCollected: totalCollected,

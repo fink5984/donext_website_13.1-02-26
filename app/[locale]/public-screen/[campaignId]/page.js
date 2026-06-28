@@ -62,6 +62,7 @@ export default function PublicCampaignScreen() {
             fundraisers: 'מתרימים',
             outOfGoal: 'מתוך יעד של',
             outOfMonthlyGoal: 'מתוך יעד חודשי של',
+            raisedSoFar: 'עד כה נתרם',
             perMonth: 'לחודש',
             timeToStart: 'זמן לתחילה',
             timeToEnd: 'זמן לסיום',
@@ -133,6 +134,7 @@ export default function PublicCampaignScreen() {
             fundraisers: 'Fundraisers',
             outOfGoal: 'out of a goal of',
             outOfMonthlyGoal: 'out of a monthly goal of',
+            raisedSoFar: 'Raised so far',
             perMonth: '/ month',
             timeToStart: 'Time to start',
             timeToEnd: 'Time to end',
@@ -613,6 +615,11 @@ export default function PublicCampaignScreen() {
     const progressPercent = Math.min(statistics.progressPercentage, 100);
     // Display percentage - can be above 100%
     const displayPercent = statistics.progressPercentage;
+
+    // Gauge display option: show only the raised amount (no percentage, no "out of goal" line)
+    const gaugeRaisedOnly = !!settings?.gaugeRaisedOnly;
+    // Layout option: hide the time + statistics circles, leaving only the progress gauge
+    const showOnlyProgressCircle = !!settings?.showOnlyProgressCircle;
     
     // Function to convert Google Drive URL to direct image URL
     const convertGoogleDriveUrl = (url) => {
@@ -1172,23 +1179,36 @@ export default function PublicCampaignScreen() {
                                         
                                         {/* Text overlay */}
                                         <div className={styles.gaugeContent}>
-                                            <div className={styles.gaugePercent}>
-                                                {displayPercent.toFixed(0)}%
-                                            </div>
+                                            {/* When "raised only" is set we drop the percentage and the goal line,
+                                                showing a "raised so far" label above just the raised amount. */}
+                                            {gaugeRaisedOnly ? (
+                                                <div className={styles.gaugeTarget}>
+                                                    {t('raisedSoFar')}
+                                                </div>
+                                            ) : (
+                                                <div className={styles.gaugePercent}>
+                                                    {displayPercent.toFixed(0)}%
+                                                </div>
+                                            )}
                                             <div className={styles.gaugeAmount}>
                                                 {formatAmount(animatedCollected)}
                                             </div>
-                                            <div className={styles.gaugeTarget}>
-                                                {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
-                                                    ? t('outOfMonthlyGoal')
-                                                    : t('outOfGoal')} {formatAmount(statistics.targetAmount)}
-                                            </div>
+                                            {!gaugeRaisedOnly && (
+                                                <div className={styles.gaugeTarget}>
+                                                    {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
+                                                        ? t('outOfMonthlyGoal')
+                                                        : t('outOfGoal')} {formatAmount(statistics.targetAmount)}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             ) : (
                                 // No goal
                                 <div className={styles.liquidGaugeContainer}>
+                                    <div className={styles.gaugeTarget}>
+                                        {t('raisedSoFar')}
+                                    </div>
                                     <div className={styles.gaugeAmount}>
                                         {formatAmount(animatedCollected)}
                                     </div>
@@ -1197,7 +1217,7 @@ export default function PublicCampaignScreen() {
                         </div>
 
                         {/* Middle Circle - Dynamic Stats */}
-                        {dynamicStats.length > 0 && (() => {
+                        {!showOnlyProgressCircle && dynamicStats.length > 0 && (() => {
                             const accent = data?.publicScreenRanksBackgroundColor || '#b45309';
                             const activeStat = dynamicStats[currentStatIndex] || dynamicStats[0];
                             return (
@@ -1249,6 +1269,7 @@ export default function PublicCampaignScreen() {
                         })()}
 
                         {/* Timer Section - Left Side */}
+                        {!showOnlyProgressCircle && (
                         <div className={styles.timerSection}>
                             {/* Progress Circle */}
                             <div className={styles.timerCircle}>
@@ -1384,6 +1405,7 @@ export default function PublicCampaignScreen() {
                                 </div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
 

@@ -33,6 +33,8 @@ export async function GET(request, { params }) {
                 unitLabelPlural: '',
                 unitPrice: null,
                 minDonationAmount: null,
+                gaugeRaisedOnly: false,
+                showOnlyProgressCircle: false,
             });
         }
 
@@ -56,6 +58,8 @@ export async function GET(request, { params }) {
             unitLabelPlural: settings.unitLabelPlural || '',
             unitPrice: settings.unitPrice != null ? Number(settings.unitPrice) : null,
             minDonationAmount: settings.minDonationAmount != null ? Number(settings.minDonationAmount) : null,
+            gaugeRaisedOnly: settings.gaugeRaisedOnly ?? false,
+            showOnlyProgressCircle: settings.showOnlyProgressCircle ?? false,
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -75,7 +79,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -120,6 +124,8 @@ export async function PUT(request, { params }) {
             unitLabelPlural: unitLabelPlural || null,
             unitPrice: toPositiveNumber(unitPrice),
             minDonationAmount: toPositiveNumber(minDonationAmount),
+            gaugeRaisedOnly: gaugeRaisedOnly ?? false,
+            showOnlyProgressCircle: showOnlyProgressCircle ?? false,
         };
         if (monthsCalc !== null) updateData.monthsCalculation = monthsCalc;
         if (donationsCalc !== null) updateData.donationsCalculation = donationsCalc;
