@@ -11,13 +11,58 @@ const AmountSelection = ({
     onAmountSelect,
     onCustomAmountChange,
     campaign,
-    readOnly
+    readOnly,
+    unitMode = false,
+    unitPrice = 0,
+    unitLabelSingular = '',
+    unitLabelPlural = ''
 }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRTL = locale === 'he';
     const currencySymbol = getCampaignCurrencySymbol(campaign);
-    const title = isMonthlyCampaign ? t('howMuchMonthly') : t('howMuchTotal');
+
+    // Unit-donation mode: show amounts as units (e.g. meters) and let the donor enter a
+    // quantity. The value pushed up via onCustomAmountChange stays in money (units × price).
+    const unitActive = unitMode && unitPrice > 0;
+    const labelFor = (count) => (count === 1 ? unitLabelSingular : (unitLabelPlural || unitLabelSingular));
+    const moneyToUnits = (money) => {
+        const units = (Number(money) || 0) / unitPrice;
+        const rounded = Math.round(units * 100) / 100; // up to 2 decimals, trimmed
+        return Number.isFinite(rounded) ? rounded : 0;
+    };
+    const formatUnitLabel = (money) => {
+        const units = moneyToUnits(money);
+        const num = units.toLocaleString();
+        const lbl = labelFor(units);
+        return lbl ? `${num} ${lbl}` : num;
+    };
+
+    // Local string for the unit-quantity input so typing (e.g. "3.") stays smooth while we
+    // keep the parent's customAmount in money.
+    const [unitInput, setUnitInput] = React.useState('');
+    useEffect(() => {
+        // Reset the quantity field when the custom amount is cleared externally (e.g. a rank was picked)
+        if (unitActive && (customAmount === '' || customAmount == null)) {
+            setUnitInput('');
+        }
+    }, [customAmount, unitActive]);
+
+    const handleUnitInputChange = (e) => {
+        let value = e.target.value.replace(/[^0-9.]/g, '');
+        const parts = value.split('.');
+        if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+        setUnitInput(value);
+        const units = parseFloat(value);
+        onCustomAmountChange(value === '' || isNaN(units) ? '' : String(units * unitPrice));
+    };
+
+    const baseTitle = isMonthlyCampaign ? t('howMuchMonthly') : t('howMuchTotal');
+    const title = unitActive
+        ? (isRTL
+            ? `כמה ${unitLabelPlural || unitLabelSingular || 'יחידות'} תרצה לתרום?`
+            : `How many ${unitLabelPlural || unitLabelSingular || 'units'} would you like to donate?`)
+        : baseTitle;
 
     // Truncate to 2 decimal places when receiving value from outside (e.g., in edit mode)
     useEffect(() => {
@@ -74,7 +119,9 @@ const AmountSelection = ({
                             {index === 4 && <span className={styles.star}>⭐</span>}
                         </div>
                         <span className={`${styles.amountText} headline-4`}>
-                            {isRTL ? (
+                            {unitActive ? (
+                                formatUnitLabel(rank.amount)
+                            ) : isRTL ? (
                                 <>{Number(rank.amount).toLocaleString()} {currencySymbol}</>
                             ) : (
                                 <>{currencySymbol} {Number(rank.amount).toLocaleString()}</>
@@ -114,15 +161,15 @@ const AmountSelection = ({
                     <input
                         type="text"
                         className={styles.customAmountField}
-                        placeholder={t('otherAmount')}
-                        value={customAmount}
-                        onChange={handleCustomAmountChange}
+                        placeholder={unitActive ? (isRTL ? 'כמות אחרת' : 'Other quantity') : t('otherAmount')}
+                        value={unitActive ? unitInput : customAmount}
+                        onChange={unitActive ? handleUnitInputChange : handleCustomAmountChange}
                         onFocus={() => !readOnly && onAmountSelect('custom')}
                         readOnly={readOnly}
                         style={readOnly ? { cursor: 'default' } : undefined}
                     />
                     {selectedAmount === 'custom' ? (
-                        <div className={styles.currencySymbol}>{currencySymbol}</div>
+                        <div className={styles.currencySymbol}>{unitActive ? (labelFor(parseFloat(unitInput) || 0) || currencySymbol) : currencySymbol}</div>
                     ) : (
                         <div className={styles.editIcon}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

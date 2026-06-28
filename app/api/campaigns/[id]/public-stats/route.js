@@ -466,7 +466,15 @@ export async function GET(request, { params }) {
                 settings: {
                     hasGoal: screenSettings?.hasGoal ?? true,
                     textOverTotal: screenSettings?.textOverTotal,
-                    textUnderTotal: screenSettings?.textUnderTotal
+                    textUnderTotal: screenSettings?.textUnderTotal,
+                    // "Unit mode": display raised units (e.g. meters) instead of money
+                    unitMode: publicScreenSettings?.unitMode ?? false,
+                    // "Unit donation mode": the donation form itself works in units
+                    unitDonationMode: publicScreenSettings?.unitDonationMode ?? false,
+                    unitLabel: publicScreenSettings?.unitLabel || null,
+                    unitLabelPlural: publicScreenSettings?.unitLabelPlural || null,
+                    unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,
+                    minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null
                 },
                 statistics: {
                     totalCollected: totalCollected,

@@ -702,6 +702,12 @@ model PublicScreenSettings {
   promoVideoUrl        String?   @map("promo_video_url")
   monthsCalculation    Int       @default(1) @map("months_calculation")
   donationsCalculation Int       @default(1) @map("donations_calculation")
+  unitMode             Boolean   @default(false) @map("unit_mode")
+  unitDonationMode     Boolean   @default(false) @map("unit_donation_mode")
+  unitLabel            String?   @map("unit_label")
+  unitLabelPlural      String?   @map("unit_label_plural")
+  unitPrice            Decimal?  @map("unit_price")
+  minDonationAmount    Decimal?  @map("min_donation_amount")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

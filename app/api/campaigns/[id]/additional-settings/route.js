@@ -27,6 +27,12 @@ export async function GET(request, { params }) {
                 showDonationDetails: true,
                 monthsCalculation: 1,
                 donationsCalculation: 1,
+                unitMode: false,
+                unitDonationMode: false,
+                unitLabel: '',
+                unitLabelPlural: '',
+                unitPrice: null,
+                minDonationAmount: null,
             });
         }
 
@@ -44,6 +50,12 @@ export async function GET(request, { params }) {
             promoVideoUrl: settings.promoVideoUrl || null,
             monthsCalculation: settings.monthsCalculation ?? 1,
             donationsCalculation: settings.donationsCalculation ?? 1,
+            unitMode: settings.unitMode ?? false,
+            unitDonationMode: settings.unitDonationMode ?? false,
+            unitLabel: settings.unitLabel || '',
+            unitLabelPlural: settings.unitLabelPlural || '',
+            unitPrice: settings.unitPrice != null ? Number(settings.unitPrice) : null,
+            minDonationAmount: settings.minDonationAmount != null ? Number(settings.minDonationAmount) : null,
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -63,7 +75,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -72,6 +84,11 @@ export async function PUT(request, { params }) {
             : null;
         const monthsCalc = monthsCalculation !== undefined ? toPositiveInt(monthsCalculation) : null;
         const donationsCalc = donationsCalculation !== undefined ? toPositiveInt(donationsCalculation) : null;
+
+        // מצב "תצוגת יחידות": מחיר/מינימום נשמרים כמספר חיובי, אחרת null
+        const toPositiveNumber = (val) => Number.isFinite(Number(val)) && Number(val) > 0
+            ? Number(val)
+            : null;
 
         // בדיקת קיום הקמפיין
         const existingCampaign = await prisma.campaign.findUnique({
@@ -97,6 +114,12 @@ export async function PUT(request, { params }) {
             isEnabled: isEnabled ?? false,
             showDonationDetails: showDonationDetails ?? true,
             promoVideoUrl: promoVideoUrl || null,
+            unitMode: unitMode ?? false,
+            unitDonationMode: unitDonationMode ?? false,
+            unitLabel: unitLabel || null,
+            unitLabelPlural: unitLabelPlural || null,
+            unitPrice: toPositiveNumber(unitPrice),
+            minDonationAmount: toPositiveNumber(minDonationAmount),
         };
         if (monthsCalc !== null) updateData.monthsCalculation = monthsCalc;
         if (donationsCalc !== null) updateData.donationsCalculation = donationsCalc;

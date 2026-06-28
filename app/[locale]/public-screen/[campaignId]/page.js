@@ -583,6 +583,29 @@ export default function PublicCampaignScreen() {
     }
 
     const { campaign, statistics, settings, recentDonations, topDonors, ranks, publicScreenRanks, fundraisers, publicScreenAbout, showDonationDetails } = data;
+
+    // "Unit mode": instead of showing the raised amount of money, show how many units
+    // (e.g. meters, bricks) were raised. unitPrice converts money <-> units; the goal in
+    // units is derived from the money goal ÷ unitPrice (percentage is identical either way).
+    const unitPrice = Number(settings?.unitPrice) || 0;
+    const unitMode = !!settings?.unitMode && unitPrice > 0;
+    const unitLabelSingular = settings?.unitLabel || '';
+    const unitLabelPlural = settings?.unitLabelPlural || settings?.unitLabel || '';
+    const formatUnits = (moneyValue) => {
+        if (!unitPrice) return '';
+        const units = (Number(moneyValue) || 0) / unitPrice;
+        // Round to nearest whole unit, but keep one decimal when it isn't whole
+        const rounded = Math.round(units * 10) / 10;
+        const isWhole = Math.abs(rounded - Math.round(rounded)) < 0.05;
+        const display = isWhole ? Math.round(rounded) : rounded;
+        const num = new Intl.NumberFormat('he-IL').format(display);
+        const label = display === 1 ? unitLabelSingular : unitLabelPlural;
+        return label ? `${num} ${label}` : num;
+    };
+    // In unit mode raised/goal amounts are shown as units; otherwise as formatted currency.
+    // Used for the gauge and for the donor / fundraiser / top-donor cards.
+    const formatAmount = (moneyValue) => unitMode ? formatUnits(moneyValue) : formatCurrency(moneyValue);
+
     // When a monthly campaign is displayed in monthly units (monthsCalculation === 1), every amount on the page
     // represents a monthly figure. We append "לחודש" next to amounts so it stays unambiguous for viewers.
     const isMonthlyUnitMode = campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1;
@@ -1153,12 +1176,12 @@ export default function PublicCampaignScreen() {
                                                 {displayPercent.toFixed(0)}%
                                             </div>
                                             <div className={styles.gaugeAmount}>
-                                                {formatCurrency(animatedCollected)}
+                                                {formatAmount(animatedCollected)}
                                             </div>
                                             <div className={styles.gaugeTarget}>
                                                 {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
                                                     ? t('outOfMonthlyGoal')
-                                                    : t('outOfGoal')} {formatCurrency(statistics.targetAmount)}
+                                                    : t('outOfGoal')} {formatAmount(statistics.targetAmount)}
                                             </div>
                                         </div>
                                     </div>
@@ -1167,7 +1190,7 @@ export default function PublicCampaignScreen() {
                                 // No goal
                                 <div className={styles.liquidGaugeContainer}>
                                     <div className={styles.gaugeAmount}>
-                                        {formatCurrency(animatedCollected)}
+                                        {formatAmount(animatedCollected)}
                                     </div>
                                 </div>
                             )}
@@ -1484,7 +1507,7 @@ export default function PublicCampaignScreen() {
                                             </div>
                                         </div>
                                         <div className={styles.fundraiserDetailsAmount} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                            <span>{formatCurrency(displayAmount)}</span>
+                                            <span>{formatAmount(displayAmount)}</span>
                                             {isMonthlyUnitMode && (
                                                 <span style={{ fontSize: '0.55em', color: '#94a3b8', fontWeight: 'normal', marginTop: '-2px' }}>
                                                     {t('perMonth')}
@@ -1507,7 +1530,7 @@ export default function PublicCampaignScreen() {
                                         <div className={styles.progressText}>
                                             <span>{progressPercentage.toFixed(0)}%</span>
                                             {selectedFundraiser.targetAmount > 0 && (
-                                                <span>{t('goal')}: {formatCurrency(selectedFundraiser.targetAmount)}</span>
+                                                <span>{t('goal')}: {formatAmount(selectedFundraiser.targetAmount)}</span>
                                             )}
                                         </div>
                                     </div>
@@ -1748,7 +1771,7 @@ export default function PublicCampaignScreen() {
                                                     border: '1px solid rgba(180, 83, 9, 0.2)'
                                                 }}>
                                                     <div style={{ fontWeight: 'bold', fontSize: '1.1em', textAlign: 'center' }}>
-                                                        {formatCurrency(displayAmount)}
+                                                        {formatAmount(displayAmount)}
                                                     </div>
                                                     {isMonthlyUnitMode && (
                                                         <div style={{ fontSize: '0.7em', fontWeight: 'normal', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -1763,7 +1786,7 @@ export default function PublicCampaignScreen() {
                                                             whiteSpace: 'nowrap',
                                                             textAlign: 'center'
                                                         }}>
-                                                            {t('monthly')}: {formatCurrency(donor.monthlyAmount || donor.amount)}
+                                                            {t('monthly')}: {formatAmount(donor.monthlyAmount || donor.amount)}
                                                         </div>
                                                     )}
                                                 </div>
@@ -1899,7 +1922,7 @@ export default function PublicCampaignScreen() {
                                                         width: '100%'
                                                     }}>
                                                         <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>
-                                                            {(statistics.monthsCalculation || 1) > 1 ? `${t('total')}: ` : ''}{formatCurrency(item.totalRaised)}
+                                                            {(statistics.monthsCalculation || 1) > 1 ? `${t('total')}: ` : ''}{formatAmount(item.totalRaised)}
                                                         </div>
                                                         {isMonthlyUnitMode && (
                                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -1908,7 +1931,7 @@ export default function PublicCampaignScreen() {
                                                         )}
                                                         {(statistics.monthsCalculation || 1) > 1 && (
                                                             <div style={{ fontSize: '0.75rem', color: '#666', whiteSpace: 'nowrap' }}>
-                                                                {t('monthly')}: {formatCurrency(item.monthlyRaised || (item.totalRaised / (statistics.monthsCalculation || data?.campaign?.defaultHokMonths || 1)))}
+                                                                {t('monthly')}: {formatAmount(item.monthlyRaised || (item.totalRaised / (statistics.monthsCalculation || data?.campaign?.defaultHokMonths || 1)))}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1921,7 +1944,7 @@ export default function PublicCampaignScreen() {
                                                         width: '100%'
                                                     }}>
                                                         <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b' }}>
-                                                            {formatCurrency(item.totalRaised)}
+                                                            {formatAmount(item.totalRaised)}
                                                         </div>
                                                     </div>
                                                 )}
@@ -1941,7 +1964,7 @@ export default function PublicCampaignScreen() {
                                                 <div className={styles.progressText}>
                                                     <span>{progressPercentage.toFixed(0)}%</span>
                                                     {item.targetAmount > 0 && (
-                                                        <span>יעד: {formatCurrency(item.targetAmount)}</span>
+                                                        <span>יעד: {formatAmount(item.targetAmount)}</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -2081,7 +2104,7 @@ export default function PublicCampaignScreen() {
                                                 border: '1px solid rgba(180, 83, 9, 0.2)'
                                             }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.1em', textAlign: 'center' }}>
-                                                    {formatCurrency(displayAmount)}
+                                                    {formatAmount(displayAmount)}
                                                 </div>
                                                 {isMonthlyUnitMode && (
                                                     <div style={{ fontSize: '0.7em', fontWeight: 'normal', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -2096,7 +2119,7 @@ export default function PublicCampaignScreen() {
                                                         whiteSpace: 'nowrap',
                                                         textAlign: 'center'
                                                     }}>
-                                                        {t('monthly')}: {formatCurrency(item.monthlyAmount || item.amount)}
+                                                        {t('monthly')}: {formatAmount(item.monthlyAmount || item.amount)}
                                                     </div>
                                                 )}
                                             </div>

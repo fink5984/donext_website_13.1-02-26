@@ -37,6 +37,10 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const [selectedDonor, setSelectedDonor] = useState(null);
     const [validationState, setValidationState] = useState({ isValid: false });
     const [selectedFundraiserId, setSelectedFundraiserId] = useState(initialFundraiserId || null);
+    // Minimum free-amount donation enforced on the public screen (null = no minimum)
+    const [minDonationAmount, setMinDonationAmount] = useState(null);
+    // Unit-donation mode: the donor picks a number of units; the charged amount stays in money
+    const [unitConfig, setUnitConfig] = useState({ active: false, price: 0, labelSingular: '', labelPlural: '' });
     
     // Existing donor state (found by phone)
     const [existingDonor, setExistingDonor] = useState(null);
@@ -96,6 +100,15 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     setCampaign(campaignData);
                     setFundraisers(publicStatsData.data?.fundraisers || []);
                     setDonationRanks(publicStatsData.data?.ranks || []);
+                    setMinDonationAmount(publicStatsData.data?.settings?.minDonationAmount ?? null);
+                    const s = publicStatsData.data?.settings || {};
+                    const unitPrice = Number(s.unitPrice) || 0;
+                    setUnitConfig({
+                        active: !!s.unitDonationMode && unitPrice > 0,
+                        price: unitPrice,
+                        labelSingular: s.unitLabel || '',
+                        labelPlural: s.unitLabelPlural || s.unitLabel || ''
+                    });
                     
                     // Set credit card provider from campaign
                     if (campaignData?.creditCardProvider) {
@@ -191,6 +204,14 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const isMonthlyCampaign = campaign?.donationType === 'monthly';
     const isDefaultUnlimitedCampaign = isMonthlyCampaign && campaign?.defaultHokMonths === 0;
     const defaultNumberOfPayments = isMonthlyCampaign && !isDefaultUnlimitedCampaign ? (campaign?.defaultHokMonths ?? 12) : 1;
+
+    // Enforce the minimum donation only on the free (custom) amount field. Fixed ranks are exempt.
+    const customAmountValue = formData.selectedAmount === 'custom' ? (parseFloat(formData.customAmount) || 0) : 0;
+    const belowMinimum = minDonationAmount != null
+        && formData.selectedAmount === 'custom'
+        && formData.customAmount !== ''
+        && customAmountValue > 0
+        && customAmountValue < minDonationAmount;
     const defaultIsUnlimited = isDefaultUnlimitedCampaign;
 
     const handleAmountSelect = (amount) => {
@@ -441,7 +462,14 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
             return;
         }
 
-        const selectedAmountValue = formData.selectedAmount === 'custom' 
+        // Guard: a free amount below the configured minimum must not be submitted
+        if (minDonationAmount != null
+            && formData.selectedAmount === 'custom'
+            && (parseFloat(formData.customAmount) || 0) < minDonationAmount) {
+            return;
+        }
+
+        const selectedAmountValue = formData.selectedAmount === 'custom'
             ? parseFloat(formData.customAmount) || 0 
             : formData.selectedAmount || 0;
         
@@ -699,7 +727,19 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                                 onAmountSelect={handleAmountSelect}
                                 onCustomAmountChange={handleCustomAmountChange}
                                 campaign={campaign}
+                                unitMode={unitConfig.active}
+                                unitPrice={unitConfig.price}
+                                unitLabelSingular={unitConfig.labelSingular}
+                                unitLabelPlural={unitConfig.labelPlural}
                             />
+
+                            {belowMinimum && (
+                                <div style={{ color: '#dc2626', fontSize: '13px', marginTop: '8px', textAlign: locale === 'he' ? 'right' : 'left' }}>
+                                    {locale === 'he'
+                                        ? `סכום התרומה המינימלי הוא ₪${minDonationAmount.toLocaleString()}`
+                                        : `The minimum donation amount is ₪${minDonationAmount.toLocaleString()}`}
+                                </div>
+                            )}
 
                             <PaymentFrequency
                                 isMonthlyCampaign={isMonthlyCampaign}
@@ -1047,12 +1087,12 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         onClick={() => {
                             if (!validationState.isValid) {
                                 validationState.showValidation?.();
-                            } else {
+                            } else if (!belowMinimum) {
                                 handleSubmit();
                             }
                         }}
-                        disabled={!validationState.isValid || isLoading}
-                        disabledClick={!validationState.isValid || isLoading}
+                        disabled={!validationState.isValid || belowMinimum || isLoading}
+                        disabledClick={!validationState.isValid || belowMinimum || isLoading}
                         loading={isLoading}
                     />
                 </AlertDialogContent>

@@ -35,7 +35,13 @@ export default function AdditionalSettingsPage() {
         publicScreenEndDate: '',
         isEnabled: false,
         showDonationDetails: true,
-        promoVideoUrl: ''
+        promoVideoUrl: '',
+        unitMode: false,
+        unitDonationMode: false,
+        unitLabel: '',
+        unitLabelPlural: '',
+        unitPrice: '',
+        minDonationAmount: ''
     });
 
     // State for copied link notification
@@ -107,7 +113,13 @@ export default function AdditionalSettingsPage() {
                     publicScreenRanksBackgroundColor: data.publicScreenRanksBackgroundColor || '#b45309',
                     isEnabled: data.isEnabled ?? false,
                     showDonationDetails: data.showDonationDetails ?? true,
-                    promoVideoUrl: data.promoVideoUrl || ''
+                    promoVideoUrl: data.promoVideoUrl || '',
+                    unitMode: data.unitMode ?? false,
+                    unitDonationMode: data.unitDonationMode ?? false,
+                    unitLabel: data.unitLabel || '',
+                    unitLabelPlural: data.unitLabelPlural || '',
+                    unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
+                    minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : ''
                 });
             }
         } catch (error) {
@@ -461,6 +473,120 @@ export default function AdditionalSettingsPage() {
                                 {formData.showDonationDetails ? 'מציג את כל הטאבים (תורמים, מתרימים, מובילים, אודות)' : 'מציג רק טאב אודות'}
                             </span>
                         </label>
+                    </div>
+                </div>
+
+                {/* תצוגת יחידות (מטרים/לבנים וכו') */}
+                <div className={styles.settingsSection}>
+                    <h2><ScreensIcon className={styles.sectionTitleIcon} />תצוגת יחידות במקום סכום</h2>
+                    <p className={styles.sectionDesc}>
+                        במקום להציג כמה כסף נאסף, המסך יציג כמה יחידות נאספו (לדוגמה: מטרים לבניית בית כנסת).
+                        הגדר מחיר ליחידה ושם היחידה, והמערכת תחשב אוטומטית כמה יחידות נאספו וכמה היעד.
+                    </p>
+
+                    <div className={styles.toggleContainer}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.unitMode}
+                                onChange={(e) => handleInputChange('unitMode', e.target.checked)}
+                                className={styles.toggleInput}
+                            />
+                            <span className={styles.toggleSwitch}></span>
+                            <span className={styles.toggleText}>
+                                {formData.unitMode ? 'מציג יחידות נאספו' : 'מציג סכום שנאסף (ברירת מחדל)'}
+                            </span>
+                        </label>
+                    </div>
+
+                    {formData.unitMode && (
+                        <div className={styles.contactForm}>
+                            <div className={styles.formGroup}>
+                                <label>מחיר ליחידה (₪)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="any"
+                                    placeholder="לדוגמה: 100"
+                                    value={formData.unitPrice}
+                                    onChange={(e) => handleInputChange('unitPrice', e.target.value)}
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>שם היחידה (יחיד)</label>
+                                <input
+                                    type="text"
+                                    placeholder="לדוגמה: מטר"
+                                    value={formData.unitLabel}
+                                    onChange={(e) => handleInputChange('unitLabel', e.target.value)}
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>שם היחידה (רבים)</label>
+                                <input
+                                    type="text"
+                                    placeholder="לדוגמה: מטרים"
+                                    value={formData.unitLabelPlural}
+                                    onChange={(e) => handleInputChange('unitLabelPlural', e.target.value)}
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            {formData.unitPrice && Number(formData.unitPrice) > 0 && (
+                                <p className={styles.infoText}>
+                                    💡 היעד ביחידות יחושב אוטומטית לפי היעד הכספי ÷ מחיר ליחידה.
+                                    אם לא הוגדר יעד לקמפיין — יוצג רק מספר היחידות שנאספו, ללא יעד.
+                                </p>
+                            )}
+
+                            <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                                <label className={styles.toggleLabel}>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.unitDonationMode}
+                                        onChange={(e) => handleInputChange('unitDonationMode', e.target.checked)}
+                                        className={styles.toggleInput}
+                                    />
+                                    <span className={styles.toggleSwitch}></span>
+                                    <span className={styles.toggleText}>
+                                        {formData.unitDonationMode
+                                            ? 'טופס התרומה ביחידות (התורם בוחר כמות)'
+                                            : 'טופס התרומה בכסף (ברירת מחדל)'}
+                                    </span>
+                                </label>
+                                <p className={styles.infoText}>
+                                    כשמופעל, התורם בוחר כמה יחידות לתרום והסכום מחושב אוטומטית (כמות × מחיר ליחידה).
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* סכום מינימום לתרומה */}
+                <div className={styles.settingsSection}>
+                    <h2><EyeIcon className={styles.sectionTitleIcon} />סכום מינימום לתרומה</h2>
+                    <p className={styles.sectionDesc}>
+                        סכום מינימלי שניתן להזין בשדה הסכום החופשי בטופס התרומה. השאר ריק כדי לא להגביל.
+                        דרגות תרומה קבועות אינן מושפעות מהמגבלה.
+                    </p>
+
+                    <div className={styles.contactForm}>
+                        <div className={styles.formGroup}>
+                            <label>סכום מינימום (₪)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="ללא הגבלה"
+                                value={formData.minDonationAmount}
+                                onChange={(e) => handleInputChange('minDonationAmount', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
                     </div>
                 </div>
 
