@@ -64,6 +64,13 @@ const AmountSelection = ({
             : `How many ${unitLabelPlural || unitLabelSingular || 'units'} would you like to donate?`)
         : baseTitle;
 
+    // The custom field placeholder. In unit mode it asks for a quantity; the unit word is
+    // shown here (not as an overlay symbol) so the long label doesn't collide with the text.
+    const unitWord = unitLabelPlural || unitLabelSingular || (isRTL ? 'יחידות' : 'units');
+    const customPlaceholder = unitActive
+        ? (isRTL ? `כמות ${unitWord}` : `Quantity (${unitWord})`)
+        : t('otherAmount');
+
     // Truncate to 2 decimal places when receiving value from outside (e.g., in edit mode)
     useEffect(() => {
         if (customAmount && typeof customAmount === 'string') {
@@ -145,7 +152,7 @@ const AmountSelection = ({
                         if (!readOnly && selectedAmount !== 'custom' && !customAmount) {
                             const input = document.querySelector(`.${styles.customAmountField}`);
                             if (input) {
-                                input.placeholder = t('otherAmount');
+                                input.placeholder = customPlaceholder;
                             }
                         }
                     }}
@@ -169,7 +176,9 @@ const AmountSelection = ({
                         style={readOnly ? { cursor: 'default' } : undefined}
                     />
                     {selectedAmount === 'custom' ? (
-                        <div className={styles.currencySymbol}>{unitActive ? (labelFor(parseFloat(unitInput) || 0) || currencySymbol) : currencySymbol}</div>
+                        // In unit mode the unit word is conveyed via the placeholder, so we skip the
+                        // overlay symbol (the long label would collide with the centered input text).
+                        unitActive ? null : <div className={styles.currencySymbol}>{currencySymbol}</div>
                     ) : (
                         <div className={styles.editIcon}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
