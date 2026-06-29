@@ -7,6 +7,17 @@
     position: relative;
 }
 
+/* Offset so page content starts below the fixed DONEXT header */
+.withSiteHeader {
+    padding-top: 80px;
+}
+
+@media (max-width: 768px) {
+    .withSiteHeader {
+        padding-top: 64px;
+    }
+}
+
 /* Language Toggle Button - Floating Round Button */
 .languageToggle {
     position: fixed;

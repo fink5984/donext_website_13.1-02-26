@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigat
 import styles from './page.module.css';
 import DoNextLoader from '@/app/components/DoNextLoader';
 import DonationFormPublic from '@/components/DonationForm/DonationFormPublic';
+import SiteHeader from '@/app/[locale]/landing/SiteHeader';
 
 export default function PublicCampaignScreen() {
     const params = useParams();
@@ -963,7 +964,10 @@ export default function PublicCampaignScreen() {
     const sortedAndFilteredData = sortData(filteredData);
 
     return (
-        <div className={styles.container} style={{ direction: locale === 'he' ? 'rtl' : 'ltr' }}>
+        <div className={`${styles.container} ${styles.withSiteHeader}`} style={{ direction: locale === 'he' ? 'rtl' : 'ltr' }}>
+            {/* Fixed DONEXT marketing header (links deep-link to the landing page sections) */}
+            <SiteHeader logos={data?.publicScreenHeaderLogos || []} />
+
             {/* Language Toggle Button - Floating Round Button */}
             <button 
                 className={`${styles.languageToggle} ${locale === 'he' ? styles.languageToggleRtl : styles.languageToggleLtr}`}

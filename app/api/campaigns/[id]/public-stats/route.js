@@ -508,6 +508,7 @@ export async function GET(request, { params }) {
                 publicScreenStartDate: publicScreenSettings?.startDate || null,
                 publicScreenEndDate: publicScreenSettings?.endDate || null,
                 publicScreenRanksBackgroundColor: publicScreenSettings?.ranksBackgroundColor || '#b45309',
+                publicScreenHeaderLogos: publicScreenSettings?.headerLogos || [],
                 showDonationDetails: publicScreenSettings?.showDonationDetails ?? true,
                 promoVideoUrl: publicScreenSettings?.promoVideoUrl || null,
                 recentDonations: formattedRecentDonations,

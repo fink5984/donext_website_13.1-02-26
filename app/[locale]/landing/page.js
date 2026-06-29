@@ -143,6 +143,7 @@ export default function LandingPage() {
   const aboutRef = useRef(null);
   const contactRef = useRef(null);
   const statsRef = useRef(null);
+  const roiRef = useRef(null);
 
   // Scroll-reveal animation observer
   useEffect(() => {
@@ -168,6 +169,27 @@ export default function LandingPage() {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Deep-link support: when arriving with a #features / #about / #contact hash
+  // (e.g. from the public-screen header), scroll to that section once mounted.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const refByHash = { features: featuresRef, about: aboutRef, contact: contactRef };
+    const scrollToHash = () => {
+      const hash = window.location.hash?.replace('#', '');
+      const ref = refByHash[hash];
+      if (ref?.current) {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    // Delay so layout/images settle before measuring scroll position
+    const timer = setTimeout(scrollToHash, 400);
+    window.addEventListener('hashchange', scrollToHash);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', scrollToHash);
+    };
   }, []);
 
   // Fetch organization logos
@@ -303,6 +325,12 @@ export default function LandingPage() {
     return Math.max(0, Math.round(total));
   })();
 
+  // Progressive disclosure: each question is revealed only after the previous one
+  // has been answered.
+  const roiQ1Done = roiQ1 > 0;
+  const roiQ2Done = roiQ1Done && !!roiGapDir && num(roiGapAmount) > 0;
+  const roiQ3Done = roiQ2Done && (roiExtraUnknown || num(roiExtra) > 0);
+
   const toggleChecklist = (idx) => {
     setChecklistChecked(prev => {
       const next = [...prev];
@@ -376,7 +404,7 @@ export default function LandingPage() {
                 {t('hero.cta')}
                 <IconArrow dir={dir} />
               </button>
-              <button className={styles.btnHeroOutline} onClick={() => scrollTo(featuresRef)}>
+              <button className={styles.btnHeroOutline} onClick={() => scrollTo(roiRef)}>
                 {t('hero.secondary')}
               </button>
             </div>
@@ -425,7 +453,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== ROI CALCULATOR + CHECKLIST ===== */}
-      <section className={`${styles.roiCheckSection} ${styles.revealOnScroll}`}>
+      <section ref={roiRef} className={`${styles.roiCheckSection} ${styles.revealOnScroll}`}>
         <div className={styles.roiCheckGrid}>
           {/* Left: ROI Calculator */}
           <div className={styles.roiCalcCard}>
@@ -446,76 +474,88 @@ export default function LandingPage() {
                 />
               </div>
 
-              {/* Q2 - distance from target */}
-              <label className={styles.roiLabel}>{t('roiCalc.q2Label')}</label>
-              <div className={styles.roiToggle}>
-                <button
-                  type="button"
-                  className={`${styles.roiToggleBtn} ${roiGapDir === 'missed' ? styles.roiToggleBtnActive : ''}`}
-                  onClick={() => setRoiGapDir(roiGapDir === 'missed' ? '' : 'missed')}
-                >
-                  {t('roiCalc.q2Missed')}
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.roiToggleBtn} ${roiGapDir === 'reached' ? styles.roiToggleBtnActive : ''}`}
-                  onClick={() => setRoiGapDir(roiGapDir === 'reached' ? '' : 'reached')}
-                >
-                  {t('roiCalc.q2Reached')}
-                </button>
-              </div>
-              {roiGapDir && (
-                <div className={styles.roiInputWrap}>
-                  <span className={styles.roiCurrency}>₪</span>
-                  <input
-                    className={styles.roiInput}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder={t('roiCalc.q2AmountPlaceholder')}
-                    value={roiGapAmount}
-                    onChange={(e) => setRoiGapAmount(e.target.value.replace(/[^\d]/g, ''))}
-                  />
-                </div>
+              {/* Q2 - distance from target (revealed after Q1) */}
+              {roiQ1Done && (
+                <>
+                  <label className={styles.roiLabel}>{t('roiCalc.q2Label')}</label>
+                  <div className={styles.roiToggle}>
+                    <button
+                      type="button"
+                      className={`${styles.roiToggleBtn} ${roiGapDir === 'missed' ? styles.roiToggleBtnActive : ''}`}
+                      onClick={() => setRoiGapDir(roiGapDir === 'missed' ? '' : 'missed')}
+                    >
+                      {t('roiCalc.q2Missed')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.roiToggleBtn} ${roiGapDir === 'reached' ? styles.roiToggleBtnActive : ''}`}
+                      onClick={() => setRoiGapDir(roiGapDir === 'reached' ? '' : 'reached')}
+                    >
+                      {t('roiCalc.q2Reached')}
+                    </button>
+                  </div>
+                  {roiGapDir && (
+                    <div className={styles.roiInputWrap}>
+                      <span className={styles.roiCurrency}>₪</span>
+                      <input
+                        className={styles.roiInput}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder={t('roiCalc.q2AmountPlaceholder')}
+                        value={roiGapAmount}
+                        onChange={(e) => setRoiGapAmount(e.target.value.replace(/[^\d]/g, ''))}
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Q3 - effortless extra */}
-              <label className={styles.roiLabel}>{t('roiCalc.q3Label')}</label>
-              <div className={styles.roiInputWrap}>
-                <span className={styles.roiCurrency}>₪</span>
-                <input
-                  className={styles.roiInput}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder={t('roiCalc.q3AmountPlaceholder')}
-                  value={roiExtra}
-                  onChange={(e) => { setRoiExtra(e.target.value.replace(/[^\d]/g, '')); setRoiExtraUnknown(false); }}
-                  disabled={roiExtraUnknown}
-                />
-              </div>
-              <label className={styles.roiUnknown}>
-                <input
-                  type="checkbox"
-                  checked={roiExtraUnknown}
-                  onChange={(e) => setRoiExtraUnknown(e.target.checked)}
-                />
-                <span>{t('roiCalc.q3Unknown')}</span>
-              </label>
+              {/* Q3 - effortless extra (revealed after Q2) */}
+              {roiQ2Done && (
+                <>
+                  <label className={styles.roiLabel}>{t('roiCalc.q3Label')}</label>
+                  <div className={styles.roiInputWrap}>
+                    <span className={styles.roiCurrency}>₪</span>
+                    <input
+                      className={styles.roiInput}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={t('roiCalc.q3AmountPlaceholder')}
+                      value={roiExtra}
+                      onChange={(e) => { setRoiExtra(e.target.value.replace(/[^\d]/g, '')); setRoiExtraUnknown(false); }}
+                      disabled={roiExtraUnknown}
+                    />
+                  </div>
+                  <label className={styles.roiUnknown}>
+                    <input
+                      type="checkbox"
+                      checked={roiExtraUnknown}
+                      onChange={(e) => setRoiExtraUnknown(e.target.checked)}
+                    />
+                    <span>{t('roiCalc.q3Unknown')}</span>
+                  </label>
+                </>
+              )}
 
-              {/* Q4 - uncollected percentage */}
-              <label className={styles.roiLabel}>{t('roiCalc.q4Label')}</label>
-              <div className={styles.roiInputWrap}>
-                <span className={styles.roiCurrency}>%</span>
-                <input
-                  className={styles.roiInput}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder={t('roiCalc.q4Placeholder')}
-                  value={roiUncollected}
-                  onChange={(e) => setRoiUncollected(e.target.value.replace(/[^\d]/g, '').slice(0, 3))}
-                />
-              </div>
+              {/* Q4 - uncollected percentage (revealed after Q3) */}
+              {roiQ3Done && (
+                <>
+                  <label className={styles.roiLabel}>{t('roiCalc.q4Label')}</label>
+                  <div className={styles.roiInputWrap}>
+                    <span className={styles.roiCurrency}>%</span>
+                    <input
+                      className={styles.roiInput}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={t('roiCalc.q4Placeholder')}
+                      value={roiUncollected}
+                      onChange={(e) => setRoiUncollected(e.target.value.replace(/[^\d]/g, '').slice(0, 3))}
+                    />
+                  </div>
+                </>
+              )}
 
-              {roiResult > 0 && (
+              {roiQ3Done && roiResult > 0 && (
                 <div className={styles.roiResult}>
                   <p className={styles.roiResultIntro}>{t('roiCalc.resultIntro')}</p>
                   <div className={styles.roiResultNumber}>₪{roiResult.toLocaleString()}</div>
@@ -625,7 +665,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FEATURES ===== */}
-      <section className={`${styles.features} ${styles.revealOnScroll}`} ref={featuresRef}>
+      <section id="features" className={`${styles.features} ${styles.revealOnScroll}`} ref={featuresRef}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionTag}>{t('features.tag')}</span>
           <h2 className={styles.sectionTitle}>{t('features.title')}</h2>
@@ -745,7 +785,7 @@ export default function LandingPage() {
       )}
 
       {/* ===== ABOUT ===== */}
-      <section className={`${styles.about} ${styles.revealOnScroll}`} ref={aboutRef}>
+      <section id="about" className={`${styles.about} ${styles.revealOnScroll}`} ref={aboutRef}>
         <div className={styles.aboutContent}>
           <div className={styles.aboutText}>
             <span className={styles.sectionTag}>{t('about.tag')}</span>
@@ -820,7 +860,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== CONTACT ===== */}
-      <section className={`${styles.contact} ${styles.revealOnScroll}`} ref={contactRef}>
+      <section id="contact" className={`${styles.contact} ${styles.revealOnScroll}`} ref={contactRef}>
         <div className={styles.contactContent}>
           <div className={styles.contactInfo}>
             <span className={styles.sectionTag}>{t('contact.tag')}</span>

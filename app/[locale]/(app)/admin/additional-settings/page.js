@@ -31,6 +31,7 @@ export default function AdditionalSettingsPage() {
         publicScreenPhone: '',
         publicScreenEmail: '',
         publicScreenBanners: [],
+        publicScreenHeaderLogos: [],
         publicScreenStartDate: '',
         publicScreenEndDate: '',
         isEnabled: false,
@@ -110,6 +111,7 @@ export default function AdditionalSettingsPage() {
                     publicScreenPhone: data.publicScreenPhone || '',
                     publicScreenEmail: data.publicScreenEmail || '',
                     publicScreenBanners: data.publicScreenBanners || [],
+                    publicScreenHeaderLogos: data.publicScreenHeaderLogos || [],
                     publicScreenStartDate: data.publicScreenStartDate ? new Date(data.publicScreenStartDate).toISOString().slice(0, 16) : '',
                     publicScreenEndDate: data.publicScreenEndDate ? new Date(data.publicScreenEndDate).toISOString().slice(0, 16) : '',
                     publicScreenRanksBackgroundColor: data.publicScreenRanksBackgroundColor || '#b45309',
@@ -366,21 +368,41 @@ export default function AdditionalSettingsPage() {
     const handleBannerDrop = (e, dropIndex) => {
         e.preventDefault();
         const dragIndex = parseInt(e.dataTransfer.getData('text/html'));
-        
+
         if (dragIndex === dropIndex) return;
-        
+
         const newBanners = [...formData.publicScreenBanners];
         const draggedItem = newBanners[dragIndex];
-        
+
         // Remove from old position
         newBanners.splice(dragIndex, 1);
         // Insert at new position
         newBanners.splice(dropIndex, 0, draggedItem);
-        
+
         setFormData({
             ...formData,
             publicScreenBanners: newBanners
         });
+    };
+
+    // Header logo handlers (logos shown next to the DONEXT logo in the public-screen header)
+    const handleHeaderLogoUploadComplete = (url) => {
+        if (!url) {
+            console.error('No URL received from header logo upload');
+            setErrorMessage('העלאת הלוגו נכשלה - לא התקבל קישור');
+            return;
+        }
+        setFormData((prev) => ({
+            ...prev,
+            publicScreenHeaderLogos: [...(prev.publicScreenHeaderLogos || []), url]
+        }));
+    };
+
+    const handleRemoveHeaderLogo = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            publicScreenHeaderLogos: (prev.publicScreenHeaderLogos || []).filter((_, i) => i !== index)
+        }));
     };
 
     if (!campaignId) {
@@ -633,6 +655,49 @@ export default function AdditionalSettingsPage() {
                                     : 'מציג את כל שלושת העיגולים (ברירת מחדל)'}
                             </span>
                         </label>
+                    </div>
+                </div>
+
+                {/* לוגואים בבאנר העליון */}
+                <div className={styles.settingsSection}>
+                    <h2><GalleryIcon className={styles.sectionTitleIcon} />לוגואים בבאנר העליון</h2>
+                    <p className={styles.sectionDesc}>
+                        לוגואים שיוצגו בבאנר שבראש הדף הציבורי, ליד הסמל של DONEXT.
+                    </p>
+
+                    {formData.publicScreenHeaderLogos.length > 0 && (
+                        <div className={styles.bannersGrid}>
+                            {formData.publicScreenHeaderLogos.map((logo, index) => (
+                                <div key={index} className={styles.bannerCard}>
+                                    <div className={styles.bannerCardImage}>
+                                        <img src={logo} alt={`לוגו ${index + 1}`} />
+                                    </div>
+                                    <div className={styles.bannerCardFooter}>
+                                        <span className={styles.bannerCardTitle}>לוגו #{index + 1}</span>
+                                        <div className={styles.bannerCardActions}>
+                                            <button
+                                                className={`${styles.iconButton} ${styles.iconButtonDanger}`}
+                                                onClick={() => handleRemoveHeaderLogo(index)}
+                                                title="מחק"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className={styles.uploadCard}>
+                        <FileUpload
+                            campaignId={campaignId}
+                            onUploadComplete={handleHeaderLogoUploadComplete}
+                            accept="image/*"
+                            label="📤 העלה לוגו חדש"
+                            endpoint="/api/storage"
+                            prefix="header-logos"
+                        />
                     </div>
                 </div>
 

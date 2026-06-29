@@ -42,6 +42,51 @@
   }
 }
 
+/* DONEXT logo + optional partner/campaign logos shown beside it */
+.navLogoGroup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.navLogoDivider {
+  width: 1px;
+  height: 28px;
+  background: rgba(12, 74, 213, 0.18);
+  flex-shrink: 0;
+}
+
+.navPartnerLogos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.navPartnerLogo {
+  height: 36px;
+  width: auto;
+  max-width: 130px;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .navLogoGroup {
+    gap: 10px;
+  }
+
+  .navPartnerLogo {
+    height: 28px;
+    max-width: 90px;
+  }
+
+  .navLogoDivider {
+    height: 22px;
+  }
+}
+
 .navLinks {
   display: flex;
   align-items: center;
@@ -629,7 +674,8 @@
   gap: 32px;
   max-width: 1200px;
   margin: 0 auto;
-  align-items: start;
+  // Stretch both cards to equal height (the shorter checklist matches the calculator)
+  align-items: stretch;
 }
 
 .roiCalcCard,
