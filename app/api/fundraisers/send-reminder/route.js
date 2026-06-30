@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCampaignId } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendEmailWithRetry } from '@/lib/email';
 
 /**
  * POST /api/fundraisers/send-reminder
@@ -239,22 +239,26 @@ ${completionPercentage}% מצוות המתרימים כבר מילאו את הש
 בהצלחה בהתרמה!
 צוות Donext`;
 
-            await sendEmail({
+            const res = await sendEmailWithRetry({
                 to: person.email,
                 subject: `⏰ ${firstName}, מחכים רק לך! - קמפיין "${campaignName}"`,
                 text: emailText,
                 html: emailHtml
             });
 
-            // עדכון סטטוס שאלון ל-RECEIVED (נשלח) — רק אם עדיין NOT_SENT
-            if (fundraiser.statusQuestionnaire === 'NOT_SENT') {
-                await prisma.fundraiser.update({
-                    where: { id: fundraiser.id },
-                    data: { statusQuestionnaire: 'RECEIVED' }
-                });
+            // אם השליחה נכשלה (כולל 429 אחרי retries) — לא מעדכנים סטטוס, המתרים נשאר NOT_SENT
+            if (res?.success === false) {
+                console.error(`Failed to send reminder to ${person.email}:`, res.error?.message);
+            } else {
+                // עדכון סטטוס שאלון ל-RECEIVED (נשלח) — רק אם עדיין NOT_SENT
+                if (fundraiser.statusQuestionnaire === 'NOT_SENT') {
+                    await prisma.fundraiser.update({
+                        where: { id: fundraiser.id },
+                        data: { statusQuestionnaire: 'RECEIVED' }
+                    });
+                }
+                console.log(`Reminder sent to ${person.email}`);
             }
-
-            console.log(`Reminder sent to ${person.email}`);
 
         } catch (error) {
             console.error(`Error sending reminder to ${person?.email}:`, error);

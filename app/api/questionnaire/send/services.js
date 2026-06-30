@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, sendEmailsThrottled } from '@/lib/email';
 
 function buildEmailContent({ campaignName, loginUrl, recipientName }) {
   const subject = `קישור לשאלון המתרימים - קמפיין ${campaignName}`;
@@ -85,19 +85,25 @@ export async function sendQuestionnaireEmails({ campaignId, selection, fundraise
     }))
     .filter((r) => !!r.email);
 
-  let sentCount = 0;
-  const failed = [];
-  const success = [];
-  const promises = recipients.map(async (r) => {
-    // יצירת קישור עם redirect ו-campaignId
-    const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent('/Questionnaire')}&campaignId=${campaignId}`;
-    
+  // יצירת קישור עם redirect ו-campaignId (זהה לכל הנמענים)
+  const loginUrl = `${baseUrl}/login?redirect=${encodeURIComponent('/Questionnaire')}&campaignId=${campaignId}`;
+
+  // בניית רשימת המיילים ושליחה בקצב מבוקר מתחת למגבלת Resend (10/שנייה)
+  const messages = recipients.map((r) => {
     const { subject, text, html } = buildEmailContent({
       campaignName: campaign.name,
       loginUrl,
       recipientName: r.name || undefined
     });
-    const res = await sendEmail({ to: r.email, subject, text, html });
+    return { to: r.email, subject, text, html };
+  });
+
+  let sentCount = 0;
+  const failed = [];
+  const success = [];
+  const results = await sendEmailsThrottled(messages);
+  results.forEach((res, idx) => {
+    const r = recipients[idx];
     if (res?.success === false) {
       failed.push({ email: r.email, error: res.error?.message || 'SEND_FAILED' });
     } else {
@@ -105,7 +111,6 @@ export async function sendQuestionnaireEmails({ campaignId, selection, fundraise
       sentCount += 1;
     }
   });
-  await Promise.all(promises);
 
   // עדכון סטטוס למי שנשלח: 'RECEIVED' (רק למי שהיה 'NOT_SENT')
   // const idsToUpdate = recipients
