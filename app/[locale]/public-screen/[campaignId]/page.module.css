@@ -2413,17 +2413,15 @@
 
 /* Small Tablets / Large Phones (576px - 767px) */
 @media (max-width: 767px) {
-    .container {
-        padding: 0;
-    }
-    
+    /* Keep the floating round language button at the bottom corner.
+       (Do NOT reset .container padding here — that would wipe the
+       .withSiteHeader top offset and push content under the fixed header.) */
     .languageToggle {
-        top: 10px;
-        right: 10px;
-        padding: 6px 12px;
-        font-size: 12px;
+        width: 40px;
+        height: 40px;
+        bottom: 70px;
     }
-    
+
     .bannerSection {
         min-height: auto;
     }
