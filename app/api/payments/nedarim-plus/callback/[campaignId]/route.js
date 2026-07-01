@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
+import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 
 /**
  * Nedarim Plus / Merkaz Hatzedaka Callback Endpoint (per-campaign) v2
@@ -156,7 +157,7 @@ export async function POST(request, { params }) {
     const numberOfPayments = resolvedTashlumim ? parseInt(resolvedTashlumim) : 1;
     const isUnlimited = !resolvedTashlumim || resolvedTashlumim === '0';
 
-    await prisma.donation.create({
+    const createdDonation = await prisma.donation.create({
       data: {
         donorId,
         monthlyAmount: parseFloat(Amount),
@@ -171,6 +172,9 @@ export async function POST(request, { params }) {
     });
 
     console.log(`✅ Donation created from callback for donor ${donorId} via ${resolvedPaymentMethod}`);
+
+    // שליחה ל-PixelArt (אם מוגדר בקמפיין)
+    await sendDonationToPixelArt(createdDonation.id);
 
   } catch (error) {
     console.error('Error processing Nedarim Plus callback:', error);

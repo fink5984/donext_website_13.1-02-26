@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { handlePrismaError } from '@/lib/prisma/utils';
 import { getCampaignId, getCurrentUserFromRequest, getOperatorId } from '@/lib/auth';
 import { z } from 'zod';
-import { sendToPixelArt } from './pixelart';
+import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
 
@@ -1074,47 +1074,9 @@ export async function POST(request) {
         // בדיקה ושליחה ל-PixelArt API - רק בהוספה חדשה
         let pixelArtError = null;
         if (mode === 'add') {
-            const campaign = await prisma.campaign.findUnique({
-                where: { id: donation.donor.campaign.id },
-                select: { pixelArt: true, pixelArtId: true }
-            });
-
-            if (campaign?.pixelArt && campaign?.pixelArtId) {
-                console.log(`Found PixelArt campaign: ${campaign.pixelArtId}`);
-
-                const pixelArtData = {
-                    ...(donation.donor.person?.firstName && { first_name: donation.donor.person.firstName }),
-                    ...(donation.donor.person?.lastName && { last_name: donation.donor.person.lastName }),
-                    ...(donation.donor.person?.titleBefore && { title: donation.donor.person.titleBefore }),
-                    ...(donation.donor.person?.titleAfter && { suffix: donation.donor.person.titleAfter }),
-                    ...(donation.donor.person?.mainMobile && { phone: donation.donor.person.mainMobile }),
-                    ...(donation.donor.person?.email && { email: donation.donor.person.email }),
-                    ...(donation.donor.person?.street?.name && { address: `${donation.donor.person.houseNumber || ''} ${donation.donor.person.street.name}`.trim() }),
-                    ...(donation.donor.person?.city?.name && { town: donation.donor.person.city.name }),
-                    donation: {
-                        monthly_amount: parseFloat(monthlyAmount),
-                        num_of_months: finalNumberOfPayments || 1
-                    }
-                };
-
-                console.log('📤 Sending to PixelArt API:', JSON.stringify(pixelArtData, null, 2));
-
-                // שליחה ל-PixelArt API
-                const pixelArtResult = await sendToPixelArt(campaign.pixelArtId, pixelArtData);
-                if (!pixelArtResult) {
-                    pixelArtError = 'שגיאה בשליחת הנתונים ל-PixelArt';
-                } else if (pixelArtResult.donation?.id) {
-                    // עדכון השדה external_donation_id עם הערך שהתקבל מהמערכת החיצונית
-                    await prisma.donation.update({
-                        where: { id: donation.id },
-                        data: {
-                            externalDonationId: toBigIntOrNull(pixelArtResult.donation.id)
-                        }
-                    });
-                    console.log(`Successfully sent donation to PixelArt: ${campaign.pixelArtId}, donation_id: ${pixelArtResult.donation.id}`);
-                } else {
-                    console.log(`Successfully sent donation to PixelArt: ${campaign.pixelArtId}`);
-                }
+            const pixelArtResult = await sendDonationToPixelArt(donation.id);
+            if (!pixelArtResult.success && !pixelArtResult.skipped) {
+                pixelArtError = pixelArtResult.error || 'שגיאה בשליחת הנתונים ל-PixelArt';
             }
         }
 

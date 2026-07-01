@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
+import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
 
 // 9 ספרות אחרונות של מספר טלפון - להשוואה עם המיקרו-פורמטים השונים שיכולים להישמר במסד
@@ -209,6 +210,9 @@ export async function POST(request, { params }) {
             hasPaymentMethod: paymentMethod ? true : false,
             cityName: donation.donor?.person?.city?.name
         });
+
+        // שליחה ל-PixelArt (אם מוגדר בקמפיין) - לא חוסם את התגובה במקרה של כשל
+        await sendDonationToPixelArt(donation.id);
 
         return NextResponse.json({
             success: true,

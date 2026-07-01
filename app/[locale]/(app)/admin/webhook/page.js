@@ -20,6 +20,11 @@ export default function WebhookPage() {
         kanin: {
             enabled: false,
             url: ''
+        },
+        pixelart: {
+            enabled: false,
+            eventId: '',
+            apiKey: ''
         }
     });
 
@@ -38,7 +43,15 @@ export default function WebhookPage() {
             if (response.ok) {
                 const data = await response.json();
                 if (data.webhook_settings) {
-                    setWebhookSettings(data.webhook_settings);
+                    // מיזוג עם ברירות המחדל כדי שכל המפתחות (כולל pixelart) תמיד יהיו קיימים
+                    setWebhookSettings(prev => ({
+                        ...prev,
+                        ...data.webhook_settings,
+                        pixelart: {
+                            ...prev.pixelart,
+                            ...(data.webhook_settings.pixelart || {})
+                        }
+                    }));
                 }
             }
         } catch (error) {
@@ -66,6 +79,39 @@ export default function WebhookPage() {
 
         setWebhookSettings(newSettings);
         await saveSettings(newSettings);
+    };
+
+    // PixelArt: החלפת מצב הפעלה ושמירה מיידית
+    const handlePixelartToggle = async () => {
+        const newSettings = {
+            ...webhookSettings,
+            pixelart: {
+                ...webhookSettings.pixelart,
+                enabled: !webhookSettings.pixelart.enabled
+            }
+        };
+        setWebhookSettings(newSettings);
+        await saveSettings(newSettings);
+    };
+
+    // PixelArt: עדכון שדה (מספר אירוע / מפתח) במצב מקומי בלבד
+    const handlePixelartChange = (field, value) => {
+        setWebhookSettings(prev => ({
+            ...prev,
+            pixelart: {
+                ...prev.pixelart,
+                [field]: value
+            }
+        }));
+    };
+
+    // PixelArt: שמירת מספר האירוע והמפתח
+    const handlePixelartSave = async () => {
+        if (!webhookSettings.pixelart.eventId?.toString().trim()) {
+            setErrorMessage('יש להזין מספר אירוע (Event ID) עבור פיקסל ארט');
+            return;
+        }
+        await saveSettings(webhookSettings);
     };
 
     const saveSettings = async (settings) => {
@@ -224,6 +270,59 @@ export default function WebhookPage() {
                                         {copiedUrl === 'kanin' ? '✓ הועתק' : '📋 העתק'}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* PixelArt Integration */}
+                    <div className={styles.webhookCard}>
+                        <div className={styles.webhookHeader}>
+                            <div className={styles.webhookInfo}>
+                                <div className={styles.webhookIcon}>🎨</div>
+                                <div className={styles.webhookDetails}>
+                                    <h3>פיקסל ארט</h3>
+                                    <p>שליחת כל תרומה חדשה ל-PixelArt (מהמערכת ומהדף הציבורי)</p>
+                                </div>
+                            </div>
+                            <label className={styles.switch}>
+                                <input
+                                    type="checkbox"
+                                    checked={webhookSettings.pixelart.enabled}
+                                    onChange={handlePixelartToggle}
+                                />
+                                <span className={styles.slider}></span>
+                            </label>
+                        </div>
+
+                        {webhookSettings.pixelart.enabled && (
+                            <div className={styles.webhookUrlSection}>
+                                <div className={styles.fieldGroup}>
+                                    <label>מספר אירוע (Event ID):</label>
+                                    <input
+                                        type="text"
+                                        value={webhookSettings.pixelart.eventId || ''}
+                                        onChange={(e) => handlePixelartChange('eventId', e.target.value)}
+                                        placeholder="לדוגמה: 1234"
+                                        className={styles.textInput}
+                                    />
+                                </div>
+                                <div className={styles.fieldGroup}>
+                                    <label>מפתח (API Key):</label>
+                                    <input
+                                        type="text"
+                                        value={webhookSettings.pixelart.apiKey || ''}
+                                        onChange={(e) => handlePixelartChange('apiKey', e.target.value)}
+                                        placeholder="מפתח ה-API מ-PixelArt"
+                                        className={styles.textInput}
+                                    />
+                                </div>
+                                <button
+                                    className={styles.saveButton}
+                                    onClick={handlePixelartSave}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? 'שומר...' : '💾 שמור הגדרות פיקסל ארט'}
+                                </button>
                             </div>
                         )}
                     </div>
