@@ -366,6 +366,7 @@
             }
 
             @media (max-width: 768px) {
+                flex: none;
                 height: auto;
             }
 
@@ -390,6 +391,7 @@
                 }
 
                 @media (max-width: 768px) {
+                    flex: none;
                     height: auto;
                     padding: var(--Spacing-Spacing-4) var(--Spacing-Spacing-4);
                 }
@@ -411,9 +413,12 @@
                         padding-bottom: 4px;
                     }
 
+                    // Mobile: keep the title on its own line but place the
+                    // search field and the action buttons together on one row.
                     @media (max-width: 768px) {
-                        flex-direction: column;
-                        align-items: flex-start;
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        align-items: center;
                         gap: var(--Spacing-Spacing-4);
                         padding-bottom: var(--Spacing-Spacing-5);
                     }
@@ -424,6 +429,7 @@
                         width: 100%;
 
                         @media (max-width: 768px) {
+                            flex: 0 0 100%;
                             font-size: 18px !important;
                         }
                     }
@@ -434,8 +440,18 @@
                         gap: var(--Spacing-Spacing-3);
 
                         @media (max-width: 768px) {
-                            width: 100%;
-                            flex-wrap: wrap;
+                            flex: 1 1 auto;
+                            width: auto;
+                            min-width: 0;
+                            flex-wrap: nowrap;
+
+                            // let the search field shrink so it stays inline
+                            // with the action buttons instead of wrapping them
+                            > div:not(.iconButtons) {
+                                flex: 1 1 0;
+                                min-width: 0;
+                                width: auto;
+                            }
                         }
 
                         .iconButtons {
@@ -468,6 +484,13 @@
                             }
                         }
                     }
+
+                    // Kebab menu sits inline with the search + action buttons on mobile
+                    .menuWrapper {
+                        @media (max-width: 768px) {
+                            flex: 0 0 auto;
+                        }
+                    }
                 }
 
                 .table {
@@ -476,6 +499,14 @@
                     min-height: 0;
                     display: flex;
                     flex-direction: column;
+
+                    // On mobile the parents switch to height:auto, so the
+                    // internal-scroll flex sizing must be released or the
+                    // table (and its mobile cards) collapse to zero height.
+                    @media (max-width: 768px) {
+                        flex: none;
+                        height: auto;
+                    }
 
                     .tableHeader,
                     .tableRow {
@@ -746,6 +777,8 @@
                         min-height: 0;
 
                         @media (max-width: 768px) {
+                            flex: none;
+                            height: auto;
                             max-height: none;
                             overflow-y: visible;
                         }

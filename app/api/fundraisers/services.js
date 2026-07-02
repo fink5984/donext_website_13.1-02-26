@@ -315,10 +315,9 @@ async function getFilteredFundraisers(params) {
     if (fundraiserId) where.id = parseInt(fundraiserId);
     if (operatorId) {
         where.assignedOperatorId = parseInt(operatorId);
-        // מפעיל לא צריך לראות את עצמו ברשימת המתרימים שלו
-        if (!fundraiserId) {
-            where.id = { not: parseInt(operatorId) };
-        }
+        // כאשר מפעיל משויך לעצמו כמתרים (assignedOperatorId === operatorId)
+        // הוא כן צריך להופיע ברשימת המתרימים שלו — כך גם נספר ב-summary,
+        // ולכן אין להחריג אותו מהרשימה (אחרת הספירה והתצוגה לא תואמות).
     }
     if (filters.firstName) where.person = { ...where.person, firstName: { contains: filters.firstName, mode: 'insensitive' } };
     if (filters.lastName) where.person = { ...where.person, lastName: { contains: filters.lastName, mode: 'insensitive' } };
