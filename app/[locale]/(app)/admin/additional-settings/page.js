@@ -44,7 +44,11 @@ export default function AdditionalSettingsPage() {
         unitPrice: '',
         minDonationAmount: '',
         gaugeRaisedOnly: false,
-        showOnlyProgressCircle: false
+        showOnlyProgressCircle: false,
+        bankName: '',
+        bankBranch: '',
+        bankAccountNumber: '',
+        bankAccountHolder: ''
     });
 
     // State for copied link notification
@@ -125,7 +129,11 @@ export default function AdditionalSettingsPage() {
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
                     gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
-                    showOnlyProgressCircle: data.showOnlyProgressCircle ?? false
+                    showOnlyProgressCircle: data.showOnlyProgressCircle ?? false,
+                    bankName: data.bankName || '',
+                    bankBranch: data.bankBranch || '',
+                    bankAccountNumber: data.bankAccountNumber || '',
+                    bankAccountHolder: data.bankAccountHolder || ''
                 });
             }
         } catch (error) {
@@ -927,6 +935,61 @@ export default function AdditionalSettingsPage() {
                                 placeholder="example@example.com"
                                 value={formData.publicScreenEmail}
                                 onChange={(e) => handleInputChange('publicScreenEmail', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* פרטי חשבון בנק להעברה */}
+                <div className={styles.settingsSection}>
+                    <h2>🏦 פרטי חשבון בנק להעברה</h2>
+                    <p className={styles.sectionDesc}>
+                        פרטי חשבון להעברה בנקאית שיוצגו במסך הציבורי מתחת לכפתור התרומה,
+                        עבור תורמים שמעדיפים להעביר ישירות. השאר ריק כדי לא להציג.
+                    </p>
+
+                    <div className={styles.contactForm}>
+                        <div className={styles.formGroup}>
+                            <label>שם הבנק</label>
+                            <input
+                                type="text"
+                                placeholder="לדוגמה: בנק מזרחי טפחות"
+                                value={formData.bankName}
+                                onChange={(e) => handleInputChange('bankName', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>מספר סניף</label>
+                            <input
+                                type="text"
+                                placeholder="לדוגמה: 123"
+                                value={formData.bankBranch}
+                                onChange={(e) => handleInputChange('bankBranch', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>מספר חשבון</label>
+                            <input
+                                type="text"
+                                placeholder="לדוגמה: 456789"
+                                value={formData.bankAccountNumber}
+                                onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>שם בעל החשבון</label>
+                            <input
+                                type="text"
+                                placeholder="לדוגמה: עמותת ..."
+                                value={formData.bankAccountHolder}
+                                onChange={(e) => handleInputChange('bankAccountHolder', e.target.value)}
                                 className={styles.input}
                             />
                         </div>

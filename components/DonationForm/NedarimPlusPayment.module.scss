@@ -6,6 +6,42 @@
     width: 100%;
   }
 
+  // ID (Zeout) box — styled to look like part of the Nedarim Plus iframe above it
+  .zeoutField {
+    width: 100%;
+    background: #fff;
+    padding: 16px 20px 8px;
+    border-radius: var(--Border-Radius-md, 12px) var(--Border-Radius-md, 12px) 0 0;
+    // Sit flush on top of the iframe so the two read as one continuous form
+    margin-bottom: -8px;
+    box-sizing: border-box;
+  }
+
+  .zeoutLabel {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #6b7a90;
+    text-align: start;
+  }
+
+  .zeoutInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #333;
+    background: #fff;
+    border: 1px solid #d9e0ea;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--Text-Default, #6E99EC);
+    }
+  }
+
   .iframeWrapper {
     width: 100%;
     min-height: 300px;

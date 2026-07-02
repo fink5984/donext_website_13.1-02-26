@@ -130,7 +130,13 @@ export default function PublicCampaignScreen() {
             byTarget: 'לפי יעד',
             byLastDonation: 'לפי תרומה אחרונה',
             monthly: 'חודשי',
-            showDonations: 'הצג תרומות'
+            showDonations: 'הצג תרומות',
+            contactTitle: 'פרטי יצירת קשר',
+            bankTransferTitle: 'פרטים להעברה בנקאית',
+            bankName: 'בנק',
+            bankBranch: 'סניף',
+            bankAccount: 'חשבון',
+            bankHolder: 'ע"ש'
         },
         en: {
             donate: 'Donate',
@@ -202,7 +208,13 @@ export default function PublicCampaignScreen() {
             byTarget: 'By target',
             byLastDonation: 'By last donation',
             monthly: 'Monthly',
-            showDonations: 'Show donations'
+            showDonations: 'Show donations',
+            contactTitle: 'Contact details',
+            bankTransferTitle: 'Bank transfer details',
+            bankName: 'Bank',
+            bankBranch: 'Branch',
+            bankAccount: 'Account',
+            bankHolder: 'Account holder'
         }
     };
     
@@ -266,14 +278,8 @@ export default function PublicCampaignScreen() {
         return () => clearInterval(interval);
     }, [campaignId]);
 
-    // Show promo video overlay after 5 seconds (once per page load)
-    useEffect(() => {
-        if (!data?.promoVideoUrl) return;
-        const timer = setTimeout(() => {
-            setShowPromoVideo(true);
-        }, 5000);
-        return () => clearTimeout(timer);
-    }, [data?.promoVideoUrl, campaignId]);
+    // The promo video no longer opens automatically — the visitor opens it via
+    // the persistent PLAY button shown over the banners (see promoPlayButton).
 
     // Set default tab to 'about' when showDonationDetails is false
     useEffect(() => {
@@ -967,6 +973,23 @@ export default function PublicCampaignScreen() {
     // Apply sorting
     const sortedAndFilteredData = sortData(filteredData);
 
+    // Persistent PLAY button shown over the banners/hero when a promo video exists.
+    // Clicking it opens the video overlay and starts playback (no auto-popup).
+    const promoPlayButton = data?.promoVideoUrl ? (
+        <button
+            className={styles.promoPlayFab}
+            onClick={() => {
+                setPromoVideoPlaying(true);
+                setShowPromoVideo(true);
+            }}
+            aria-label={locale === 'he' ? 'הפעל סרטון' : 'Play video'}
+        >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="34" height="34" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        </button>
+    ) : null;
+
     return (
         <div className={`${styles.container} ${styles.withSiteHeader}`} style={{ direction: locale === 'he' ? 'rtl' : 'ltr' }}>
             {/* Fixed DONEXT marketing header (links deep-link to the landing page sections) */}
@@ -1068,10 +1091,12 @@ export default function PublicCampaignScreen() {
                             e.target.style.display = 'block';
                         }}
                     />
+                    {promoPlayButton}
                 </div>
             ) : (
                 /* Hero Section - only shows when no banners */
                 <div className={styles.hero}>
+                    {promoPlayButton}
                     <div className={styles.heroOverlay}>
                         <div className={styles.heroContent}>
                             {campaign.logo && (
@@ -1436,6 +1461,63 @@ export default function PublicCampaignScreen() {
                         {t('share')}
                     </button>
                 </div>
+
+                {/* Transfer / contact details below the donate button */}
+                {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder || data.publicScreenPhone || data.publicScreenEmail) && (
+                    <div className={styles.donateInfoBlock}>
+                        {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder) && (
+                            <div className={styles.donateInfoCard}>
+                                <h4 className={styles.donateInfoTitle}>{t('bankTransferTitle')}</h4>
+                                <div className={styles.donateInfoRows}>
+                                    {data.publicScreenBankName && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('bankName')}</span>
+                                            <span className={styles.donateInfoValue}>{data.publicScreenBankName}</span>
+                                        </div>
+                                    )}
+                                    {data.publicScreenBankBranch && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('bankBranch')}</span>
+                                            <span className={styles.donateInfoValue}>{data.publicScreenBankBranch}</span>
+                                        </div>
+                                    )}
+                                    {data.publicScreenBankAccountNumber && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('bankAccount')}</span>
+                                            <span className={styles.donateInfoValue}>{data.publicScreenBankAccountNumber}</span>
+                                        </div>
+                                    )}
+                                    {data.publicScreenBankAccountHolder && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('bankHolder')}</span>
+                                            <span className={styles.donateInfoValue}>{data.publicScreenBankAccountHolder}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {(data.publicScreenPhone || data.publicScreenEmail) && (
+                            <div className={styles.donateInfoCard}>
+                                <h4 className={styles.donateInfoTitle}>{t('contactTitle')}</h4>
+                                <div className={styles.donateInfoRows}>
+                                    {data.publicScreenPhone && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('phone')}</span>
+                                            <a className={styles.donateInfoValue} href={`tel:${data.publicScreenPhone}`} dir="ltr">{data.publicScreenPhone}</a>
+                                        </div>
+                                    )}
+                                    {data.publicScreenEmail && (
+                                        <div className={styles.donateInfoRow}>
+                                            <span className={styles.donateInfoLabel}>{t('email')}</span>
+                                            <a className={styles.donateInfoValue} href={`mailto:${data.publicScreenEmail}`} dir="ltr">{data.publicScreenEmail}</a>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </section>
 
             {/* Tabs Section */}

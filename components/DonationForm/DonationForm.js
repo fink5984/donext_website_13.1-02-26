@@ -199,6 +199,10 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     // Credit card provider state
     const [creditCardProvider, setCreditCardProvider] = useState(''); // 'stripe' or 'bevel'
 
+    // Unit-donation mode: the donor picks a number of units; the charged amount stays in money.
+    // Mirrors the public form so the backoffice /donations form shows unit tiers when configured.
+    const [unitConfig, setUnitConfig] = useState({ active: false, price: 0, labelSingular: '', labelPlural: '' });
+
     // Compute the effective payment amount: use partialFulfillAmount when fulfilling a commitment
     const paymentAmount = isEditingPaymentMethod
         ? (parseFloat(partialFulfillAmount) || 0)
@@ -292,6 +296,31 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         if (campaign?.id) {
             fetchStripeKeys();
         }
+    }, [campaign?.id]);
+
+    // Load unit-donation config (same source the public screen uses) so the amount tiers
+    // can be shown as units instead of money when the campaign is configured that way.
+    useEffect(() => {
+        if (!campaign?.id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetchWithAuth(`/api/campaigns/${campaign.id}/additional-settings`);
+                if (!res.ok) return;
+                const s = await res.json();
+                if (cancelled) return;
+                const unitPrice = Number(s.unitPrice) || 0;
+                setUnitConfig({
+                    active: !!s.unitDonationMode && unitPrice > 0,
+                    price: unitPrice,
+                    labelSingular: s.unitLabel || '',
+                    labelPlural: s.unitLabelPlural || s.unitLabel || ''
+                });
+            } catch (error) {
+                console.error('Error loading unit-donation config:', error);
+            }
+        })();
+        return () => { cancelled = true; };
     }, [campaign?.id]);
 
     const handleDonorChange = (newDonor) => {
@@ -1372,6 +1401,10 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                                 onCustomAmountChange={handleCustomAmountChange}
                                 campaign={campaign}
                                 readOnly={mode === 'edit'}
+                                unitMode={unitConfig.active}
+                                unitPrice={unitConfig.price}
+                                unitLabelSingular={unitConfig.labelSingular}
+                                unitLabelPlural={unitConfig.labelPlural}
                             />
 
                             <PaymentFrequency

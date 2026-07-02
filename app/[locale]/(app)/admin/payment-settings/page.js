@@ -138,7 +138,7 @@ export default function PaymentSettingsPage() {
     const [showMatbiaModal, setShowMatbiaModal] = useState(false);
     const [ojcKeys, setOjcKeys] = useState({ orgId: '' });
     const [showOjcModal, setShowOjcModal] = useState(false);
-    const [nedarimPlusKeys, setNedarimPlusKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1 });
+    const [nedarimPlusKeys, setNedarimPlusKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, requireZeout: false });
     const [showNedarimPlusModal, setShowNedarimPlusModal] = useState(false);
     const [merkazHatzedakaKeys, setMerkazHatzedakaKeys] = useState({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, note: '' });
     const [showMerkazHatzedakaModal, setShowMerkazHatzedakaModal] = useState(false);
@@ -231,7 +231,8 @@ export default function PaymentSettingsPage() {
                         mosad: data.nedarim_plus_mosad || '',
                         apiValid: data.nedarim_plus_api_valid || '',
                         paymentType: data.nedarim_plus_payment_type || 'Ragil',
-                        hkDay: data.nedarim_plus_hk_day || 1
+                        hkDay: data.nedarim_plus_hk_day || 1,
+                        requireZeout: data.nedarim_plus_require_zeout || false
                     });
                 }
                 
@@ -345,7 +346,7 @@ export default function PaymentSettingsPage() {
                 return;
             } else {
                 // If disabling, clear keys
-                setNedarimPlusKeys({ mosad: '', apiValid: '' });
+                setNedarimPlusKeys({ mosad: '', apiValid: '', paymentType: 'Ragil', hkDay: 1, requireZeout: false });
             }
         }
         
@@ -404,6 +405,7 @@ export default function PaymentSettingsPage() {
                 requestBody.nedarim_plus_api_valid = nedarimPlusKeys.apiValid || '';
                 requestBody.nedarim_plus_payment_type = nedarimPlusKeys.paymentType || 'Ragil';
                 requestBody.nedarim_plus_hk_day = nedarimPlusKeys.hkDay || 1;
+                requestBody.nedarim_plus_require_zeout = nedarimPlusKeys.requireZeout || false;
             }
             
             // Include Merkaz Hatzedaka keys if enabled
@@ -1399,7 +1401,21 @@ export default function PaymentSettingsPage() {
                                 </small>
                             </div>
                         )}
-                        
+
+                        <div className={styles.formGroup}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={nedarimPlusKeys.requireZeout}
+                                    onChange={(e) => setNedarimPlusKeys(prev => ({ ...prev, requireZeout: e.target.checked }))}
+                                />
+                                דרוש תעודת זהות בטופס האשראי
+                            </label>
+                            <small className={styles.helpText}>
+                                כאשר מופעל, מוצגת תיבת תעודת זהות מעל טופס האשראי של נדרים פלוס. התעודה נשלחת עם החיוב ואינה נשמרת אצלנו.
+                            </small>
+                        </div>
+
                         <div className={styles.modalActions}>
                             <button
                                 className={styles.cancelButton}

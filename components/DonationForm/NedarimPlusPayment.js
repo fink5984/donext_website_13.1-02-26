@@ -28,6 +28,7 @@ const NedarimPlusPayment = forwardRef(({
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(400);
   const [nedarimConfig, setNedarimConfig] = useState(null);
+  const [zeout, setZeout] = useState('');
   const iframeRef = useRef(null);
   const processingRef = useRef(false);
 
@@ -38,7 +39,8 @@ const NedarimPlusPayment = forwardRef(({
         mosad: preloadedConfig.nedarim_plus_mosad,
         apiValid: preloadedConfig.nedarim_plus_api_valid,
         paymentType: preloadedConfig.nedarim_plus_payment_type || 'Ragil',
-        hkDay: preloadedConfig.nedarim_plus_hk_day || 1
+        hkDay: preloadedConfig.nedarim_plus_hk_day || 1,
+        requireZeout: preloadedConfig.nedarim_plus_require_zeout || false
       });
     }
   }, [preloadedConfig]);
@@ -68,7 +70,8 @@ const NedarimPlusPayment = forwardRef(({
               mosad: data.nedarim_plus_mosad,
               apiValid: data.nedarim_plus_api_valid,
               paymentType: data.nedarim_plus_payment_type || 'Ragil',
-              hkDay: data.nedarim_plus_hk_day || 1
+              hkDay: data.nedarim_plus_hk_day || 1,
+              requireZeout: data.nedarim_plus_require_zeout || false
             });
           } else {
             setErrorMessage(t('nedarimPlusNotConfigured'));
@@ -357,7 +360,7 @@ const NedarimPlusPayment = forwardRef(({
     const nedarimData = {
       Mosad: nedarimConfig.mosad,
       ApiValid: nedarimConfig.apiValid,
-      Zeout: '',
+      Zeout: nedarimConfig.requireZeout ? (zeout || '').replace(/[^0-9]/g, '') : '',
       FirstName: firstName,
       LastName: lastName,
       Street: '',
@@ -405,12 +408,23 @@ const NedarimPlusPayment = forwardRef(({
     }
     
     return true;
-  }, [nedarimConfig, donorName, donorEmail, donorPhone, amount, numberOfPayments, isMonthlyCampaign, campaignId]);
+  }, [nedarimConfig, donorName, donorEmail, donorPhone, amount, numberOfPayments, isMonthlyCampaign, campaignId, zeout]);
 
   // Handle payment submission - returns a Promise that resolves when payment is confirmed
   const handlePayment = async () => {
     if (processingRef.current || !nedarimConfig || !isIframeLoaded) {
       return Promise.reject(new Error('Payment component not ready'));
+    }
+
+    // If ID (Zeout) is required, make sure the donor entered a valid one before charging
+    if (nedarimConfig.requireZeout) {
+      const cleanZeout = (zeout || '').replace(/[^0-9]/g, '');
+      if (cleanZeout.length < 5) {
+        const errorMsg = t('nedarimPlusZeoutRequired');
+        setErrorMessage(errorMsg);
+        if (onError) onError(errorMsg);
+        return Promise.reject(new Error(errorMsg));
+      }
     }
 
     processingRef.current = true;
@@ -516,6 +530,25 @@ const NedarimPlusPayment = forwardRef(({
         {!isIframeLoaded && (
           <div className={styles.loadingMessage}>
             {t('loadingPayment')}
+          </div>
+        )}
+
+        {nedarimConfig.requireZeout && isIframeLoaded && (
+          <div className={styles.zeoutField} dir={isRTL ? 'rtl' : 'ltr'}>
+            <label htmlFor="nedarim-zeout" className={styles.zeoutLabel}>
+              {t('nedarimPlusZeoutLabel')}
+            </label>
+            <input
+              id="nedarim-zeout"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={9}
+              value={zeout}
+              onChange={(e) => setZeout(e.target.value.replace(/[^0-9]/g, ''))}
+              className={styles.zeoutInput}
+              placeholder={t('nedarimPlusZeoutPlaceholder')}
+            />
           </div>
         )}
 

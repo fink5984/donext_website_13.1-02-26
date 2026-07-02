@@ -13,6 +13,9 @@
   max-height: 90vh;
   overflow: auto;
   direction: inherit;
+  /* Sit above the fixed public-screen SiteHeader (z-index: 100) so the form
+     top isn't hidden behind it. Kept below the promo video overlay (100001). */
+  z-index: 100000 !important;
 
   // Donor name header
   .donorNameHeader {
@@ -1518,6 +1521,7 @@
   width: 100%;
   box-sizing: border-box;
   outline: none;
+  color: var(--Text-Default, #6E99EC);
 
   &::placeholder {
     color: var(--Text-Default, #6E99EC);

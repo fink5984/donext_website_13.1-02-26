@@ -6,6 +6,10 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRtl = locale === 'he';
+
+    // Keep the required "*" on the right: in RTL inputs a trailing "*" renders on
+    // the left, so prefix it instead; in LTR it stays as a suffix.
+    const requiredPlaceholder = (label) => (isRtl ? `* ${label}` : `${label} *`);
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -85,7 +89,7 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                 }}>
                     <input
                         type="text"
-                        placeholder={`${t('firstName')} *`}
+                        placeholder={requiredPlaceholder(t('firstName'))}
                         value={firstName}
                         onChange={handleFirstNameChange}
                         dir={isRtl ? 'rtl' : 'ltr'}
@@ -102,7 +106,7 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                 }}>
                     <input
                         type="text"
-                        placeholder={`${t('lastName')} *`}
+                        placeholder={requiredPlaceholder(t('lastName'))}
                         value={lastName}
                         onChange={handleLastNameChange}
                         dir={isRtl ? 'rtl' : 'ltr'}

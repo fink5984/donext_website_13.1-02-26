@@ -41,6 +41,7 @@ export async function GET(request, context) {
                 nedarimPlusApiValid: true,
                 nedarimPlusPaymentType: true,
                 nedarimPlusHkDay: true,
+                nedarimPlusRequireZeout: true,
                 // Merkaz Hatzedaka settings
                 merkazHatzedakaMosad: true,
                 merkazHatzedakaApiValid: true,
@@ -86,6 +87,7 @@ export async function GET(request, context) {
             nedarim_plus_api_valid: campaign.nedarimPlusApiValid || false,
             nedarim_plus_payment_type: campaign.nedarimPlusPaymentType || 'Ragil',
             nedarim_plus_hk_day: campaign.nedarimPlusHkDay || 1,
+            nedarim_plus_require_zeout: campaign.nedarimPlusRequireZeout || false,
             // Merkaz Hatzedaka settings (public)
             merkaz_hatzedaka_mosad: campaign.merkazHatzedakaMosad || null,
             merkaz_hatzedaka_api_valid: campaign.merkazHatzedakaApiValid || null,

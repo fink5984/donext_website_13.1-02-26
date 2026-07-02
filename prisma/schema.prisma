@@ -247,6 +247,7 @@ model Campaign {
   nedarimPlusApiValid  String?                @map("nedarim_plus_api_valid")
   nedarimPlusPaymentType String?              @default("Ragil") @map("nedarim_plus_payment_type") // Ragil or HK
   nedarimPlusHkDay     Int?                   @default(1) @map("nedarim_plus_hk_day") // Day of month for HK (1-28)
+  nedarimPlusRequireZeout Boolean?            @default(false) @map("nedarim_plus_require_zeout") // Require donor ID (Zeout) above the iframe
   merkazHatzedakaMosad     String?            @map("merkaz_hatzedaka_mosad")
   merkazHatzedakaApiValid  String?            @map("merkaz_hatzedaka_api_valid")
   merkazHatzedakaPaymentType String?          @default("Ragil") @map("merkaz_hatzedaka_payment_type")
@@ -711,6 +712,10 @@ model PublicScreenSettings {
   gaugeRaisedOnly         Boolean @default(false) @map("gauge_raised_only")
   showOnlyProgressCircle  Boolean @default(false) @map("show_only_progress_circle")
   headerLogos          Json?     @map("header_logos")
+  bankName             String?   @map("bank_name")
+  bankBranch           String?   @map("bank_branch")
+  bankAccountNumber    String?   @map("bank_account_number")
+  bankAccountHolder    String?   @map("bank_account_holder")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

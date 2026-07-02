@@ -36,6 +36,10 @@ export async function GET(request, { params }) {
                 gaugeRaisedOnly: false,
                 showOnlyProgressCircle: false,
                 publicScreenHeaderLogos: [],
+                bankName: '',
+                bankBranch: '',
+                bankAccountNumber: '',
+                bankAccountHolder: '',
             });
         }
 
@@ -62,6 +66,10 @@ export async function GET(request, { params }) {
             gaugeRaisedOnly: settings.gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: settings.showOnlyProgressCircle ?? false,
             publicScreenHeaderLogos: settings.headerLogos || [],
+            bankName: settings.bankName || '',
+            bankBranch: settings.bankBranch || '',
+            bankAccountNumber: settings.bankAccountNumber || '',
+            bankAccountHolder: settings.bankAccountHolder || '',
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -81,7 +89,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -129,6 +137,10 @@ export async function PUT(request, { params }) {
             gaugeRaisedOnly: gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: showOnlyProgressCircle ?? false,
             headerLogos: Array.isArray(publicScreenHeaderLogos) ? publicScreenHeaderLogos : [],
+            bankName: bankName?.trim() || null,
+            bankBranch: bankBranch?.trim() || null,
+            bankAccountNumber: bankAccountNumber?.trim() || null,
+            bankAccountHolder: bankAccountHolder?.trim() || null,
         };
         if (monthsCalc !== null) updateData.monthsCalculation = monthsCalc;
         if (donationsCalc !== null) updateData.donationsCalculation = donationsCalc;
