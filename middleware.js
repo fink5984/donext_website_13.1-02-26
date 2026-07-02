@@ -16,11 +16,27 @@ export async function middleware(request) {
 
   // Handle API routes with authentication (existing logic)
   if (pathname.startsWith('/api')) {
+    // ── Donary external API ──────────────────────────────────────────────
+    // נתיב האינטגרציה החיצונית (משיכת מידע ע"י Donary) מוגן במפתח ייעודי
+    // משלהם בלבד. כך ניתן לבטל/להחליף את גישת Donary בלי לגעת בשאר המערכת.
+    // מקבל את DONARY_API_KEY (המפתח של Donary) או API_KEY (מפתח פנימי/אדמין).
+    if (pathname.startsWith('/api/donext-api')) {
+      const apiKey = request.headers.get('x-api-key');
+      const isDonaryKey = process.env.DONARY_API_KEY && apiKey === process.env.DONARY_API_KEY;
+      const isInternalKey = process.env.API_KEY && apiKey === process.env.API_KEY;
+      if (isDonaryKey || isInternalKey) {
+        return NextResponse.next();
+      }
+      return new NextResponse(
+        JSON.stringify({ error: 'Invalid or missing API key' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // רשימת endpoints שלא צריכים authentication בכלל
     const publicEndpoints = [
       '/api/login',
       '/api/donations/nedarim',
-      '/api/donext-api',
       '/api/donations/webhook-pixelart',
       '/api/donors/next-for-questionnaire',
       '/api/webhooks/donary',
@@ -173,6 +189,16 @@ export async function middleware(request) {
     } catch (err) {
       return new NextResponse(JSON.stringify({ error: 'Invalid or expired token' }), { status: 401 });
     }
+  }
+
+  // One-off redirect: the public screen for campaign 205 now lives at 201.
+  // Matches with or without a locale prefix (/public-screen/205, /he/public-screen/205, …).
+  // Temporary redirect (307) so it can be removed later without stale browser caching.
+  const legacyPublicScreen = pathname.match(/^(\/(?:he|en))?\/public-screen\/205\/?$/);
+  if (legacyPublicScreen) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/public-screen/205', '/public-screen/201');
+    return NextResponse.redirect(url);
   }
 
   // Handle public-screen routes - detect country by IP for automatic language selection

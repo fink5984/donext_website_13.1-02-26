@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation';
 import styles from './page.module.css';
 import DoNextLoader from '@/app/components/DoNextLoader';
@@ -35,6 +36,9 @@ export default function PublicCampaignScreen() {
     const [isSliding, setIsSliding] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, status: 'loading' });
     const [showDonationModal, setShowDonationModal] = useState(false);
+    // Guard so the modal portal only renders on the client (document exists).
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
     const [donationModalFundraiser, setDonationModalFundraiser] = useState(null);
     const [donationStep, setDonationStep] = useState(1); // 1: select amount, 2: checkout
     const [donationFormData, setDonationFormData] = useState({
@@ -2179,8 +2183,9 @@ export default function PublicCampaignScreen() {
                 </p>
             </footer>
 
-            {/* Donation Modal */}
-            {showDonationModal && (
+            {/* Donation Modal — rendered in a portal on document.body so the fixed
+                DONEXT SiteHeader can never overlap it via an ancestor stacking context. */}
+            {mounted && showDonationModal && createPortal(
                 <div className={styles.modalOverlay} onClick={() => {
                     setShowDonationModal(false);
                     setDonationStep(1);
@@ -2324,7 +2329,8 @@ export default function PublicCampaignScreen() {
                             </>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Add Donation Form Modal */}

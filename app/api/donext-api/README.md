@@ -9,7 +9,12 @@ GET/POST /api/donext-api
 ```
 
 ## Authentication
-כרגע לא נדרש authentication. יש לוודא שהשרת מוגדר נכון לקבל בקשות מהטלפון.
+כל קריאה חייבת לכלול header `x-api-key` עם המפתח הייעודי (`DONARY_API_KEY`) או המפתח הפנימי (`API_KEY`).
+מפתח חסר/שגוי → `401 { "error": "Invalid or missing API key" }`.
+
+```
+x-api-key: <DONARY_API_KEY>
+```
 
 ---
 
@@ -143,8 +148,10 @@ GET /api/donext-api?action=searchByPhone&phone=0501234567
 ## 2. הוספת תרומה
 
 **הערות חשובות**: 
-- הפונקציה מוסיפה תרומה רק לתורמים קיימים בקמפיין. אם התורם לא קיים, תוחזר שגיאה.
-- אם לתורם יש כבר תרומה קיימת, הסכום החדש יתווסף לתרומה הקיימת (לא יחליף אותה).
+- הפונקציה רושמת תרומה רק לתורמים קיימים בקמפיין. אם התורם לא קיים, תוחזר שגיאה (יצירת תורם חדש: `action=createDonor`).
+- **כל קריאה יוצרת רשומת תרומה חדשה** (כמו "הוסף תרומה" ב-UI) — אין דריסה ואין קיפול לתרומה אחת. לתורם יכולות להיות כמה תרומות, והסכומים מסתכמים בקריאות הקריאה.
+- **record-only**: כש-`createdInSystem: "DONARY"` (או `recordOnly: true`) הרישום **לא** נשלח ל-Money API — כי החיוב כבר בוצע במכשיר/Pocket. כך נמנע חיוב כפול.
+- **Idempotency**: שליחת `idempotencyKey` (מספרי, מזהה התרומה המקומי במכשיר) מונעת רשומות כפולות ב-retry. שליחה חוזרת עם אותו מפתח מחזירה `duplicate: true` ולא יוצרת רשומה נוספת.
 - **חיפוש מדויק**: אם יש כמה תורמים עם אותו טלפון או שם, תוחזר שגיאה עם רשימת השמות.
 - **חיפוש לפי שם מלא**: תמיכה בחיפוש "יוסי כהן" (כל המילים חייבות להימצא).
 - **פתרון לכפילויות**: אם קיבלת שגיאת `MULTIPLE_DONORS_FOUND`, השתמש בשם מלא במקום טלפון.
@@ -153,34 +160,40 @@ GET /api/donext-api?action=searchByPhone&phone=0501234567
 ```http
 POST /api/donext-api
 Content-Type: application/json
+x-api-key: <DONARY_API_KEY>
 
 {
   "action": "addDonation",
   "phone": "0501234567",           // אופציונלי (במקום donorName)
   "donorName": "יוסי כהן",         // אופציונלי (במקום phone)
   "campaignId": 123,               // חובה
-  "amount": 500.00,                // חובה - סכום חודשי
+  "amount": 500.00,                // חובה - סכום חודשי / לתשלום
   "fundraiserPhone": "0509876543", // אופציונלי - לקישור למתרים
   "numberOfPayments": 12,          // אופציונלי - מספר תשלומים
   "isUnlimited": false,            // אופציונלי - האם ללא הגבלה
-  "hasPaymentMethod": true         // אופציונלי - האם יש אמצעי תשלום
+  "hasPaymentMethod": true,        // אופציונלי - האם יש אמצעי תשלום
+  "paymentMethod": "CREDIT",       // אופציונלי - סוג התשלום שבוצע במכשיר
+  "createdInSystem": "DONARY",     // מסמן מקור מכשיר → record-only (לא מחייב שוב)
+  "idempotencyKey": 170012345678,  // אופציונלי אך מומלץ - מזהה מספרי ייחודי מהמכשיר
+  "dedication": "לעילוי נשמת...",   // אופציונלי
+  "note": "..."                    // אופציונלי
 }
 ```
 
-### Response (תרומה חדשה)
+### Response (תרומה נרשמה)
 ```json
 {
   "success": true,
   "data": {
-    "message": "התרומה נוספה בהצלחה",
+    "message": "התרומה נרשמה בהצלחה",
     "donationId": 456,
     "donorId": 789,
-    "isAddedToExisting": false,
-    "addedAmount": 500.00,
-    "newMonthlyAmount": 500.00,
+    "isUpdated": false,
+    "recordOnly": true,
+    "monthlyAmount": 500.00,
     "numberOfPayments": 12,
     "isUnlimited": false,
-    "newTotalAmount": 6000.00,
+    "totalAmount": 6000.00,
     "campaignType": "חודשי",
     "hasPaymentMethod": true
   },
@@ -188,22 +201,18 @@ Content-Type: application/json
 }
 ```
 
-### Response (הוספה לתרומה קיימת)
+### Response (שליחה כפולה — idempotent)
 ```json
 {
   "success": true,
   "data": {
-    "message": "התרומה נוספה לתרומה קיימת בהצלחה",
+    "message": "התרומה כבר נקלטה (idempotent) — לא נוצרה רשומה כפולה",
     "donationId": 456,
     "donorId": 789,
-    "isAddedToExisting": true,
-    "addedAmount": 300.00,
-    "newMonthlyAmount": 800.00,
+    "duplicate": true,
+    "monthlyAmount": 500.00,
     "numberOfPayments": 12,
-    "isUnlimited": false,
-    "newTotalAmount": 9600.00,
-    "campaignType": "חודשי",
-    "hasPaymentMethod": true
+    "isUnlimited": false
   },
   "error": null
 }
@@ -262,6 +271,21 @@ Content-Type: application/json
 - `numberOfPayments: null` + `isUnlimited: true` = תרומה ללא הגבלה
 - `numberOfPayments: מספר` = מספר תשלומים מוגדר
 - ללא פרמטרים = ברירת מחדל לפי סוג הקמפיין
+
+---
+
+## 2.1 פעולות כתיבה נוספות (Write-back)
+
+כל הפעולות הן `POST /api/donext-api` עם `action` ב-body. תיעוד מלא עם דוגמאות: ראו `DONARY_SYNC_FROM_DONEXT.md` סעיף 9.
+
+| `action` | תיאור | שדות מרכזיים |
+|---|---|---|
+| `createDonor` | יצירת תורם חדש — **רק ב-Crowdfunding** | `campaignId`, `firstName`, `lastName`, `mobile` (חובה); `email`, `landline`, `englishFirstName/LastName`, `expected`, `potential` (High/Medium/Low), `fundraiserPhone` |
+| `createFollowUp` | יצירת תזכורת / Follow-up | `donorId` (או `phone`+`campaignId`), `content` (חובה); `dueDate`, `assignee` |
+| `completeFollowUp` | סימון תזכורת כהושלמה / ביטול | `reminderId` (חובה); `completed` (ברירת מחדל `true`) |
+| `setDonorAnonymous` | עדכון דגל אנונימי לתורם | `donorId` (או `phone`+`campaignId`), `isAnonymous` (חובה) |
+
+קודי שגיאה ייעודיים: `ADD_DONOR_NOT_ALLOWED` (קמפיין שאינו Crowdfunding), `MISSING_CONTENT`, `INVALID_DUE_DATE`, `REMINDER_NOT_FOUND`.
 
 ---
 
@@ -517,6 +541,13 @@ GET /api/donext-api?action=campaigns
 | `MULTIPLE_DONORS_FOUND` | נמצאו מספר תורמים - נדרש דיוק |
 | `MISSING_IDENTIFIER` | מזהה חסר |
 | `CAMPAIGN_NOT_FOUND` | קמפיין לא נמצא |
+| `INVALID_CAMPAIGN_ID` | מספר קמפיין לא תקין |
+| `INVALID_DONOR_ID` | donorId לא תקין |
+| `ADD_DONOR_NOT_ALLOWED` | הוספת תורם אפשרית רק בקמפיין Crowdfunding |
+| `MISSING_CONTENT` | תוכן תזכורת חסר |
+| `INVALID_DUE_DATE` | תאריך יעד לא תקין |
+| `MISSING_REMINDER_ID` | מזהה תזכורת חסר |
+| `REMINDER_NOT_FOUND` | תזכורת לא נמצאה |
 | `JSON_PARSE_ERROR` | שגיאה בפורמט JSON |
 | `INTERNAL_ERROR` | שגיאה פנימית בשרת |
 
@@ -572,7 +603,7 @@ curl -X POST "http://localhost:3000/api/donext-api" \
    - **קמפיין פרויקט**: `monthlyAmount * numberOfPayments`
    - **קמפיין חודשי**: `monthlyAmount` בלבד
 
-3. **תורמים קיימים בלבד**: הפונקציה עובדת רק עם תורמים קיימים בקמפיין - לא יוצרת תורמים חדשים
+3. **תורמים קיימים בלבד**: `addDonation` עובדת רק עם תורמים קיימים בקמפיין. ליצירת תורם חדש יש להשתמש ב-`action=createDonor` (Crowdfunding בלבד)
 
 4. **קישור מתרימים**: כאשר מוסיפים תרומה עם `fundraiserPhone`, המערכת מקשרת את התרומה למתרים
 

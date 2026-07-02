@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c \"import json; data=json.load\\(open\\(r'c:\\\\Users\\\\User\\\\Desktop\\\\projects 0925\\\\donext_website_13.1_new\\\\messages\\\\he.json', encoding='utf-8'\\)\\); print\\(json.dumps\\(data.get\\('navigation', {}\\), ensure_ascii=False, indent=2\\)\\)\")"
+      "Bash(python -c \"import json; data=json.load\\(open\\(r'c:\\\\Users\\\\User\\\\Desktop\\\\projects 0925\\\\donext_website_13.1_new\\\\messages\\\\he.json', encoding='utf-8'\\)\\); print\\(json.dumps\\(data.get\\('navigation', {}\\), ensure_ascii=False, indent=2\\)\\)\")",
+      "WebFetch(domain:api.kesherhk.co.il)",
+      "WebFetch(domain:kesherhk.info)"
     ]
   }
 }

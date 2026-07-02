@@ -1958,7 +1958,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 100000; /* above the fixed DONEXT SiteHeader (z-index: 100) */
     padding: 1rem;
     animation: fadeIn 0.2s ease;
 }
@@ -1978,7 +1978,7 @@
     padding: 2rem;
     max-width: 900px;
     width: 100%;
-    max-height: 85vh;
+    max-height: 78vh;
     overflow-y: auto;
     position: relative;
     animation: slideUp 0.3s ease;
@@ -2659,7 +2659,7 @@
     .modalContent {
         padding: 1.25rem;
         border-radius: 16px 16px 0 0;
-        max-height: 90vh;
+        max-height: 85vh;
         margin-bottom: 0;
     }
     

@@ -31,19 +31,23 @@ export async function GET(request) {
             case 'donorTotal':
                 return await getDonorTotal(donorName, campaignId);
 
-            case 'fundraiserStats':
-                return await getFundraiserStats(fundraiserPhone || fundraiserName);
-
             case 'campaigns':
-                return await getCampaigns();
-            case 'fundraiserDonors':
-                return await getFundraiserDonors(campaignId, fundraiserName, fundraiserPhone);
-
-            case 'getFundraiserByCampaign':
-                return await getFundraiserByCampaign(phone, campaignId);
+                return await getCampaigns(campaignId);
 
             case 'getFundraiserDonorsList':
                 return await getFundraiserDonorsList(phone, campaignId);
+
+            case 'campaignDonors':
+                return await getCampaignDonors(campaignId);
+
+            case 'campaignFundraisers':
+                return await getCampaignFundraisers(campaignId, fundraiserPhone || phone);
+
+            case 'campaignOperators':
+                return await getCampaignOperators(campaignId);
+
+            case 'campaignRanks':
+                return await getCampaignRanks(campaignId);
 
             case 'debug':
                 return await getDebugInfo();
@@ -65,38 +69,22 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const data = await request.json();
-        const {
-            action,
-            phone,
-            campaignId,
-            donorName,
-            amount,
-            fundraiserPhone,
-            numberOfPayments,
-            isUnlimited,
-            hasPaymentMethod,
-            paymentMethod,
-            createdInSystem,
-            sourceLabel
-        } = data;
+        const { action } = data;
 
-        if (action === 'addDonation') {
-            return await addDonation({
-                phone,
-                campaignId,
-                donorName,
-                amount,
-                fundraiserPhone,
-                numberOfPayments,
-                isUnlimited,
-                hasPaymentMethod,
-                paymentMethod,
-                createdInSystem,
-                sourceLabel
-            });
+        switch (action) {
+            case 'addDonation':
+                return await addDonation(data);
+            case 'createDonor':
+                return await createDonor(data);
+            case 'createFollowUp':
+                return await createFollowUp(data);
+            case 'completeFollowUp':
+                return await completeFollowUp(data);
+            case 'setDonorAnonymous':
+                return await setDonorAnonymous(data);
+            default:
+                return apiError('פעולה לא תקינה', 'INVALID_ACTION', 400);
         }
-
-        return apiError('פעולה לא תקינה', 'INVALID_ACTION', 400);
 
     } catch (error) {
         console.error('Error in donext-api POST:', error);
@@ -434,141 +422,27 @@ async function getDonorTotal(donorName, campaignId) {
 }
 
 /**
- * קבלת נתוני מתרים
- */
-async function getFundraiserStats(identifier) {
-    if (!identifier) {
-        return apiError('מזהה מתרים חסר', 'MISSING_IDENTIFIER', 400);
-    }
-
-    let whereClause;
-
-    // נבדוק אם זה מספר טלפון או שם
-    if (isProbablyPhone(identifier)) {
-        // מספר טלפון
-        whereClause = buildPhoneWhereForPerson(identifier);
-    } else {
-        // שם - נחלק למילים ונבדוק שכל המילים נמצאות
-        const words = identifier.trim().split(/\s+/); // פיצול לפי רווחים
-
-        if (words.length >= 2) {
-            // מספר מילים - צריך שכל המילים יימצאו בשם המלא
-            const andConditions = words.map(word => ({
-                OR: [
-                    { firstName: { contains: word } },
-                    { lastName: { contains: word } }
-                ]
-            }));
-
-            whereClause = {
-                AND: andConditions
-            };
-        } else {
-            // מילה אחת - חיפוש רגיל
-            whereClause = {
-                OR: [
-                    { firstName: { contains: identifier } },
-                    { lastName: { contains: identifier } }
-                ]
-            };
-        }
-    }
-
-    const fundraisers = await prisma.person.findMany({
-        where: whereClause,
-        include: {
-            fundraisers: {
-                include: {
-                    donors: {
-                        include: {
-                            donations: {
-                                where: {
-                                    deleted_at: null
-                                }
-                            },
-                            person: true,
-                            campaign: true
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    if (!fundraisers || fundraisers.length === 0) {
-        return apiError('מתרים לא נמצא', 'FUNDRAISER_NOT_FOUND', 404);
-    }
-
-    // נעבור על כל המתרימים ונחשב את הנתונים שלהם
-    const fundraiserStats = [];
-
-    for (const fundraiser of fundraisers) {
-        for (const fundraiserRecord of fundraiser.fundraisers) {
-            let totalDonationsAmount = 0;
-            let donorsWithDonations = 0;
-            let totalExpected = 0;
-
-            for (const donor of fundraiserRecord.donors) {
-                // חישוב expected (הצפי)
-                const expected = parseFloat(donor.expected) || 0;
-                totalExpected += expected;
-
-                // בדיקה אם לתורם יש תרומות
-                const hasDonations = donor.donations && donor.donations.length > 0;
-                if (hasDonations) {
-                    donorsWithDonations++;
-
-                    // חישוב סכום התרומות לפי סוג קמפיין
-                    for (const donation of donor.donations) {
-                        const monthlyAmount = parseFloat(donation.monthlyAmount) || 0;
-                        const donationType = donor.campaign?.donationType;
-
-                        if (donationType === 'project' && donation.numberOfPayments && donation.numberOfPayments > 0) {
-                            totalDonationsAmount += (monthlyAmount * donation.numberOfPayments);
-                        } else if (donationType === 'project') {
-                            totalDonationsAmount += monthlyAmount;
-                        } else {
-                            totalDonationsAmount += monthlyAmount;
-                        }
-                    }
-                }
-            }
-
-            fundraiserStats.push({
-                fundraiserId: fundraiser.id,
-                fundraiserName: `${fundraiser.firstName || ''} ${fundraiser.lastName || ''}`.trim(),
-                campaignId: fundraiserRecord.campaignId,
-                totalDonationsAmount,
-                donorsWithDonations,
-                totalExpected,
-                totalDonors: fundraiserRecord.donors.length
-            });
-        }
-    }
-
-    return apiSuccess({
-        searchedIdentifier: identifier,
-        foundFundraisers: fundraiserStats,
-        totalFundraisersFound: fundraiserStats.length
-    });
-}
-
-/**
  * הוספת תרומה חדשה עם לוגיקה מתקדמת
  */
-async function addDonation({
-                               phone,
-                               campaignId,
-                               donorName,
-                               amount,
-                               fundraiserPhone,
-                               numberOfPayments,
-                               isUnlimited,
-                               hasPaymentMethod,
-                               paymentMethod,
-                               createdInSystem,
-                               sourceLabel
-                           }) {
+async function addDonation(data) {
+    const {
+        phone,
+        campaignId,
+        donorName,
+        amount,
+        fundraiserPhone,
+        numberOfPayments,
+        isUnlimited,
+        hasPaymentMethod,
+        paymentMethod,
+        createdInSystem,
+        sourceLabel,
+        dedication,
+        note,
+        idempotencyKey,
+        recordOnly
+    } = data;
+
     if (!campaignId || !amount) {
         return apiError('מספר קמפיין וסכום חסרים', 'MISSING_REQUIRED_FIELDS', 400);
     }
@@ -617,81 +491,14 @@ async function addDonation({
         finalIsUnlimited = isUnlimited || false;
     }
 
-    // נמצא את התורם
-    let donor;
+    // record-only: כשהתרומה כבר חויבה במכשיר (Pocket) — רק רושמים, לא מחייבים שוב.
+    // בנתיב Donary המכשיר מבצע את החיוב, ולכן אסור להפעיל חיוב נוסף ב-Money API.
+    const isRecordOnly = recordOnly === true || createdInSystem === 'DONARY';
 
-    if (phone) {
-        // חיפוש מתקדם - נחפש תורמים קיימים בקמפיין עם הטלפון הזה
-        const donors = await prisma.donor.findMany({
-            where: {
-                campaignId: campaignIdInt,
-                person: buildPhoneWhereForPerson(phone)
-            },
-            include: {
-                person: true
-            }
-        });
-
-        if (!donors || donors.length === 0) {
-            return apiError('לא נמצא תורם עם מספר טלפון זה בקמפיין הזה', 'DONOR_NOT_FOUND', 404);
-        }
-
-        if (donors.length > 1) {
-            const donorsList = donors.map(d => `${d.person.firstName || ''} ${d.person.lastName || ''}`.trim()).join(', ');
-            return apiError(`נמצאו ${donors.length} תורמים עם מספר טלפון זה: ${donorsList}. אנא ציין שם מדויק`, 'MULTIPLE_DONORS_FOUND', 400);
-        }
-
-        donor = donors[0];
-    } else if (donorName) {
-        // שימוש באותה לוגיקה של חיפוש שם מלא כמו בפונקציות אחרות
-        const words = donorName.trim().split(/\s+/);
-
-        let whereClause;
-        if (words.length >= 2) {
-            // מספר מילים - צריך שכל המילים יימצאו בשם המלא
-            const andConditions = words.map(word => ({
-                OR: [
-                    { firstName: { contains: word } },
-                    { lastName: { contains: word } }
-                ]
-            }));
-
-            whereClause = {
-                AND: andConditions
-            };
-        } else {
-            // מילה אחת - חיפוש רגיל
-            whereClause = {
-                OR: [
-                    { firstName: { contains: donorName } },
-                    { lastName: { contains: donorName } }
-                ]
-            };
-        }
-
-        const donors = await prisma.donor.findMany({
-            where: {
-                campaignId: campaignIdInt,
-                person: whereClause
-            },
-            include: {
-                person: true
-            }
-        });
-
-        if (!donors || donors.length === 0) {
-            return apiError('לא נמצא תורם עם השם הזה בקמפיין הזה', 'DONOR_NOT_FOUND', 404);
-        }
-
-        if (donors.length > 1) {
-            const donorsList = donors.map(d => `${d.person.firstName || ''} ${d.person.lastName || ''}`.trim()).join(', ');
-            return apiError(`נמצאו ${donors.length} תורמים עם השם הזה: ${donorsList}. אנא ציין שם מדויק יותר`, 'MULTIPLE_DONORS_FOUND', 400);
-        }
-
-        donor = donors[0];
-    } else {
-        return apiError('יש לספק מספר טלפון או שם תורם', 'MISSING_IDENTIFIER', 400);
-    }
+    // איתור התורם — חייב להיות קיים בקמפיין (יצירת תורם חדש: action=createDonor)
+    const donorResult = await resolveDonorForWrite({ phone, donorName, campaignIdInt });
+    if (donorResult.error) return donorResult.error;
+    const donor = donorResult.donor;
 
     // אם יש מספר טלפון מתרים, נמצא אותו ונקשר
     if (fundraiserPhone) {
@@ -717,96 +524,75 @@ async function addDonation({
         }
     }
 
-    // בדיקה אם כבר קיימת תרומה לתורם הזה
-    const existingDonation = await prisma.donation.findFirst({
-        where: {
-            donorId: donor.id,
-            deleted_at: null
-        }
-    });
-
-    let donation;
-    if (existingDonation) {
-        // הוספה לתרומה קיימת (כמו mode='add' בקוד הקיים)
-        // קבלת פרטי הקמפיין לחישוב נכון
-        const campaignForCalc = await prisma.campaign.findUnique({
-            where: { id: campaignIdInt },
-            select: { donationType: true }
-        });
-
-        // עדכון לסכום החדש (דריסה במקום הוספה)
-        const newTotalAmount = amountDecimal;
-
-        // חישוב הסכום החודשי החדש
-        let newMonthlyAmount;
-        if (campaignForCalc?.donationType === 'project') {
-            // קמפיין פרויקט - מחלקים במספר התשלומים החדש
-            newMonthlyAmount = newTotalAmount / (finalNumberOfPayments || 1);
-        } else {
-            // קמפיין חודשי - הסכום החדש הוא הסכום הכולל
-            newMonthlyAmount = newTotalAmount;
-        }
-
-        donation = await prisma.donation.update({
-            where: { id: existingDonation.id },
-            data: {
-                monthlyAmount: newMonthlyAmount,
-                numberOfPayments: finalIsUnlimited ? null : finalNumberOfPayments,
-                isUnlimited: finalIsUnlimited,
-                hasPaymentMethod: finalHasPaymentMethod,
-                donateApproval: true,
-                ...(paymentMethod && { paymentMethod }),
-                ...(createdInSystem && { createdInSystem }),
-                sourceLabel: sourceLabel || 'API'
+    // Idempotency — מניעת רשומות כפולות ב-retry/לחיצה כפולה.
+    // externalDonationId = מזהה התרומה המקומי שהמכשיר שולח (חייב להיות מספרי).
+    let externalId = null;
+    if (idempotencyKey !== undefined && idempotencyKey !== null && `${idempotencyKey}`.trim() !== '') {
+        try { externalId = BigInt(idempotencyKey); } catch { externalId = null; }
+    }
+    if (externalId !== null) {
+        const dup = await prisma.donation.findFirst({
+            where: {
+                externalDonationId: externalId,
+                deleted_at: null,
+                donor: { campaignId: campaignIdInt }
             }
         });
-    } else {
-        // ניצור תרומה חדשה
-        donation = await prisma.donation.create({
-            data: {
-                donorId: donor.id,
-                monthlyAmount: amountDecimal,
-                numberOfPayments: finalIsUnlimited ? null : finalNumberOfPayments,
-                isUnlimited: finalIsUnlimited,
-                hasPaymentMethod: finalHasPaymentMethod,
-                donateApproval: true,
-                ...(paymentMethod && { paymentMethod }),
-                ...(createdInSystem && { createdInSystem }),
-                sourceLabel: sourceLabel || 'API'
-            }
-        });
+        if (dup) {
+            return NextResponse.json({
+                success: true,
+                data: {
+                    message: 'התרומה כבר נקלטה (idempotent) — לא נוצרה רשומה כפולה',
+                    donationId: dup.id,
+                    donorId: donor.id,
+                    duplicate: true,
+                    monthlyAmount: parseFloat(dup.monthlyAmount),
+                    numberOfPayments: dup.isUnlimited ? 'ללא הגבלה' : dup.numberOfPayments,
+                    isUnlimited: dup.isUnlimited
+                }
+            });
+        }
     }
 
-    // שליחה ל-Money API
-    await sendDonationToMoney({
-        campaignId: campaignIdInt,
-        donationId: donation.id,
-        firstName: donor.person?.firstName,
-        lastName: donor.person?.lastName,
-        phone: donor.id.toString(),
-        amount: amountDecimal,
-        numberOfPayments: finalIsUnlimited ? null : (finalNumberOfPayments || 1),
-        hasPaymentMethod: finalHasPaymentMethod,
-        cityName: donor.person?.city?.name
+    // כל קריאה = רשומת Donation חדשה (כמו "הוסף תרומה" ב-UI) — אין דריסה ואין קיפול
+    // לתרומה אחת. הסכומים מסתכמים אוטומטית בקריאות הקריאה (reduce על כל התרומות).
+    const donation = await prisma.donation.create({
+        data: {
+            donorId: donor.id,
+            monthlyAmount: amountDecimal,
+            numberOfPayments: finalIsUnlimited ? null : finalNumberOfPayments,
+            isUnlimited: finalIsUnlimited,
+            hasPaymentMethod: finalHasPaymentMethod,
+            donateApproval: true,
+            ...(paymentMethod && { paymentMethod }),
+            ...(createdInSystem && { createdInSystem }),
+            ...(dedication && { dedication }),
+            ...(note && { note }),
+            ...(externalId !== null && { externalDonationId: externalId }),
+            sourceLabel: sourceLabel || (isRecordOnly ? 'DONARY' : 'API')
+        }
     });
+
+    // שליחה ל-Money API — רק כשאנחנו מבצעים את החיוב.
+    // ב-record-only (נתיב Donary) המכשיר/Pocket כבר חייב — מדלגים כדי למנוע חיוב כפול.
+    if (!isRecordOnly) {
+        await sendDonationToMoney({
+            campaignId: campaignIdInt,
+            donationId: donation.id,
+            firstName: donor.person?.firstName,
+            lastName: donor.person?.lastName,
+            phone: donor.id.toString(),
+            amount: amountDecimal,
+            numberOfPayments: finalIsUnlimited ? null : (finalNumberOfPayments || 1),
+            hasPaymentMethod: finalHasPaymentMethod,
+            cityName: donor.person?.city?.name
+        });
+    }
 
     // חישוב סכום כולל לתצוגה
-    let totalAmount = amountDecimal;
+    let displayTotalAmount = amountDecimal;
     if (!finalIsUnlimited && finalNumberOfPayments) {
-        totalAmount = amountDecimal * finalNumberOfPayments;
-    }
-
-    // חישוב הסכום הכולל החדש להצגה
-    let displayTotalAmount;
-    if (existingDonation) {
-        // אם הוספנו לתרומה קיימת, נחשב את הסכום הכולל החדש
-        if (!finalIsUnlimited && finalNumberOfPayments) {
-            displayTotalAmount = parseFloat(donation.monthlyAmount) * finalNumberOfPayments;
-        } else {
-            displayTotalAmount = parseFloat(donation.monthlyAmount);
-        }
-    } else {
-        displayTotalAmount = totalAmount;
+        displayTotalAmount = amountDecimal * finalNumberOfPayments;
     }
 
     // שליחת אירועי Pusher לעדכון מיידי של הדפים
@@ -824,7 +610,7 @@ async function addDonation({
                 donationId: donation.id,
                 donorId: donor.id,
                 campaignId: campaignIdInt,
-                action: existingDonation ? 'updated' : 'created'
+                action: 'created'
             };
 
             const publicPayload = {
@@ -852,10 +638,11 @@ async function addDonation({
     const response = NextResponse.json({
         success: true,
         data: {
-            message: existingDonation ? 'התרומה עודכנה בהצלחה' : 'התרומה נוספה בהצלחה',
+            message: 'התרומה נרשמה בהצלחה',
             donationId: donation.id,
             donorId: donor.id,
-            isUpdated: !!existingDonation,
+            isUpdated: false,
+            recordOnly: isRecordOnly,
             monthlyAmount: parseFloat(donation.monthlyAmount),
             numberOfPayments: finalIsUnlimited ? 'ללא הגבלה' : finalNumberOfPayments,
             isUnlimited: finalIsUnlimited,
@@ -872,15 +659,277 @@ async function addDonation({
     return response;
 }
 
+// מיפוי Potential Tag (PRD) → צבע רמזור ב-DB (הופכי ל-potentialLevelMap ב-buildDonorPayload)
+const POTENTIAL_TO_COLOR = { High: 'green', Medium: 'orange', Low: 'red' };
+
+/**
+ * איתור תורם קיים בקמפיין לפי טלפון או שם מלא (לשימוש בכתיבה — addDonation).
+ * מחזיר { donor } או { error } (תשובת apiError מוכנה).
+ */
+async function resolveDonorForWrite({ phone, donorName, campaignIdInt }) {
+    if (phone) {
+        const donors = await prisma.donor.findMany({
+            where: { campaignId: campaignIdInt, person: buildPhoneWhereForPerson(phone) },
+            include: { person: true }
+        });
+        if (!donors || donors.length === 0) {
+            return { error: apiError('לא נמצא תורם עם מספר טלפון זה בקמפיין הזה', 'DONOR_NOT_FOUND', 404) };
+        }
+        if (donors.length > 1) {
+            const list = donors.map(d => `${d.person.firstName || ''} ${d.person.lastName || ''}`.trim()).join(', ');
+            return { error: apiError(`נמצאו ${donors.length} תורמים עם מספר טלפון זה: ${list}. אנא ציין שם מדויק`, 'MULTIPLE_DONORS_FOUND', 400) };
+        }
+        return { donor: donors[0] };
+    }
+    if (donorName) {
+        const words = donorName.trim().split(/\s+/);
+        let whereClause;
+        if (words.length >= 2) {
+            whereClause = { AND: words.map(word => ({ OR: [{ firstName: { contains: word } }, { lastName: { contains: word } }] })) };
+        } else {
+            whereClause = { OR: [{ firstName: { contains: donorName } }, { lastName: { contains: donorName } }] };
+        }
+        const donors = await prisma.donor.findMany({
+            where: { campaignId: campaignIdInt, person: whereClause },
+            include: { person: true }
+        });
+        if (!donors || donors.length === 0) {
+            return { error: apiError('לא נמצא תורם עם השם הזה בקמפיין הזה', 'DONOR_NOT_FOUND', 404) };
+        }
+        if (donors.length > 1) {
+            const list = donors.map(d => `${d.person.firstName || ''} ${d.person.lastName || ''}`.trim()).join(', ');
+            return { error: apiError(`נמצאו ${donors.length} תורמים עם השם הזה: ${list}. אנא ציין שם מדויק יותר`, 'MULTIPLE_DONORS_FOUND', 400) };
+        }
+        return { donor: donors[0] };
+    }
+    return { error: apiError('יש לספק מספר טלפון או שם תורם', 'MISSING_IDENTIFIER', 400) };
+}
+
+/**
+ * איתור תורם לפי donorId (עדיף) או phone+campaignId — לשימוש בתזכורות/אנונימי.
+ */
+async function resolveDonorRef({ donorId, phone, campaignId }) {
+    if (donorId !== undefined && donorId !== null && `${donorId}`.trim() !== '') {
+        const id = parseInt(donorId);
+        if (isNaN(id)) return { error: apiError('donorId לא תקין', 'INVALID_DONOR_ID', 400) };
+        const donor = await prisma.donor.findUnique({ where: { id }, include: { person: true } });
+        if (!donor) return { error: apiError('תורם לא נמצא', 'DONOR_NOT_FOUND', 404) };
+        return { donor };
+    }
+    if (phone && campaignId) {
+        return await resolveDonorForWrite({ phone, campaignIdInt: parseInt(campaignId) });
+    }
+    return { error: apiError('יש לספק donorId או phone+campaignId', 'MISSING_IDENTIFIER', 400) };
+}
+
+/**
+ * יצירת תורם חדש מהמכשיר (Crowdfunding "Add Donor")
+ * POST /api/donext-api  { action: 'createDonor', campaignId, firstName, lastName, mobile, ... }
+ */
+async function createDonor(data) {
+    const {
+        campaignId, firstName, lastName, mobile, phone, landline, email,
+        englishFirstName, englishLastName, expected, goal, potential, fundraiserPhone
+    } = data;
+
+    if (!campaignId) return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
+    if (!firstName || !lastName) return apiError('שם פרטי ושם משפחה חובה', 'MISSING_REQUIRED_FIELDS', 400);
+    const mobileNum = mobile || phone;
+    if (!mobileNum) return apiError('מספר טלפון נייד חובה', 'MISSING_REQUIRED_FIELDS', 400);
+
+    const campaignIdInt = parseInt(campaignId);
+    if (isNaN(campaignIdInt)) return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+
+    const campaign = await prisma.campaign.findUnique({
+        where: { id: campaignIdInt },
+        select: { id: true, clientId: true, campaignType: true }
+    });
+    if (!campaign) return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
+
+    // לפי ה-PRD: הוספת תורם מהמכשיר מותרת רק בקמפיין Crowdfunding (לא ב-Community)
+    if (campaign.campaignType !== 'crowdfunding') {
+        return apiError('הוספת תורם מהמכשיר אפשרית רק בקמפיין Crowdfunding', 'ADD_DONOR_NOT_ALLOWED', 403);
+    }
+
+    const goalValue = expected != null ? expected : (goal != null ? goal : null);
+    const trafficLightColor = potential ? (POTENTIAL_TO_COLOR[potential] || null) : null;
+
+    // קישור מתרים (אופציונלי)
+    let fundraiserId = null;
+    if (fundraiserPhone) {
+        const fp = await prisma.person.findFirst({ where: buildPhoneWhereForPerson(fundraiserPhone) });
+        if (fp) {
+            const fr = await prisma.fundraiser.findFirst({ where: { personId: fp.id, campaignId: campaignIdInt } });
+            if (fr) fundraiserId = fr.id;
+        }
+    }
+
+    const cleanMobile = String(mobileNum).replace(/\D/g, '');
+    const cleanLandline = landline ? String(landline).replace(/\D/g, '') : null;
+
+    const donor = await prisma.$transaction(async (tx) => {
+        const person = await tx.person.create({
+            data: {
+                clientId: campaign.clientId,
+                firstName,
+                lastName,
+                mainMobile: cleanMobile || null,
+                phoneLandline: cleanLandline,
+                email: email || null,
+                active: true,
+                ...((englishFirstName || englishLastName) && {
+                    englishName: { create: { firstName: englishFirstName || null, lastName: englishLastName || null } }
+                })
+            }
+        });
+        return await tx.donor.create({
+            data: {
+                campaignId: campaignIdInt,
+                personId: person.id,
+                fundraiserId,
+                expected: goalValue,
+                trafficLightColor,
+                isAnonymous: false,
+                active: true
+            },
+            include: DONOR_API_INCLUDE
+        });
+    });
+
+    return apiSuccess({
+        message: 'התורם נוצר בהצלחה',
+        donor: buildDonorPayload(donor)
+    });
+}
+
+/**
+ * יצירת תזכורת / Follow-up מהמכשיר
+ * POST /api/donext-api  { action: 'createFollowUp', donorId | (phone+campaignId), content, dueDate?, assignee? }
+ */
+async function createFollowUp(data) {
+    const { donorId, phone, campaignId, content, note, body, dueDate, assignee, assigneeName } = data;
+    const text = content || note || body;
+    if (!text || `${text}`.trim() === '') {
+        return apiError('תוכן התזכורת חסר', 'MISSING_CONTENT', 400);
+    }
+
+    const ref = await resolveDonorRef({ donorId, phone, campaignId });
+    if (ref.error) return ref.error;
+
+    let followUpDate = null;
+    if (dueDate) {
+        const d = new Date(dueDate);
+        if (isNaN(d.getTime())) return apiError('תאריך יעד לא תקין', 'INVALID_DUE_DATE', 400);
+        followUpDate = d;
+    }
+
+    const created = await prisma.donorNote.create({
+        data: {
+            donorId: ref.donor.id,
+            note: text,
+            followUpDate,
+            assignedToName: assignee || assigneeName || null,
+            noteCompleted: false
+        }
+    });
+
+    return apiSuccess({
+        message: 'התזכורת נוצרה בהצלחה',
+        donorId: ref.donor.id,
+        reminder: {
+            id: created.id,
+            content: created.note,
+            assignee: created.assignedToName,
+            dueDate: created.followUpDate,
+            completed: created.noteCompleted
+        }
+    });
+}
+
+/**
+ * סימון תזכורת כהושלמה (או ביטול) מהמכשיר
+ * POST /api/donext-api  { action: 'completeFollowUp', reminderId, completed? }
+ */
+async function completeFollowUp(data) {
+    const { reminderId, noteId, completed } = data;
+    const id = parseInt(reminderId || noteId);
+    if (!id || isNaN(id)) return apiError('מזהה תזכורת חסר', 'MISSING_REMINDER_ID', 400);
+
+    const existing = await prisma.donorNote.findUnique({ where: { id } });
+    if (!existing) return apiError('תזכורת לא נמצאה', 'REMINDER_NOT_FOUND', 404);
+
+    const markComplete = completed === undefined ? true : !!completed;
+    const updated = await prisma.donorNote.update({
+        where: { id },
+        data: {
+            noteCompleted: markComplete,
+            noteCompletedAt: markComplete ? new Date() : null
+        }
+    });
+
+    return apiSuccess({
+        message: markComplete ? 'התזכורת סומנה כהושלמה' : 'סימון ההשלמה בוטל',
+        reminder: {
+            id: updated.id,
+            content: updated.note,
+            assignee: updated.assignedToName,
+            dueDate: updated.followUpDate,
+            completed: updated.noteCompleted
+        }
+    });
+}
+
+/**
+ * עדכון דגל אנונימי לתורם (Anonymous Public Display)
+ * POST /api/donext-api  { action: 'setDonorAnonymous', donorId | (phone+campaignId), isAnonymous }
+ */
+async function setDonorAnonymous(data) {
+    const { donorId, phone, campaignId, isAnonymous } = data;
+    if (isAnonymous === undefined || isAnonymous === null) {
+        return apiError('יש לציין isAnonymous (true/false)', 'MISSING_PARAMETERS', 400);
+    }
+
+    const ref = await resolveDonorRef({ donorId, phone, campaignId });
+    if (ref.error) return ref.error;
+
+    const updated = await prisma.donor.update({
+        where: { id: ref.donor.id },
+        data: { isAnonymous: !!isAnonymous }
+    });
+
+    return apiSuccess({
+        donorId: updated.id,
+        isAnonymous: updated.isAnonymous || false
+    });
+}
+
 /**
  * קבלת רשימת קמפיינים פעילים
+ * אם מועבר campaignId – מוחזר קמפיין בודד בלבד
+ * GET /api/donext-api?action=campaigns
+ * GET /api/donext-api?action=campaigns&campaignId=88
  */
-async function getCampaigns() {
+async function getCampaigns(campaignId = null) {
+    // אם הועבר campaignId – נסנן לקמפיין בודד
+    let whereClause = undefined;
+    if (campaignId !== null && campaignId !== undefined && campaignId !== '') {
+        const campaignIdInt = parseInt(campaignId);
+        if (isNaN(campaignIdInt)) {
+            return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+        }
+        whereClause = { id: campaignIdInt };
+    }
+
     const campaigns = await prisma.campaign.findMany({
+        where: whereClause,
         select: {
             id: true,
             name: true,
             nameEn: true,
+            donationType: true,
+            campaignType: true,
+            hasOperators: true,
+            isEvent: true,
             startDate: true,
             endDate: true,
             targetAmount: true,
@@ -896,6 +945,11 @@ async function getCampaigns() {
             created_at: 'desc'
         }
     });
+
+    // אם ביקשו קמפיין ספציפי שלא נמצא – נחזיר 404
+    if (whereClause && campaigns.length === 0) {
+        return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
+    }
 
     const campaignsWithStats = await Promise.all(
         campaigns.map(async (campaign) => {
@@ -928,6 +982,11 @@ async function getCampaigns() {
                 name: campaign.name,
                 nameEn: campaign.nameEn,
                 clientName: campaign.client.organizationName || campaign.client.name,
+                // סוג הקמפיין
+                donationType: campaign.donationType || null,   // 'monthly' | 'project'
+                campaignType: campaign.campaignType || null,    // 'community' | 'crowdfunding'
+                hasOperators: campaign.hasOperators || false,
+                isEvent: campaign.isEvent || false,
                 startDate: campaign.startDate,
                 endDate: campaign.endDate,
                 targetAmount: campaign.targetAmount ? parseFloat(campaign.targetAmount) : null,
@@ -943,246 +1002,136 @@ async function getCampaigns() {
 
     return apiSuccess(campaignsWithStats);
 }
-/**
- * קבלת כל התורמים של מתרים בקמפיין (שם מלא, טלפון, עיר)
- * GET /api/donext-api?action=fundraiserDonors&campaignId=123&fundraiserName=... | fundraiserPhone=...
- */
-async function getFundraiserDonors(campaignId, fundraiserName, fundraiserPhone) {
-    if (!campaignId) {
-        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
-    }
-    if (!fundraiserName && !fundraiserPhone) {
-        return apiError('יש לספק שם מתרים או טלפון מתרים', 'MISSING_FUNDRAISER_IDENTIFIER', 400);
-    }
-
-    const campaignIdInt = parseInt(campaignId);
-
-    // וידוא קמפיין קיים (אופציונלי אך מומלץ)
-    const campaign = await prisma.campaign.findUnique({
-        where: { id: campaignIdInt },
-        select: { id: true, name: true }
-    });
-    if (!campaign) {
-        return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
-    }
-
-    // בניית תנאי חיפוש למתרים לפי שם/טלפון – בדומה ללוגיקה הקיימת בקוד
-    let personWhere;
-    if (fundraiserPhone && isProbablyPhone(fundraiserPhone)) {
-        personWhere = buildPhoneWhereForPerson(fundraiserPhone);
-    } else if (fundraiserName) {
-        const words = fundraiserName.trim().split(/\s+/);
-        if (words.length >= 2) {
-            const andConditions = words.map(word => ({
-                OR: [
-                    { firstName: { contains: word } },
-                    { lastName: { contains: word } }
-                ]
-            }));
-            personWhere = { AND: andConditions };
-        } else {
-            personWhere = {
-                OR: [
-                    { firstName: { contains: fundraiserName } },
-                    { lastName: { contains: fundraiserName } }
-                ]
-            };
-        }
-    } else {
-        return apiError('מזהה מתרים לא תקין', 'INVALID_FUNDRAISER_IDENTIFIER', 400);
-    }
-
-    // שליפת רשומות מתרים בקמפיין + התורמים שלהם
-    const fundraisers = await prisma.fundraiser.findMany({
-        where: {
-            campaignId: campaignIdInt,
-            person: personWhere
-        },
-        include: {
-            person: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    mainMobile: true,
-                    secondaryMobile: true,
-                    phoneLandline: true
-                }
-            },
-            donors: {
-                include: {
-                    person: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                            mainMobile: true,
-                            secondaryMobile: true,
-                            phoneLandline: true,
-                            city: { select: { id: true, name: true } }, // יחסי
-                        }
-                    },
-                    donations: {
-                        where: {
-                            deleted_at: null // רק תרומות פעילות
-                        },
-                        select: {
-                            monthlyAmount: true,
-                            numberOfPayments: true,
-                            isUnlimited: true
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    if (!fundraisers || fundraisers.length === 0) {
-        return apiError('מתרים לא נמצא בקמפיין זה', 'FUNDRAISER_NOT_FOUND', 404);
-        // אם תרצי להחזיר 404 גם כשיש התאמה לשם אבל בקמפיין אחר – אפשר להרחיב כאן.
-    }
-
-    // פונקציה לעדיפות טלפון להצגה
-    const pickPhone = (p) => p?.mainMobile || p?.secondaryMobile || p?.phoneLandline || null;
-
-    // מבנה תשובה: אם יש כמה מקרים (שמות דומים), נחזיר מערך
-    const payload = fundraisers.map(fr => {
-        const fundraiserFullName = `${fr.person?.firstName || ''} ${fr.person?.lastName || ''}`.trim();
-        const donors = (fr.donors || []).map(d => {
-            const dp = d.person;
-            const cityName = dp?.city?.name
-                || null;
-            
-            // חישוב סך התרומות
-            let totalDonations = 0;
-            if (d.donations && d.donations.length > 0) {
-                totalDonations = d.donations.reduce((sum, donation) => {
-                    const monthlyAmount = parseFloat(donation.monthlyAmount || 0);
-                    // אם התרומה היא ללא הגבלה או שמספר התשלומים לא מוגדר, נחשב כתשלום בודד
-                    const payments = donation.isUnlimited || !donation.numberOfPayments ? 1 : donation.numberOfPayments;
-                    return sum + (monthlyAmount * payments);
-                }, 0);
-            }
-            
-            return {
-                donorId: d.id,
-                fullName: `${dp?.firstName || ''} ${dp?.lastName || ''}`.trim(),
-                phone: pickPhone(dp),
-                city: cityName,
-                totalDonations: totalDonations
-            };
-        });
-
-        // מיינו לפי שם מלא (אופציונלי)
-        donors.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'he'));
-
-        return {
-            fundraiserId: fr.id,
-            fundraiserName: fundraiserFullName,
-            fundraiserPhone: pickPhone(fr.person),
-            campaignId: campaign.id,
-            campaignName: campaign.name,
-            totalDonors: donors.length,
-            donors
-        };
-    });
-
-    // אם נמצאה התאמה אחת – נחזיר אובייקט בודד לנוחות; אם יותר – נחזיר מערך
-    const result = (payload.length === 1) ? payload[0] : { matches: payload, totalMatches: payload.length };
-
-    return apiSuccess(result);
-}
 
 /**
- * קבלת פרטי מתרים לפי טלפון וקמפיין
- * GET /api/donext-api?action=getFundraiserByCampaign&phone=0501234567&campaignId=123
+ * Prisma include משותף לשליפת תורם עם כל הנתונים הנדרשים ל-API החיצוני
+ * (פרטי אדם, תרומות, ותזכורות) — משמש גם ב-getFundraiserDonorsList וגם ב-getCampaignDonors
  */
-async function getFundraiserByCampaign(phone, campaignId) {
-    if (!phone) {
-        return apiError('מספר טלפון חסר', 'MISSING_PHONE', 400);
-    }
-    if (!campaignId) {
-        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
-    }
-
-    const campaignIdInt = parseInt(campaignId);
-
-    // חיפוש המתרים בקמפיין לפי טלפון
-    const fundraiser = await prisma.fundraiser.findFirst({
-        where: {
-            campaignId: campaignIdInt,
-            deleted_at: null,
-            person: buildPhoneWhereForPerson(phone)
-        },
-        include: {
-            person: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    mainMobile: true,
-                    secondaryMobile: true,
-                    phoneLandline: true,
-                    email: true,
-                    city: {
-                        select: {
-                            id: true,
-                            name: true
-                        }
-                    },
-                    street: {
-                        select: {
-                            id: true,
-                            name: true
-                        }
-                    },
-                    houseNumber: true
-                }
-            },
-            campaign: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            }
+const DONOR_API_INCLUDE = {
+    person: {
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            mainMobile: true,
+            secondaryMobile: true,
+            phoneLandline: true,
+            email: true,
+            synagogue: true,
+            city: { select: { id: true, name: true } },
+            street: { select: { id: true, name: true } },
+            houseNumber: true,
+            englishName: { select: { firstName: true, lastName: true } }
         }
-    });
-
-    if (!fundraiser) {
-        return apiError('מתרים לא נמצא בקמפיין זה', 'FUNDRAISER_NOT_FOUND', 404);
+    },
+    donations: {
+        where: { deleted_at: null },
+        select: {
+            id: true,
+            monthlyAmount: true,
+            numberOfPayments: true,
+            isUnlimited: true,
+            created_at: true,
+            paymentMethod: true,
+            hasPaymentMethod: true
+        }
+    },
+    donorNotes: {
+        select: {
+            id: true,
+            note: true,
+            followUpDate: true,
+            noteCompleted: true,
+            assignedToName: true
+        }
     }
+};
 
-    // בניית התשובה
-    const person = fundraiser.person;
+/**
+ * בניית אובייקט תורם אחיד לתשובת ה-API (כולל synagogue, goal, potential, payments, reminders)
+ */
+function buildDonorPayload(donor) {
+    const person = donor.person || {};
     const fullName = `${person.firstName || ''} ${person.lastName || ''}`.trim();
-    const primaryPhone = person.mainMobile || person.secondaryMobile || person.phoneLandline;
+    const primaryPhone = person.mainMobile || person.secondaryMobile || person.phoneLandline || null;
 
-    return apiSuccess({
-        fundraiserId: fundraiser.id,
-        fundraiserName: fullName,
-        firstName: person.firstName,
-        lastName: person.lastName,
+    // שם באנגלית (אם קיים)
+    const englishFirstName = person.englishName?.firstName || null;
+    const englishLastName = person.englishName?.lastName || null;
+    const fullNameEnglish = (englishFirstName || englishLastName)
+        ? `${englishFirstName || ''} ${englishLastName || ''}`.trim()
+        : null;
+
+    // חישוב סך התרומות
+    let totalDonations = 0;
+    if (donor.donations && donor.donations.length > 0) {
+        totalDonations = donor.donations.reduce((sum, donation) => {
+            const monthlyAmount = parseFloat(donation.monthlyAmount || 0);
+            const payments = donation.isUnlimited || !donation.numberOfPayments ? 1 : donation.numberOfPayments;
+            return sum + (monthlyAmount * payments);
+        }, 0);
+    }
+
+    // Potential Tag — דירוג פוטנציאל (רמזור): High(ירוק)/Medium(כתום)/Low(אדום)/Unknown
+    const potentialLevelMap = { green: 'High', orange: 'Medium', yellow: 'Medium', red: 'Low' };
+    const potential = {
+        level: potentialLevelMap[donor.trafficLightColor] || 'Unknown',
+        color: donor.trafficLightColor || null
+    };
+
+    // היסטוריית תשלומים / תרומות (Past Payments)
+    const payments = (donor.donations || []).map(d => ({
+        donationId: d.id,
+        amount: parseFloat(d.monthlyAmount) || 0,
+        numberOfPayments: d.isUnlimited ? null : (d.numberOfPayments || 1),
+        isUnlimited: d.isUnlimited || false,
+        paymentType: d.paymentMethod || null,
+        hasPaymentMethod: d.hasPaymentMethod || false,
+        date: d.created_at
+    }));
+
+    // תזכורות (Existing Reminders)
+    const reminders = (donor.donorNotes || []).map(n => ({
+        id: n.id,
+        content: n.note,
+        assignee: n.assignedToName || null,
+        dueDate: n.followUpDate,
+        completed: n.noteCompleted || false
+    }));
+
+    return {
+        donorId: donor.id,
+        personId: person.id || null,
+        fundraiserId: donor.fundraiserId || null,
+        fullName: fullName,
+        firstName: person.firstName || null,
+        lastName: person.lastName || null,
+        fullNameEnglish: fullNameEnglish,
+        firstNameEnglish: englishFirstName,
+        lastNameEnglish: englishLastName,
         phone: primaryPhone,
         phones: {
-            mainMobile: person.mainMobile,
-            secondaryMobile: person.secondaryMobile,
-            phoneLandline: person.phoneLandline
+            mainMobile: person.mainMobile || null,
+            secondaryMobile: person.secondaryMobile || null,
+            phoneLandline: person.phoneLandline || null
         },
-        email: person.email,
+        email: person.email || null,
         address: {
             city: person.city?.name || null,
             cityId: person.city?.id || null,
             street: person.street?.name || null,
             streetId: person.street?.id || null,
-            houseNumber: person.houseNumber
+            houseNumber: person.houseNumber || null
         },
-        campaign: {
-            id: fundraiser.campaign.id,
-            name: fundraiser.campaign.name
-        },
-        status: fundraiser.status,
-        personId: person.id
-    });
+        synagogue: person.synagogue || null,
+        goal: donor.expected != null ? parseFloat(donor.expected) : null,
+        potential: potential,
+        isAnonymous: donor.isAnonymous || false,
+        totalDonations: totalDonations,
+        donationsCount: donor.donations?.length || 0,
+        payments: payments,
+        reminders: reminders
+    };
 }
 
 /**
@@ -1230,50 +1179,7 @@ async function getFundraiserDonorsList(phone, campaignId) {
                 }
             },
             donors: {
-                include: {
-                    person: {
-                        select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                            mainMobile: true,
-                            secondaryMobile: true,
-                            phoneLandline: true,
-                            email: true,
-                            city: {
-                                select: {
-                                    id: true,
-                                    name: true
-                                }
-                            },
-                            street: {
-                                select: {
-                                    id: true,
-                                    name: true
-                                }
-                            },
-                            houseNumber: true,
-                            englishName: {
-                                select: {
-                                    firstName: true,
-                                    lastName: true
-                                }
-                            }
-                        }
-                    },
-                    donations: {
-                        where: {
-                            deleted_at: null
-                        },
-                        select: {
-                            id: true,
-                            monthlyAmount: true,
-                            numberOfPayments: true,
-                            isUnlimited: true,
-                            created_at: true
-                        }
-                    }
-                }
+                include: DONOR_API_INCLUDE
             }
         }
     });
@@ -1283,55 +1189,7 @@ async function getFundraiserDonorsList(phone, campaignId) {
     }
 
     // בניית רשימת התורמים
-    const donors = (fundraiser.donors || []).map(donor => {
-        const person = donor.person;
-        const fullName = `${person.firstName || ''} ${person.lastName || ''}`.trim();
-        const primaryPhone = person.mainMobile || person.secondaryMobile || person.phoneLandline;
-
-        // שם באנגלית (אם קיים)
-        const englishFirstName = person.englishName?.firstName || null;
-        const englishLastName = person.englishName?.lastName || null;
-        const fullNameEnglish = (englishFirstName || englishLastName) 
-            ? `${englishFirstName || ''} ${englishLastName || ''}`.trim() 
-            : null;
-
-        // חישוב סך התרומות
-        let totalDonations = 0;
-        if (donor.donations && donor.donations.length > 0) {
-            totalDonations = donor.donations.reduce((sum, donation) => {
-                const monthlyAmount = parseFloat(donation.monthlyAmount || 0);
-                const payments = donation.isUnlimited || !donation.numberOfPayments ? 1 : donation.numberOfPayments;
-                return sum + (monthlyAmount * payments);
-            }, 0);
-        }
-
-        return {
-            donorId: donor.id,
-            personId: person.id,
-            fullName: fullName,
-            firstName: person.firstName,
-            lastName: person.lastName,
-            fullNameEnglish: fullNameEnglish,
-            firstNameEnglish: englishFirstName,
-            lastNameEnglish: englishLastName,
-            phone: primaryPhone,
-            phones: {
-                mainMobile: person.mainMobile,
-                secondaryMobile: person.secondaryMobile,
-                phoneLandline: person.phoneLandline
-            },
-            email: person.email,
-            address: {
-                city: person.city?.name || null,
-                cityId: person.city?.id || null,
-                street: person.street?.name || null,
-                streetId: person.street?.id || null,
-                houseNumber: person.houseNumber
-            },
-            totalDonations: totalDonations,
-            donationsCount: donor.donations?.length || 0
-        };
-    });
+    const donors = (fundraiser.donors || []).map(buildDonorPayload);
 
     // מיון לפי שם מלא
     donors.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'he'));
@@ -1365,6 +1223,408 @@ async function getFundraiserDonorsList(phone, campaignId) {
         },
         totalDonors: donors.length,
         donors: donors
+    });
+}
+
+/**
+ * קבלת כל תורמי הקמפיין (רשימה מלאה לפי campaignId, ללא תלות במתרים)
+ * GET /api/donext-api?action=campaignDonors&campaignId=88
+ */
+async function getCampaignDonors(campaignId) {
+    if (!campaignId) {
+        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
+    }
+
+    const campaignIdInt = parseInt(campaignId);
+    if (isNaN(campaignIdInt)) {
+        return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+    }
+
+    const campaign = await prisma.campaign.findUnique({
+        where: { id: campaignIdInt },
+        select: { id: true, name: true }
+    });
+    if (!campaign) {
+        return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
+    }
+
+    const donorRecords = await prisma.donor.findMany({
+        where: {
+            campaignId: campaignIdInt,
+            personId: { not: null }
+        },
+        include: DONOR_API_INCLUDE
+    });
+
+    const donors = donorRecords.map(buildDonorPayload);
+    donors.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'he'));
+
+    return apiSuccess({
+        campaign: { id: campaign.id, name: campaign.name },
+        totalDonors: donors.length,
+        donors: donors
+    });
+}
+
+/**
+ * קבלת כל המתרימים של קמפיין (אופציונלי: סינון לפי טלפון מתרים)
+ * GET /api/donext-api?action=campaignFundraisers&campaignId=88
+ * GET /api/donext-api?action=campaignFundraisers&campaignId=88&fundraiserPhone=0501234567
+ */
+async function getCampaignFundraisers(campaignId, fundraiserPhone = null) {
+    if (!campaignId) {
+        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
+    }
+
+    const campaignIdInt = parseInt(campaignId);
+    if (isNaN(campaignIdInt)) {
+        return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+    }
+
+    // וידוא קמפיין קיים + קבלת סוג הקמפיין + דרגות אופרייטור
+    const campaign = await prisma.campaign.findUnique({
+        where: { id: campaignIdInt },
+        select: {
+            id: true,
+            name: true,
+            donationType: true,
+            hasOperators: true,
+            operatorRanks: { select: { id: true, name: true, amount: true } }
+        }
+    });
+    if (!campaign) {
+        return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
+    }
+
+    // מפת עזר: שם אופרייטור + כמות מתרימים תחת כל אופרייטור (כל הקמפיין, גם כש-fundraiserPhone מסנן)
+    const allCampaignFundraisers = await prisma.fundraiser.findMany({
+        where: { campaignId: campaignIdInt, deleted_at: null },
+        select: {
+            id: true,
+            assignedOperatorId: true,
+            person: { select: { firstName: true, lastName: true } }
+        }
+    });
+    const operatorNameById = new Map();
+    const managedCountByOperatorId = new Map();
+    for (const f of allCampaignFundraisers) {
+        operatorNameById.set(f.id, `${f.person?.firstName || ''} ${f.person?.lastName || ''}`.trim());
+        if (f.assignedOperatorId) {
+            managedCountByOperatorId.set(
+                f.assignedOperatorId,
+                (managedCountByOperatorId.get(f.assignedOperatorId) || 0) + 1
+            );
+        }
+    }
+
+    // בניית תנאי שליפה – אופציונלי לפי טלפון מתרים
+    const where = {
+        campaignId: campaignIdInt,
+        deleted_at: null
+    };
+    if (fundraiserPhone) {
+        where.person = buildPhoneWhereForPerson(fundraiserPhone);
+    }
+
+    const fundraisers = await prisma.fundraiser.findMany({
+        where,
+        include: {
+            person: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    mainMobile: true,
+                    secondaryMobile: true,
+                    phoneLandline: true,
+                    email: true,
+                    city: { select: { id: true, name: true } },
+                    street: { select: { id: true, name: true } },
+                    houseNumber: true
+                }
+            },
+            donors: {
+                select: {
+                    expected: true,
+                    donations: {
+                        where: { deleted_at: null },
+                        select: {
+                            monthlyAmount: true,
+                            numberOfPayments: true,
+                            isUnlimited: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // אם חיפשו לפי טלפון ולא נמצא – 404
+    if (fundraiserPhone && fundraisers.length === 0) {
+        return apiError('מתרים לא נמצא בקמפיין זה', 'FUNDRAISER_NOT_FOUND', 404);
+    }
+
+    const isProject = campaign.donationType === 'project';
+    const sumDonations = (donations) => donations.reduce((sum, d) => {
+        const monthly = parseFloat(d.monthlyAmount) || 0;
+        if (isProject && d.numberOfPayments && d.numberOfPayments > 0) {
+            return sum + (monthly * d.numberOfPayments);
+        }
+        return sum + monthly;
+    }, 0);
+
+    const result = fundraisers.map(fr => {
+        const p = fr.person;
+        const fullName = `${p?.firstName || ''} ${p?.lastName || ''}`.trim();
+        const primaryPhone = p?.mainMobile || p?.secondaryMobile || p?.phoneLandline || null;
+
+        let totalExpected = 0;
+        let totalRaised = 0;
+        let donorsWithDonations = 0;
+
+        for (const donor of (fr.donors || [])) {
+            totalExpected += parseFloat(donor.expected) || 0;
+            const donations = donor.donations || [];
+            if (donations.length > 0) {
+                donorsWithDonations++;
+                totalRaised += sumDonations(donations);
+            }
+        }
+
+        return {
+            fundraiserId: fr.id,
+            personId: p?.id || null,
+            fullName,
+            firstName: p?.firstName || null,
+            lastName: p?.lastName || null,
+            phone: primaryPhone,
+            phones: {
+                mainMobile: p?.mainMobile || null,
+                secondaryMobile: p?.secondaryMobile || null,
+                phoneLandline: p?.phoneLandline || null
+            },
+            email: p?.email || null,
+            address: {
+                city: p?.city?.name || null,
+                cityId: p?.city?.id || null,
+                street: p?.street?.name || null,
+                streetId: p?.street?.id || null,
+                houseNumber: p?.houseNumber || null
+            },
+            statusForecast: fr.statusForecast,
+            statusQuestionnaire: fr.statusQuestionnaire,
+            totalDonors: fr.donors?.length || 0,
+            donorsWithDonations,
+            totalExpected,
+            totalRaised,
+            // נתוני אופרייטור / היררכיית מתרימים
+            isOperator: fr.isOperator || false,
+            operatorExpected: fr.operatorExpected != null ? parseFloat(fr.operatorExpected) : null,
+            assignedOperatorId: fr.assignedOperatorId || null,
+            assignedOperatorName: fr.assignedOperatorId
+                ? (operatorNameById.get(fr.assignedOperatorId) || null)
+                : null,
+            // אם המתרים הוא אופרייטור – כמה מתרימים מנוהלים תחתיו
+            managedFundraisersCount: fr.isOperator
+                ? (managedCountByOperatorId.get(fr.id) || 0)
+                : null
+        };
+    });
+
+    // מיון לפי שם מלא
+    result.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'he'));
+
+    return apiSuccess({
+        campaign: {
+            id: campaign.id,
+            name: campaign.name,
+            hasOperators: campaign.hasOperators || false,
+            // דרגות אופרייטור המוגדרות בקמפיין (רמת קמפיין, לא משויכות למתרים ספציפי)
+            operatorRanks: (campaign.operatorRanks || []).map(r => ({
+                id: r.id,
+                name: r.name,
+                amount: r.amount != null ? parseFloat(r.amount) : null
+            }))
+        },
+        totalFundraisers: result.length,
+        fundraisers: result
+    });
+}
+
+/**
+ * קבלת דרגות / סכומים מוגדרים מראש (Pre-Set amounts) של קמפיין — תחת אותו namespace
+ * ומעטפת תקנית כמו שאר donext-api. (ה-endpoint הפנימי GET /api/ranks נשאר ללא שינוי.)
+ * GET /api/donext-api?action=campaignRanks&campaignId=88
+ */
+async function getCampaignRanks(campaignId) {
+    if (!campaignId) {
+        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
+    }
+
+    const campaignIdInt = parseInt(campaignId);
+    if (isNaN(campaignIdInt)) {
+        return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+    }
+
+    const ranks = await prisma.rank.findMany({
+        where: { campaignId: campaignIdInt },
+        select: { id: true, name: true, amount: true, isPremium: true, campaignId: true }
+    });
+
+    const data = ranks.map(r => ({
+        id: r.id,
+        name: r.name,
+        amount: r.amount != null ? Number(r.amount) : null,
+        isPremium: r.isPremium || false,
+        campaignId: r.campaignId
+    }));
+
+    return apiSuccess({ campaignId: campaignIdInt, total: data.length, ranks: data });
+}
+
+/**
+ * קבלת האופרייטורים (מנהלי מתרימים) של קמפיין + הצוות שתחת כל אחד
+ * GET /api/donext-api?action=campaignOperators&campaignId=88
+ */
+async function getCampaignOperators(campaignId) {
+    if (!campaignId) {
+        return apiError('מספר קמפיין חסר', 'MISSING_CAMPAIGN_ID', 400);
+    }
+
+    const campaignIdInt = parseInt(campaignId);
+    if (isNaN(campaignIdInt)) {
+        return apiError('מספר קמפיין לא תקין', 'INVALID_CAMPAIGN_ID', 400);
+    }
+
+    const campaign = await prisma.campaign.findUnique({
+        where: { id: campaignIdInt },
+        select: {
+            id: true,
+            name: true,
+            donationType: true,
+            hasOperators: true,
+            operatorRanks: { select: { id: true, name: true, amount: true } }
+        }
+    });
+    if (!campaign) {
+        return apiError('קמפיין לא נמצא', 'CAMPAIGN_NOT_FOUND', 404);
+    }
+
+    // שליפת כל מתרימי הקמפיין (כולל אופרייטורים) + נתוני תורמים לחישוב סכומים
+    const fundraisers = await prisma.fundraiser.findMany({
+        where: { campaignId: campaignIdInt, deleted_at: null },
+        include: {
+            person: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    mainMobile: true,
+                    secondaryMobile: true,
+                    phoneLandline: true,
+                    email: true
+                }
+            },
+            donors: {
+                select: {
+                    expected: true,
+                    donations: {
+                        where: { deleted_at: null },
+                        select: { monthlyAmount: true, numberOfPayments: true }
+                    }
+                }
+            }
+        }
+    });
+
+    const isProject = campaign.donationType === 'project';
+    const sumDonations = (donations) => donations.reduce((sum, d) => {
+        const monthly = parseFloat(d.monthlyAmount) || 0;
+        if (isProject && d.numberOfPayments && d.numberOfPayments > 0) {
+            return sum + (monthly * d.numberOfPayments);
+        }
+        return sum + monthly;
+    }, 0);
+
+    // חישוב סטטיסטיקות לכל מתרים
+    const fullName = (p) => `${p?.firstName || ''} ${p?.lastName || ''}`.trim();
+    const pickPhone = (p) => p?.mainMobile || p?.secondaryMobile || p?.phoneLandline || null;
+    const statsFor = (fr) => {
+        let totalExpected = 0;
+        let totalRaised = 0;
+        for (const donor of (fr.donors || [])) {
+            totalExpected += parseFloat(donor.expected) || 0;
+            totalRaised += sumDonations(donor.donations || []);
+        }
+        return { donorsCount: fr.donors?.length || 0, totalExpected, totalRaised };
+    };
+
+    // קיבוץ מתרימים תחת האופרייטור שאליו הם משויכים
+    const teamByOperatorId = new Map();
+    for (const fr of fundraisers) {
+        if (!fr.assignedOperatorId) continue;
+        if (!teamByOperatorId.has(fr.assignedOperatorId)) {
+            teamByOperatorId.set(fr.assignedOperatorId, []);
+        }
+        const s = statsFor(fr);
+        teamByOperatorId.get(fr.assignedOperatorId).push({
+            fundraiserId: fr.id,
+            personId: fr.person?.id || null,
+            fullName: fullName(fr.person),
+            phone: pickPhone(fr.person),
+            donorsCount: s.donorsCount,
+            totalExpected: s.totalExpected,
+            totalRaised: s.totalRaised
+        });
+    }
+
+    // בניית רשימת האופרייטורים
+    const operators = fundraisers
+        .filter(fr => fr.isOperator)
+        .map(op => {
+            const team = teamByOperatorId.get(op.id) || [];
+            const teamTotalExpected = team.reduce((s, m) => s + m.totalExpected, 0);
+            const teamTotalRaised = team.reduce((s, m) => s + m.totalRaised, 0);
+            const own = statsFor(op);
+
+            return {
+                fundraiserId: op.id,
+                personId: op.person?.id || null,
+                fullName: fullName(op.person),
+                phone: pickPhone(op.person),
+                phones: {
+                    mainMobile: op.person?.mainMobile || null,
+                    secondaryMobile: op.person?.secondaryMobile || null,
+                    phoneLandline: op.person?.phoneLandline || null
+                },
+                email: op.person?.email || null,
+                operatorExpected: op.operatorExpected != null ? parseFloat(op.operatorExpected) : null,
+                // נתוני התורמים של האופרייטור עצמו (אם הוא גם מגייס ישירות)
+                ownDonorsCount: own.donorsCount,
+                ownTotalRaised: own.totalRaised,
+                // נתוני הצוות שתחתיו
+                teamSize: team.length,
+                teamTotalExpected,
+                teamTotalRaised,
+                team
+            };
+        });
+
+    operators.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'he'));
+
+    return apiSuccess({
+        campaign: {
+            id: campaign.id,
+            name: campaign.name,
+            hasOperators: campaign.hasOperators || false,
+            operatorRanks: (campaign.operatorRanks || []).map(r => ({
+                id: r.id,
+                name: r.name,
+                amount: r.amount != null ? parseFloat(r.amount) : null
+            }))
+        },
+        totalOperators: operators.length,
+        operators
     });
 }
 
