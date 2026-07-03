@@ -313,6 +313,13 @@ export default function PublicCampaignScreen() {
 
     const loadMoreStep = () => columnsCount * 4;
 
+    // Leaving the fundraiser detail view — also drop the ?fundraiser= param so the
+    // URL effect doesn't re-select it on the next data refresh (poll / Pusher).
+    const clearSelectedFundraiser = () => {
+        setSelectedFundraiser(null);
+        if (fundraiserId) router.replace(pathname, { scroll: false });
+    };
+
     // Handle fundraiser from URL parameter
     useEffect(() => {
         if (!data || !data.fundraisers || !fundraiserId || loading) return;
@@ -320,18 +327,19 @@ export default function PublicCampaignScreen() {
         // If showDonationDetails is false, don't switch to fundraiser tab
         if (data.showDonationDetails === false) return;
         
+        // Already showing the fundraiser from the URL — don't re-apply on every
+        // data refresh (poll / Pusher), otherwise it resets the view and scroll.
+        if (selectedFundraiser?.id === parseInt(fundraiserId)) return;
+
         // Find the fundraiser by ID
         const fundraiser = data.fundraisers?.find(f => f.id === parseInt(fundraiserId));
-        
+
         if (fundraiser) {
-            // Small delay to ensure data is fully loaded
-            setTimeout(() => {
-                setActiveTab('fundraisers');
-                // Save the complete fundraiser object
-                setSelectedFundraiser(fundraiser);
-            }, 100);
+            setActiveTab('fundraisers');
+            // Save the complete fundraiser object
+            setSelectedFundraiser(fundraiser);
         }
-    }, [data, fundraiserId, loading]);
+    }, [data, fundraiserId, loading, selectedFundraiser]);
 
     // Animate collected amount
     useEffect(() => {
@@ -1127,7 +1135,7 @@ export default function PublicCampaignScreen() {
                     <button
                         key={rank.id || rank.amount || index}
                         onClick={() => {
-                            setSelectedDonationFundraiserId(null);
+                            setSelectedDonationFundraiserId(selectedFundraiser?.id ?? null);
                             setInitialDonationAmount(rank.amount);
                             setIsDonationFormOpen(true);
                         }}
@@ -1447,7 +1455,7 @@ export default function PublicCampaignScreen() {
                     <button 
                         className={styles.donateBtn}
                         onClick={() => {
-                            setSelectedDonationFundraiserId(null);
+                            setSelectedDonationFundraiserId(selectedFundraiser?.id ?? null);
                             setInitialDonationAmount(null);
                             setIsDonationFormOpen(true);
                         }}
@@ -1528,7 +1536,7 @@ export default function PublicCampaignScreen() {
                             <button
                                 onClick={() => {
                                     setActiveTab('donors');
-                                    setSelectedFundraiser(null);
+                                    clearSelectedFundraiser();
                                     setVisibleCount(15);
                                 }}
                                 className={`${styles.tab} ${activeTab === 'donors' ? styles.tabActive : ''}`}
@@ -1561,7 +1569,7 @@ export default function PublicCampaignScreen() {
                             <button
                                 onClick={() => {
                                     setActiveTab('top');
-                                    setSelectedFundraiser(null);
+                                    clearSelectedFundraiser();
                                     setVisibleCount(15);
                                 }}
                                 className={`${styles.tab} ${activeTab === 'top' ? styles.tabActive : ''}`}
@@ -1573,7 +1581,7 @@ export default function PublicCampaignScreen() {
                     <button
                         onClick={() => {
                             setActiveTab('about');
-                            setSelectedFundraiser(null);
+                            clearSelectedFundraiser();
                             setVisibleCount(15);
                         }}
                         className={`${styles.tab} ${activeTab === 'about' ? styles.tabActive : ''}`}
@@ -1598,8 +1606,8 @@ export default function PublicCampaignScreen() {
                         
                         return (
                             <div className={styles.fundraiserDetailsHeader}>
-                                <button 
-                                    onClick={() => setSelectedFundraiser(null)}
+                                <button
+                                    onClick={() => clearSelectedFundraiser()}
                                     className={styles.backBtn}
                                     aria-label={t('back')}
                                 >
@@ -2162,18 +2170,7 @@ export default function PublicCampaignScreen() {
                                                             f.name === item.fundraiserName
                                                         );
                                                         if (fundraiser) {
-                                                            setActiveTab('fundraisers');
-                                                            setSearchTerm('');
-                                                            setVisibleCount(15);
-                                                            setSelectedFundraiser({
-                                                                id: fundraiser.id,
-                                                                name: fundraiser.name,
-                                                                fundraiserName: fundraiser.name,
-                                                                totalRaised: fundraiser.totalRaised,
-                                                                targetAmount: fundraiser.targetAmount,
-                                                                donorCount: fundraiser.donorCount,
-                                                                donors: fundraiser.donors
-                                                            });
+                                                            router.push(`${pathname}?fundraiser=${fundraiser.id}`);
                                                         }
                                                     }}
                                                     style={{ cursor: 'pointer' }}
