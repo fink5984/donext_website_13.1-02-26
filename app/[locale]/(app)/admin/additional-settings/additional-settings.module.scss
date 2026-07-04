@@ -645,6 +645,13 @@
     margin-top: -8px;
 }
 
+.fieldHint {
+    display: block;
+    font-size: 12px;
+    color: var(--table-cell, #6E99EC);
+    margin-top: 6px;
+}
+
 .videoPreview {
     margin-bottom: 14px;
 }

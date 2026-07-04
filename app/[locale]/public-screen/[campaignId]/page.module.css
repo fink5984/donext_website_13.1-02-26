@@ -1031,6 +1031,19 @@ a.donateInfoValue:hover {
     text-decoration: underline;
 }
 
+.donateInfoNote {
+    margin-top: 0.5rem;
+    color: #1e293b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.donateInfoNote strong {
+    font-weight: 700;
+}
+
 .donateBtn,
 .shareBtn {
     padding: 0.75rem 2rem;
@@ -1246,6 +1259,12 @@ a.donateInfoValue:hover {
     display: grid;
     gap: 1rem;
     align-items: start;
+}
+
+/* Grid items default to min-width:auto, which lets wide/no-wrap content push a
+   card past its column and off-screen. Force them to respect the column width. */
+.donorsGrid > * {
+    min-width: 0;
 }
 
 @media (min-width: 768px) {
@@ -2140,6 +2159,133 @@ a.donateInfoValue:hover {
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* ═══════ Thank-you overlay (post-donation confetti) ═══════ */
+.thankYouOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100001; /* above the donation modal */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: fadeIn 0.25s ease;
+    /* Portaled to document.body, so set the system font explicitly. */
+    font-family: var(--font-ping), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    direction: rtl;
+}
+
+.thankYouCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.thankYouCard {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    animation: thankYouPop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes thankYouPop {
+    from {
+        transform: scale(0.85) translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.thankYouSticker {
+    display: block;
+    width: 150px;
+    height: auto;
+    margin: 0 auto 1.25rem;
+    animation: thankYouCheckPop 0.5s ease 0.1s both;
+}
+
+@keyframes thankYouCheckPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+.thankYouTitle {
+    margin: 0 0 0.75rem;
+    font-size: 2rem;
+    font-weight: 800;
+    /* color set inline from the campaign's public-screen color */
+}
+
+.thankYouLine1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--Primary-blue, #0C4AD5);
+}
+
+.thankYouLine2 {
+    margin: 0 0 1.75rem;
+    font-size: 0.95rem;
+    color: var(--Primary-blue, #0C4AD5);
+    opacity: 0.75;
+}
+
+/* Outline button in the campaign color (color + border-color set inline). */
+.thankYouCloseBtn {
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    border: 2px solid currentColor;
+    border-radius: var(--Border-Radius-lg, 24px);
+    background: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.thankYouCloseBtn:hover {
+    background: #f8fafc;
+}
+
+.thankYouCloseBtn:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+    .thankYouCard {
+        max-width: 100%;
+        padding: 2rem 1.5rem 1.5rem;
+        border-radius: 20px;
+    }
+
+    .thankYouTitle {
+        font-size: 1.75rem;
+    }
+
+    .thankYouLine1 {
+        font-size: 1.05rem;
+    }
+
+    .thankYouSticker {
+        width: 128px;
     }
 }
 

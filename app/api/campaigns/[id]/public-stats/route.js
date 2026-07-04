@@ -205,6 +205,7 @@ export async function GET(request, { params }) {
                     select: {
                         id: true,
                         isAnonymous: true,
+                        displayName: true,
                         person: true,
                         fundraiser: {
                             include: {
@@ -271,6 +272,9 @@ export async function GET(request, { params }) {
                 id: donor.id,
                 firstName: donor.person?.firstName || '',
                 lastName: donor.person?.lastName || '',
+                donorName: donor.displayName
+                    || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim()
+                    || 'אנונימי',
                 totalAmount: total,
                 monthlyAmount: latestAmounts.monthlyDisplay,
                 numberOfPayments: totalPayments,
@@ -300,7 +304,9 @@ export async function GET(request, { params }) {
                 return {
                     id: donation.id,
                     donorId: donation.donor?.id || null,
-                    donorName: `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim() || 'אנונימי',
+                    donorName: donation.donor?.displayName
+                        || `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim()
+                        || 'אנונימי',
                     donorFirstName: donation.donor?.person?.firstName || '',
                     donorLastName: donation.donor?.person?.lastName || '',
                     isAnonymous: donation.donor?.isAnonymous || false,
@@ -409,7 +415,9 @@ export async function GET(request, { params }) {
                     id: donor.id,
                     firstName: donor.person?.firstName || '',
                     lastName: donor.person?.lastName || '',
-                    donorName: `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim() || 'אנונימי',
+                    donorName: donor.displayName
+                        || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim()
+                        || 'אנונימי',
                     isAnonymous: donor.isAnonymous || false,
                     totalAmount: totalAmount,
                     monthlyAmount: monthlyAmount,
@@ -564,6 +572,7 @@ export async function GET(request, { params }) {
                 publicScreenBankBranch: publicScreenSettings?.bankBranch || null,
                 publicScreenBankAccountNumber: publicScreenSettings?.bankAccountNumber || null,
                 publicScreenBankAccountHolder: publicScreenSettings?.bankAccountHolder || null,
+                publicScreenBankAdditionalText: publicScreenSettings?.bankAdditionalText || null,
                 publicScreenBanners: publicScreenSettings?.banners || [],
                 publicScreenStartDate: publicScreenSettings?.startDate || null,
                 publicScreenEndDate: publicScreenSettings?.endDate || null,

@@ -426,6 +426,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     isUnlimited: formData.isUnlimited,
                     paymentMethod: additionalData.paymentMethod || formData.paymentMethod,
                     note: formData.note,
+                    displayName: selectedDonor?.displayName || null,
                     fundraiserId: fundraiserToUse,
                     isAnonymous: formData.isAnonymous,
                     hasPaymentMethod: additionalData.hasPaymentMethod || Boolean(formData.paymentMethod),
@@ -437,7 +438,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
             const result = await response.json();
             
             if (result.success) {
-                alert(t('donationAddedSuccess'));
+                // Success feedback is handled by the parent (thank-you overlay + confetti)
                 onSuccess?.();
                 onClose();
                 // Reset form
@@ -668,7 +669,13 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
 
     const getDonorFullName = () => {
         if (!selectedDonor) return '';
-        return `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim();
+        const realName = `${selectedDonor.firstName || ''} ${selectedDonor.lastName || ''}`.trim();
+        // Name sent to payment providers (Nedarim Plus etc.) for the receipt:
+        // use the donor's "display & receipt name", but when the donation is marked
+        // anonymous the display box shows "בעילום שם" — which must not go on the
+        // receipt — so fall back to the real name typed in the fields above.
+        if (formData.isAnonymous) return realName;
+        return (selectedDonor.displayName && selectedDonor.displayName.trim()) || realName;
     };
 
     return (

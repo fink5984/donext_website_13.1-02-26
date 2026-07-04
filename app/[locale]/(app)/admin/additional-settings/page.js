@@ -48,7 +48,8 @@ export default function AdditionalSettingsPage() {
         bankName: '',
         bankBranch: '',
         bankAccountNumber: '',
-        bankAccountHolder: ''
+        bankAccountHolder: '',
+        bankAdditionalText: ''
     });
 
     // State for copied link notification
@@ -133,7 +134,8 @@ export default function AdditionalSettingsPage() {
                     bankName: data.bankName || '',
                     bankBranch: data.bankBranch || '',
                     bankAccountNumber: data.bankAccountNumber || '',
-                    bankAccountHolder: data.bankAccountHolder || ''
+                    bankAccountHolder: data.bankAccountHolder || '',
+                    bankAdditionalText: data.bankAdditionalText || ''
                 });
             }
         } catch (error) {
@@ -992,6 +994,20 @@ export default function AdditionalSettingsPage() {
                                 onChange={(e) => handleInputChange('bankAccountHolder', e.target.value)}
                                 className={styles.input}
                             />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>טקסט נוסף</label>
+                            <textarea
+                                placeholder="לדוגמה: נא לציין את שם התורם בהעברה"
+                                value={formData.bankAdditionalText}
+                                onChange={(e) => handleInputChange('bankAdditionalText', e.target.value)}
+                                className={styles.input}
+                                rows={3}
+                            />
+                            <small className={styles.fieldHint}>
+                                טיפ: עטפו טקסט בכוכביות כדי להדגישו. לדוגמה: *טקסט מודגש*
+                            </small>
                         </div>
                     </div>
                 </div>

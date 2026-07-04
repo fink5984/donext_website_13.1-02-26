@@ -19,6 +19,7 @@ import AmountSelection from './AmountSelection';
 import PaymentFrequency from './PaymentFrequency';
 import ValidationWrapper from './ValidationWrapper';
 import { NoteInput } from './NoteInput';
+import { NoteInputPublic } from './NoteInputPublic';
 import NoteIcon from '@/app/icons/note.svg';
 import CalendarIcon from '@/app/icons/calendar.svg';
 import Calendar from '@/app/components/calendar/Calendar';
@@ -152,6 +153,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         paymentMethod: donation ? mapPaymentMethodForDisplay(donation.paymentMethod) || null : null,
         hasPaymentMethod: donation ? donation.hasPaymentMethod : false,
         note: donation ? donation.note || '' : '',
+        dedication: donation ? donation.dedication || '' : '',
         followUpDate: donation ? donation.followUpDate || null : null
 
     });
@@ -230,6 +232,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
 
             paymentMethod: null,
             note: '',
+            dedication: '',
             followUpDate: null
         });
         setValidationState({ isValid: false, showValidation: null });
@@ -275,7 +278,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 numberOfPayments: donation.numberOfPayments,
                 isUnlimited: donation.isUnlimited,
                 paymentMethod: mapPaymentMethodForDisplay(donation.paymentMethod) || null,
-                note: donation.note || ''
+                note: donation.note || '',
+                dedication: donation.dedication || ''
             });
             setNoteCompleted(donation.noteCompleted || false);
             setDonationNotes(donation.donationNotes || []);
@@ -424,6 +428,13 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         }));
     };
 
+    const handleDedicationChange = (value) => {
+        setFormData(prev => ({
+            ...prev,
+            dedication: value
+        }));
+    };
+
     const handleNoteCompletedToggle = async () => {
         if (!donation?.id || isMarkingComplete) return;
         const newCompleted = !noteCompleted;
@@ -554,6 +565,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 isUnlimited: formData.isUnlimited,
                 paymentMethod: 'STRIPE',
                 note: formData.note || null,
+                dedication: formData.dedication || null,
                 followUpDate: formData.followUpDate || null,
                 noteAssignee: formData.noteAssignee || null,
                 hasPaymentMethod: true,
@@ -671,6 +683,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 isUnlimited: formData.isUnlimited,
                 paymentMethod: 'BEVEL',
                 note: formData.note || null,
+                dedication: formData.dedication || null,
                 followUpDate: formData.followUpDate || null,
                 noteAssignee: formData.noteAssignee || null,
                 hasPaymentMethod: true,
@@ -710,6 +723,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     paymentMethod: donation.paymentMethod,
                     hasPaymentMethod: donation.hasPaymentMethod,
                     note: donation.note,
+                    dedication: formData.dedication || null,
                     followUpDate: donation.followUpDate,
                     isAnonymous: isAnonymous,
                     mode: 'edit'
@@ -946,6 +960,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'PLEDGER',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -978,6 +993,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'MATBIA',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -1010,6 +1026,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'OJC',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -1041,6 +1058,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'NEDARIM_PLUS',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -1070,6 +1088,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'MERKAZ_HATZEDAKA',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -1099,6 +1118,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         isUnlimited: formData.isUnlimited,
                         paymentMethod: 'KESHER_HK',
                         note: formData.note || null,
+                        dedication: formData.dedication || null,
                         followUpDate: formData.followUpDate || null,
                         noteAssignee: formData.noteAssignee || null,
                         hasPaymentMethod: true,
@@ -1124,6 +1144,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 isUnlimited: formData.isUnlimited,
                 paymentMethod: formData.paymentMethod || null,
                 note: formData.note || null,
+                dedication: formData.dedication || null,
                 followUpDate: formData.followUpDate || null,
                 noteAssignee: formData.noteAssignee || null,
                 hasPaymentMethod: Boolean(formData.paymentMethod),
@@ -1165,6 +1186,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 isUnlimited: formData.isUnlimited,
                 paymentMethod: 'KESHER_HK',
                 note: formData.note || null,
+                dedication: formData.dedication || null,
                 followUpDate: formData.followUpDate || null,
                 noteAssignee: formData.noteAssignee || null,
                 hasPaymentMethod: true,
@@ -1614,8 +1636,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     
                     {/* NoteInput - only for add mode */}
                     {mode !== 'edit' && (
-                    <NoteInput 
-                        value={formData.note} 
+                    <NoteInput
+                        value={formData.note}
                         onChange={handleNoteChange}
                         followUpDate={formData.followUpDate}
                         onFollowUpDateChange={(date) => setFormData(prev => ({ ...prev, followUpDate: date }))}
@@ -1624,6 +1646,12 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         onAssigneeChange={(a) => setFormData(prev => ({ ...prev, noteAssignee: a }))}
                     />
                     )}
+
+                    {/* Dedication - public-facing, shown on the public screen. Editable in add and edit modes. */}
+                    <NoteInputPublic
+                        value={formData.dedication}
+                        onChange={handleDedicationChange}
+                    />
 
                     {/* Edit mode notes - all in one container */}
                     {mode === 'edit' && (donation?.note || donationNotes.length > 0) && (

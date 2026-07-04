@@ -8,6 +8,18 @@ import DoNextLoader from '@/app/components/DoNextLoader';
 import DonationFormPublic from '@/components/DonationForm/DonationFormPublic';
 import SiteHeader from '@/app/[locale]/landing/SiteHeader';
 
+// Render text where segments wrapped in *asterisks* are shown bold
+function renderRichText(text) {
+    if (!text) return null;
+    const parts = String(text).split(/(\*[^*]+\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+            return <strong key={i}>{part.slice(1, -1)}</strong>;
+        }
+        return <span key={i}>{part}</span>;
+    });
+}
+
 export default function PublicCampaignScreen() {
     const params = useParams();
     const searchParams = useSearchParams();
@@ -38,9 +50,45 @@ export default function PublicCampaignScreen() {
     const [isSliding, setIsSliding] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, status: 'loading' });
     const [showDonationModal, setShowDonationModal] = useState(false);
+    // Thank-you overlay (confetti) shown after a successful donation.
+    const [showThankYou, setShowThankYou] = useState(false);
+    const thankYouCanvasRef = useRef(null);
     // Guard so the modal portal only renders on the client (document exists).
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
+
+    // Confetti burst while the thank-you overlay is visible (same feel as campaign 179).
+    useEffect(() => {
+        if (!showThankYou) return;
+        let alive = true;
+        let interval;
+        let myConfetti;
+        let stopTimer;
+        (async () => {
+            try {
+                const mod = await import('canvas-confetti');
+                if (!alive || !thankYouCanvasRef.current) return;
+                const confetti = mod.default;
+                myConfetti = confetti.create(thankYouCanvasRef.current, { resize: true, useWorker: false });
+                const colors = ['#0C4AD5', '#00EB3F', '#6E99EC', '#f5d78e', '#fff'];
+                const fire = () => {
+                    if (!myConfetti) return;
+                    // Burst outward from the center of the screen — i.e. out of the card itself.
+                    myConfetti({ particleCount: 90, spread: 360, startVelocity: 32, decay: 0.9, gravity: 0.9, origin: { x: 0.5, y: 0.5 }, colors, scalar: 1.1, ticks: 180 });
+                };
+                fire();
+                interval = setInterval(fire, 800);
+                // Ease off the bursts after a few seconds; overlay stays until dismissed.
+                stopTimer = setTimeout(() => { if (interval) clearInterval(interval); }, 3000);
+            } catch (_) {}
+        })();
+        return () => {
+            alive = false;
+            if (interval) clearInterval(interval);
+            if (stopTimer) clearTimeout(stopTimer);
+            try { myConfetti?.reset?.(); } catch (_) {}
+        };
+    }, [showThankYou]);
     const [donationModalFundraiser, setDonationModalFundraiser] = useState(null);
     const [donationStep, setDonationStep] = useState(1); // 1: select amount, 2: checkout
     const [donationFormData, setDonationFormData] = useState({
@@ -144,7 +192,11 @@ export default function PublicCampaignScreen() {
             bankName: 'בנק',
             bankBranch: 'סניף',
             bankAccount: 'חשבון',
-            bankHolder: 'ע"ש'
+            bankHolder: 'ע"ש',
+            thankYouTitle: 'תודה!',
+            thankYouLine1: 'תרומתך נקלטה בהצלחה',
+            thankYouLine2: 'קבלה תישלח במייל בהמשך',
+            thankYouClose: 'סגירה'
         },
         en: {
             donate: 'Donate',
@@ -228,7 +280,11 @@ export default function PublicCampaignScreen() {
             bankName: 'Bank',
             bankBranch: 'Branch',
             bankAccount: 'Account',
-            bankHolder: 'Account holder'
+            bankHolder: 'Account holder',
+            thankYouTitle: 'Thank you!',
+            thankYouLine1: 'Your donation was received successfully',
+            thankYouLine2: 'A receipt will be sent to your email shortly',
+            thankYouClose: 'Close'
         }
     };
     
@@ -920,7 +976,7 @@ export default function PublicCampaignScreen() {
                 return {
                     data: topDonors?.map((donor, index) => ({
                         id: donor.id,
-                        donorName: `${donor.firstName} ${donor.lastName}`.trim(),
+                        donorName: donor.donorName || `${donor.firstName} ${donor.lastName}`.trim(),
                         donorFirstName: donor.firstName,
                         donorLastName: donor.lastName,
                         amount: donor.monthlyAmount || donor.totalAmount,
@@ -1532,9 +1588,9 @@ export default function PublicCampaignScreen() {
                 </div>
 
                 {/* Transfer / contact details below the donate button */}
-                {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder || data.publicScreenPhone || data.publicScreenEmail) && (
+                {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder || data.publicScreenBankAdditionalText || data.publicScreenPhone || data.publicScreenEmail) && (
                     <div className={styles.donateInfoBlock}>
-                        {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder) && (
+                        {(data.publicScreenBankName || data.publicScreenBankBranch || data.publicScreenBankAccountNumber || data.publicScreenBankAccountHolder || data.publicScreenBankAdditionalText) && (
                             <div className={styles.donateInfoCard}>
                                 <h4 className={styles.donateInfoTitle}>{t('bankTransferTitle')}</h4>
                                 <div className={styles.donateInfoRows}>
@@ -1560,6 +1616,11 @@ export default function PublicCampaignScreen() {
                                         <div className={styles.donateInfoRow}>
                                             <span className={styles.donateInfoLabel}>{t('bankHolder')}</span>
                                             <span className={styles.donateInfoValue}>{data.publicScreenBankAccountHolder}</span>
+                                        </div>
+                                    )}
+                                    {data.publicScreenBankAdditionalText && (
+                                        <div className={styles.donateInfoNote}>
+                                            {renderRichText(data.publicScreenBankAdditionalText)}
                                         </div>
                                     )}
                                 </div>
@@ -2155,7 +2216,7 @@ export default function PublicCampaignScreen() {
 
                                             {/* Expandable fundraisers list */}
                                             {isExpanded && item.members && item.members.length > 0 && (
-                                                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', minWidth: 0 }}>
                                                     {item.members.map((member) => (
                                                         <div
                                                             key={member.id}
@@ -2169,13 +2230,14 @@ export default function PublicCampaignScreen() {
                                                                 background: '#f8fafc',
                                                                 borderRadius: '8px',
                                                                 border: '1px solid #e2e8f0',
-                                                                cursor: 'pointer'
+                                                                cursor: 'pointer',
+                                                                minWidth: 0
                                                             }}
                                                         >
-                                                            <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#334155', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {member.name}
                                                             </span>
-                                                            <span style={{ fontWeight: 700, color: accent, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                            <span style={{ flexShrink: 0, fontWeight: 700, color: accent, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                                                                 {formatAmount(member.totalRaised)}
                                                             </span>
                                                         </div>
@@ -2681,6 +2743,8 @@ export default function PublicCampaignScreen() {
                     setIsDonationFormOpen(false);
                     setSelectedDonationFundraiserId(null);
                     setInitialDonationAmount(null);
+                    // Celebrate the successful donation with a thank-you overlay + confetti
+                    setShowThankYou(true);
                     // Refresh data after successful donation
                     if (campaignId) {
                         fetch(`/api/campaigns/${campaignId}/public-stats`)
@@ -2694,6 +2758,31 @@ export default function PublicCampaignScreen() {
                     }
                 }}
             />
+
+            {/* Thank-you overlay with confetti after a successful donation */}
+            {mounted && showThankYou && createPortal((() => {
+                const accent = data?.publicScreenRanksBackgroundColor || '#b45309';
+                return (
+                <div className={styles.thankYouOverlay} onClick={() => setShowThankYou(false)}>
+                    <canvas ref={thankYouCanvasRef} className={styles.thankYouCanvas} />
+                    <div className={styles.thankYouCard} onClick={(e) => e.stopPropagation()}>
+                        <img className={styles.thankYouSticker} src={encodeURI('/stickers/הסטוריה.svg')} alt="" aria-hidden="true" />
+                        <h2 className={styles.thankYouTitle} style={{ color: accent }}>{t('thankYouTitle')}</h2>
+                        <p className={styles.thankYouLine1}>{t('thankYouLine1')}</p>
+                        <p className={styles.thankYouLine2}>{t('thankYouLine2')}</p>
+                        <button
+                            className={styles.thankYouCloseBtn}
+                            style={{ color: accent, borderColor: accent }}
+                            onClick={() => setShowThankYou(false)}
+                        >
+                            {t('thankYouClose')}
+                        </button>
+                    </div>
+                </div>
+                );
+            })(),
+                document.body
+            )}
         </div>
     );
 }

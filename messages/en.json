@@ -1807,6 +1807,8 @@
     "phone": "Phone",
     "email": "Email",
     "showAnonymous": "Show as anonymous on public page",
+    "displayReceiptName": "Display & receipt name",
+    "anonymousName": "Anonymous",
     "creditCard": "Credit Card",
     "dedication": "Dedication",
     "firstNameRequired": "First name is required",

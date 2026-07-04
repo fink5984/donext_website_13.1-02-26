@@ -40,6 +40,7 @@ export async function GET(request, { params }) {
                 bankBranch: '',
                 bankAccountNumber: '',
                 bankAccountHolder: '',
+                bankAdditionalText: '',
             });
         }
 
@@ -70,6 +71,7 @@ export async function GET(request, { params }) {
             bankBranch: settings.bankBranch || '',
             bankAccountNumber: settings.bankAccountNumber || '',
             bankAccountHolder: settings.bankAccountHolder || '',
+            bankAdditionalText: settings.bankAdditionalText || '',
         });
     } catch (error) {
         console.error('Error fetching additional settings:', error);
@@ -89,7 +91,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -141,6 +143,7 @@ export async function PUT(request, { params }) {
             bankBranch: bankBranch?.trim() || null,
             bankAccountNumber: bankAccountNumber?.trim() || null,
             bankAccountHolder: bankAccountHolder?.trim() || null,
+            bankAdditionalText: bankAdditionalText?.trim() || null,
         };
         if (monthsCalc !== null) updateData.monthsCalculation = monthsCalc;
         if (donationsCalc !== null) updateData.donationsCalculation = donationsCalc;

@@ -351,6 +351,7 @@ export async function GET(request) {
                 noteCompleted: true,
                 noteCompletedAt: true,
                 followUpDate: true,
+                dedication: true,
                 createdInSystem: true,
                 sourceLabel: true,
                 donationNotes: {
@@ -458,6 +459,7 @@ export async function GET(request) {
                     noteCompleted: true,
                     noteCompletedAt: true,
                     followUpDate: true,
+                    dedication: true,
                     createdInSystem: true,
                     donationNotes: {
                         select: {
@@ -732,7 +734,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, followUpDate, noteAssignee, isAnonymous, mode = 'add', transactionId } = body;
+        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, dedication, followUpDate, noteAssignee, isAnonymous, mode = 'add', transactionId } = body;
 
         // זיהוי המשתמש הנוכחי
         const currentUser = getCurrentUserFromRequest(request);
@@ -797,6 +799,11 @@ export async function POST(request) {
             if (typeof note !== 'undefined') {
                 updateData.note = note || null;
                 updateData.noteRead = note ? false : null;
+            }
+
+            // עדכון הקדשה רק אם נשלח מפתח dedication בבקשה
+            if (typeof dedication !== 'undefined') {
+                updateData.dedication = dedication || null;
             }
 
             // עדכון תאריך מעקב רק אם נשלח מפתח followUpDate בבקשה
@@ -899,6 +906,7 @@ export async function POST(request) {
                     paymentMethod: paymentMethod || null,
                     note: note || null,
                     noteRead: note ? false : null,
+                    dedication: dedication || null,
                     followUpDate: followUpDate ? new Date(followUpDate) : null,
                     createdByUserId: currentUserId,
                     updatedByUserId: currentUserId,

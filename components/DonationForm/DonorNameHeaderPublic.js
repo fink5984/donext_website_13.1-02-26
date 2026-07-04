@@ -15,6 +15,10 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
     const [lastName, setLastName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
+    // Public display / receipt name: auto-filled from first + last name until the
+    // donor edits it manually, after which we stop overriding their choice.
+    const [displayName, setDisplayName] = useState('');
+    const [displayNameEdited, setDisplayNameEdited] = useState(false);
 
     // Initialize with current donor
     useEffect(() => {
@@ -22,29 +26,55 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
         setLastName(donor?.lastName || '');
         setPhone(donor?.phone || '');
         setEmail(donor?.email || '');
+        const composed = `${donor?.firstName || ''} ${donor?.lastName || ''}`.trim();
+        setDisplayName(donor?.displayName || composed);
+        setDisplayNameEdited(Boolean(donor?.displayName) && donor.displayName !== composed);
     }, [donor]);
 
     const updateDonor = (updates) => {
+        const nextFirst = updates.firstName ?? firstName;
+        const nextLast = updates.lastName ?? lastName;
+        const nextDisplay = updates.displayName ?? displayName;
         onDonorChange?.({
-            firstName: updates.firstName ?? firstName,
-            lastName: updates.lastName ?? lastName,
+            firstName: nextFirst,
+            lastName: nextLast,
             phone: updates.phone ?? phone,
             email: updates.email ?? email,
-            first_name: updates.firstName ?? firstName,
-            last_name: updates.lastName ?? lastName
+            first_name: nextFirst,
+            last_name: nextLast,
+            displayName: nextDisplay
         });
     };
 
     const handleFirstNameChange = (e) => {
         const newFirstName = e.target.value;
         setFirstName(newFirstName);
-        updateDonor({ firstName: newFirstName });
+        if (!displayNameEdited) {
+            const auto = `${newFirstName} ${lastName}`.trim();
+            setDisplayName(auto);
+            updateDonor({ firstName: newFirstName, displayName: auto });
+        } else {
+            updateDonor({ firstName: newFirstName });
+        }
     };
 
     const handleLastNameChange = (e) => {
         const newLastName = e.target.value;
         setLastName(newLastName);
-        updateDonor({ lastName: newLastName });
+        if (!displayNameEdited) {
+            const auto = `${firstName} ${newLastName}`.trim();
+            setDisplayName(auto);
+            updateDonor({ lastName: newLastName, displayName: auto });
+        } else {
+            updateDonor({ lastName: newLastName });
+        }
+    };
+
+    const handleDisplayNameChange = (e) => {
+        const newDisplayName = e.target.value;
+        setDisplayName(newDisplayName);
+        setDisplayNameEdited(true);
+        updateDonor({ displayName: newDisplayName });
     };
 
     const handlePhoneChange = (e) => {
@@ -161,66 +191,95 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                 </div>
             </div>
             
-            {/* Anonymous Toggle */}
+            {/* Display / receipt name box, with the anonymity toggle inside it.
+                When anonymous is on, the field shows "בעילום שם" and is locked. */}
             <div style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
+                flexDirection: 'column',
                 gap: '12px',
-                width: '100%'
+                width: '100%',
+                padding: 'var(--Spacing-Spacing-4, 12px) var(--Spacing-Spacing-4, 16px)',
+                borderRadius: 'var(--Border-Radius-m, 16px)',
+                border: '1px solid var(--Border-Default, #6E99EC)',
+                background: '#FFF',
+                boxSizing: 'border-box'
             }}>
-                <label style={{
-                    position: 'relative',
-                    display: 'inline-block',
-                    width: '48px',
-                    height: '24px',
-                    cursor: 'pointer',
-                    flexShrink: 0
+                <input
+                    type="text"
+                    placeholder={t('displayReceiptName')}
+                    value={isAnonymous ? t('anonymousName') : displayName}
+                    onChange={handleDisplayNameChange}
+                    readOnly={isAnonymous}
+                    dir={isRtl ? 'rtl' : 'ltr'}
+                    className={styles.donorInput}
+                    style={{
+                        textAlign: isRtl ? 'right' : 'left',
+                        color: isAnonymous ? '#94a3b8' : undefined,
+                        cursor: isAnonymous ? 'default' : 'text'
+                    }}
+                />
+
+                {/* Anonymous Toggle (inside the box) */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    gap: '12px',
+                    width: '100%'
                 }}>
-                    <input
-                        type="checkbox"
-                        checked={isAnonymous}
-                        onChange={(e) => onAnonymousChange?.(e.target.checked)}
-                        style={{
-                            opacity: 0,
-                            width: 0,
-                            height: 0
-                        }}
-                    />
-                    <span style={{
-                        position: 'absolute',
+                    <label style={{
+                        position: 'relative',
+                        display: 'inline-block',
+                        width: '48px',
+                        height: '24px',
                         cursor: 'pointer',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: isAnonymous ? '#6E99EC' : '#cbd5e1',
-                        transition: '0.3s',
-                        borderRadius: '24px'
+                        flexShrink: 0
                     }}>
+                        <input
+                            type="checkbox"
+                            checked={isAnonymous}
+                            onChange={(e) => onAnonymousChange?.(e.target.checked)}
+                            style={{
+                                opacity: 0,
+                                width: 0,
+                                height: 0
+                            }}
+                        />
                         <span style={{
                             position: 'absolute',
-                            content: '""',
-                            height: '18px',
-                            width: '18px',
-                            left: isAnonymous ? '27px' : '3px',
-                            bottom: '3px',
-                            backgroundColor: 'white',
+                            cursor: 'pointer',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: isAnonymous ? '#6E99EC' : '#cbd5e1',
                             transition: '0.3s',
-                            borderRadius: '50%',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                        }} />
-                    </span>
-                </label>
-                <label style={{
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#6E99EC',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                }}>
-                    {t('showAnonymous')}
-                </label>
+                            borderRadius: '24px'
+                        }}>
+                            <span style={{
+                                position: 'absolute',
+                                content: '""',
+                                height: '18px',
+                                width: '18px',
+                                left: isAnonymous ? '27px' : '3px',
+                                bottom: '3px',
+                                backgroundColor: 'white',
+                                transition: '0.3s',
+                                borderRadius: '50%',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                            }} />
+                        </span>
+                    </label>
+                    <label style={{
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#6E99EC',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}>
+                        {t('showAnonymous')}
+                    </label>
+                </div>
             </div>
         </div>
     );

@@ -317,6 +317,7 @@ model Donor {
   personId                        Int?             @map("person_id")
   trafficLightColor               String?          @map("traffic_light_color")
   isAnonymous                     Boolean?         @default(false) @map("is_anonymous")
+  displayName                     String?          @map("display_name")
   invitationSent                  Boolean?         @default(false) @map("invitation_sent")
   arrivalConfirmed                Boolean?         @default(false) @map("arrival_confirmed")
   actuallyArrived                 Boolean?         @default(false) @map("actually_arrived")
@@ -716,6 +717,7 @@ model PublicScreenSettings {
   bankBranch           String?   @map("bank_branch")
   bankAccountNumber    String?   @map("bank_account_number")
   bankAccountHolder    String?   @map("bank_account_holder")
+  bankAdditionalText   String?   @map("bank_additional_text")
   campaign             Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("public_screen_settings")

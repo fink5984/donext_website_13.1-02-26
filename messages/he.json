@@ -1833,6 +1833,8 @@
     "phone": "טלפון",
     "email": "אימייל",
     "showAnonymous": "הצג בעילום שם בדף הציבורי",
+    "displayReceiptName": "שם לתצוגה ולקבלה",
+    "anonymousName": "בעילום שם",
     "creditCard": "כרטיס אשראי",
     "dedication": "הקדשה",
     "firstNameRequired": "שם פרטי הוא שדה חובה",

@@ -15,7 +15,7 @@ export async function POST(request, { params }) {
     try {
         const { id: campaignId } = await params;
         const body = await request.json();
-        const { donor, existingDonorId, amount, numberOfPayments, isUnlimited, paymentMethod, note, fundraiserId, isAnonymous, transactionId } = body;
+        const { donor, existingDonorId, amount, numberOfPayments, isUnlimited, paymentMethod, note, displayName, fundraiserId, isAnonymous, transactionId } = body;
 
         if (!campaignId) {
             return NextResponse.json(
@@ -107,6 +107,10 @@ export async function POST(request, { params }) {
             if (isAnonymous !== undefined && donorRecord.isAnonymous !== isAnonymous) {
                 updates.isAnonymous = isAnonymous;
             }
+            // עדכון שם התצוגה/קבלה אם נשלח והשתנה
+            if (displayName !== undefined && donorRecord.displayName !== (displayName || null)) {
+                updates.displayName = displayName || null;
+            }
             if (Object.keys(updates).length > 0) {
                 donorRecord = await prisma.donor.update({
                     where: { id: donorRecord.id },
@@ -131,6 +135,7 @@ export async function POST(request, { params }) {
                     personId: personRecord.id,
                     fundraiserId: fundraiserId ? parseInt(fundraiserId) : null,
                     isAnonymous: isAnonymous || false,
+                    displayName: displayName || null,
                     active: true
                 }
             });
