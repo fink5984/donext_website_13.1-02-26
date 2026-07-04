@@ -27,6 +27,8 @@ export default function PublicCampaignScreen() {
     const [selectedFundraiser, setSelectedFundraiser] = useState(null);
     const [sortBy, setSortBy] = useState('recent'); // recent, oldest, highest
     const [fundraiserSortBy, setFundraiserSortBy] = useState('amount'); // amount, donors, progress, target
+    const [expandedCommunityId, setExpandedCommunityId] = useState(null); // Community whose fundraisers are expanded inline
+    const [communitySortBy, setCommunitySortBy] = useState('amount'); // amount, donors, fundraisers, progress, target
     const [visibleCount, setVisibleCount] = useState(15); // Number of items to show (5 rows × 3 cards)
     const [columnsCount, setColumnsCount] = useState(3);
     const pusherRef = useRef(null);
@@ -65,6 +67,11 @@ export default function PublicCampaignScreen() {
             share: 'שתף',
             donors: 'תורמים',
             fundraisers: 'מתרימים',
+            communities: 'קהילות',
+            noCommunitiesYet: 'אין קהילות עדיין',
+            fundraisersLabel: 'מתרימים',
+            showFundraisers: 'הצג מתרימים',
+            hideFundraisers: 'הסתר מתרימים',
             outOfGoal: 'מתוך יעד של',
             outOfMonthlyGoal: 'מתוך יעד חודשי של',
             raisedSoFar: 'עד כה נתרם',
@@ -128,6 +135,7 @@ export default function PublicCampaignScreen() {
             byAmount: 'לפי סכום',
             byProgress: 'לפי התקדמות',
             byTarget: 'לפי יעד',
+            byFundraisers: 'לפי מתרימים',
             byLastDonation: 'לפי תרומה אחרונה',
             monthly: 'חודשי',
             showDonations: 'הצג תרומות',
@@ -143,6 +151,11 @@ export default function PublicCampaignScreen() {
             share: 'Share',
             donors: 'Donors',
             fundraisers: 'Fundraisers',
+            communities: 'Communities',
+            noCommunitiesYet: 'No communities yet',
+            fundraisersLabel: 'Fundraisers',
+            showFundraisers: 'Show fundraisers',
+            hideFundraisers: 'Hide fundraisers',
             outOfGoal: 'out of a goal of',
             outOfMonthlyGoal: 'out of a monthly goal of',
             raisedSoFar: 'Raised so far',
@@ -206,6 +219,7 @@ export default function PublicCampaignScreen() {
             byAmount: 'By amount',
             byProgress: 'By progress',
             byTarget: 'By target',
+            byFundraisers: 'By fundraisers',
             byLastDonation: 'By last donation',
             monthly: 'Monthly',
             showDonations: 'Show donations',
@@ -603,7 +617,8 @@ export default function PublicCampaignScreen() {
         );
     }
 
-    const { campaign, statistics, settings, recentDonations, topDonors, ranks, publicScreenRanks, fundraisers, publicScreenAbout, showDonationDetails } = data;
+    const { campaign, statistics, settings, recentDonations, topDonors, ranks, publicScreenRanks, fundraisers, communities, publicScreenAbout, showDonationDetails } = data;
+    const hasCommunities = Array.isArray(communities) && communities.length > 0;
 
     // "Unit mode": instead of showing the raised amount of money, show how many units
     // (e.g. meters, bricks) were raised. unitPrice converts money <-> units; the goal in
@@ -884,6 +899,22 @@ export default function PublicCampaignScreen() {
                     }) || [],
                     emptyMessage: t('noFundraisersYet')
                 };
+            case 'communities':
+                // All communities (operators / מפעילים) with aggregated statistics
+                return {
+                    data: (communities || []).map((community) => ({
+                        id: community.id,
+                        communityName: community.name,
+                        totalRaised: community.totalRaised,
+                        monthlyRaised: community.monthlyRaised,
+                        targetAmount: community.targetAmount || 0,
+                        donorCount: community.donorCount,
+                        fundraiserCount: community.fundraiserCount,
+                        members: community.members || [],
+                        type: 'community'
+                    })),
+                    emptyMessage: t('noCommunitiesYet')
+                };
             case 'top':
                 // Top donors
                 return {
@@ -927,12 +958,15 @@ export default function PublicCampaignScreen() {
                 case 'oldest':
                     return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
                 case 'highest':
-                    return sorted.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+                    // Sort by the amount actually shown on the card (totalAmount), so the
+                    // visible order matches — `amount` is only the monthly figure and
+                    // diverges from the displayed total in unit / mixed-donation modes.
+                    return sorted.sort((a, b) => (b.totalAmount ?? b.amount ?? 0) - (a.totalAmount ?? a.amount ?? 0));
                 default:
                     return sorted;
             }
         }
-        
+
         // If we're in fundraisers tab and not viewing a specific fundraiser, use fundraiser sorting
         if (activeTab === 'fundraisers' && !selectedFundraiser) {
             const sorted = [...data];
@@ -961,12 +995,39 @@ export default function PublicCampaignScreen() {
             }
         }
         
+        // Communities tab: sort operators by the selected criterion
+        if (activeTab === 'communities') {
+            const sorted = [...data];
+            switch (communitySortBy) {
+                case 'amount':
+                    return sorted.sort((a, b) => (b.totalRaised || 0) - (a.totalRaised || 0));
+                case 'donors':
+                    return sorted.sort((a, b) => (b.donorCount || 0) - (a.donorCount || 0));
+                case 'fundraisers':
+                    return sorted.sort((a, b) => (b.fundraiserCount || 0) - (a.fundraiserCount || 0));
+                case 'progress':
+                    return sorted.sort((a, b) => {
+                        const progressA = a.targetAmount > 0 ? (a.totalRaised / a.targetAmount) * 100 : 0;
+                        const progressB = b.targetAmount > 0 ? (b.totalRaised / b.targetAmount) * 100 : 0;
+                        return progressB - progressA;
+                    });
+                case 'target':
+                    return sorted.sort((a, b) => (b.targetAmount || 0) - (a.targetAmount || 0));
+                default:
+                    return sorted;
+            }
+        }
+
         return data;
     };
-    
+
     // Filter data based on search term
     const filteredData = searchTerm
         ? tabContent.data.filter(item => {
+            if (item.type === 'community') {
+                const communityName = item.communityName || '';
+                return communityName.toLowerCase().includes(searchTerm.toLowerCase());
+            }
             if (item.type === 'fundraiser') {
                 const fundraiserName = item.fundraiserName || '';
                 const searchLower = searchTerm.toLowerCase();
@@ -1566,6 +1627,23 @@ export default function PublicCampaignScreen() {
                                     )}
                                 </span>
                             </button>
+                            {hasCommunities && (
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('communities');
+                                        clearSelectedFundraiser();
+                                        setExpandedCommunityId(null);
+                                        setSearchTerm('');
+                                        setVisibleCount(15);
+                                    }}
+                                    className={`${styles.tab} ${activeTab === 'communities' ? styles.tabActive : ''}`}
+                                >
+                                    <span className={styles.tabLabel}>
+                                        {t('communities')}
+                                        <span className={styles.tabBadge}>{communities.length}</span>
+                                    </span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => {
                                     setActiveTab('top');
@@ -1812,7 +1890,28 @@ export default function PublicCampaignScreen() {
                             ))}
                         </div>
                     )}
-                    
+
+                    {/* Sort Buttons for communities tab */}
+                    {activeTab === 'communities' && (
+                        <div className={styles.fundraiserSortBar}>
+                            {[
+                                { key: 'amount', label: t('byAmount') },
+                                { key: 'donors', label: t('byDonors') },
+                                { key: 'fundraisers', label: t('byFundraisers') },
+                                { key: 'progress', label: t('byProgress') },
+                                { key: 'target', label: t('byTarget') }
+                            ].map(option => (
+                                <button
+                                    key={option.key}
+                                    onClick={() => setCommunitySortBy(option.key)}
+                                    className={`${styles.fundraiserSortBtn} ${communitySortBy === option.key ? styles.fundraiserSortBtnActive : ''}`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {/* About Tab Content */}
                     {activeTab === 'about' && (
                         <div className={styles.aboutContent} style={{
@@ -1952,6 +2051,154 @@ export default function PublicCampaignScreen() {
                             return (
                                 <>
                                     {visibleData.map((item, index) => {
+                                // Community card (operator / מפעיל) - aggregates all its fundraisers
+                                if (item.type === 'community') {
+                                    const accent = data?.publicScreenRanksBackgroundColor || '#b45309';
+                                    const amountForProgress = item.totalRaised || 0;
+                                    const progressPercentage = item.targetAmount > 0
+                                        ? (amountForProgress / item.targetAmount) * 100
+                                        : 0;
+                                    const isExpanded = expandedCommunityId === item.id;
+
+                                    return (
+                                        <div
+                                            key={`community-${item.id || index}`}
+                                            className={styles.fundraiserCard}
+                                            style={{ display: 'flex', flexDirection: 'column', minHeight: '200px', position: 'relative', overflow: 'visible', paddingTop: '2rem' }}
+                                        >
+                                            {/* Avatar circle - half outside, half inside */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '-1.5rem',
+                                                left: '50%',
+                                                transform: 'translateX(-50%)',
+                                                width: '3rem',
+                                                height: '3rem',
+                                                borderRadius: '50%',
+                                                background: accent,
+                                                color: 'white',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.25rem',
+                                                fontWeight: '700',
+                                                border: '3px solid white',
+                                                boxShadow: `0 0 0 1px ${accent}, 0 2px 8px rgba(0,0,0,0.1)`,
+                                                zIndex: 10
+                                            }}>
+                                                {item.communityName?.charAt(0)?.toUpperCase() || 'ק'}
+                                            </div>
+
+                                            {/* Community name + stats */}
+                                            <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
+                                                <span className={styles.fundraiserName}>{item.communityName}</span>
+                                                <div className={styles.fundraiserStats} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem', minHeight: '2.5rem' }}>
+                                                    <span>{item.fundraiserCount} {t('fundraisersLabel')} · {item.donorCount} {t('donors')}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Amount display */}
+                                            <div style={{
+                                                textAlign: 'center',
+                                                marginBottom: '0.5rem',
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                width: '100%',
+                                                paddingLeft: '1rem',
+                                                paddingRight: '1rem'
+                                            }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '2px',
+                                                    padding: '12px 24px',
+                                                    backgroundColor: 'rgba(180, 83, 9, 0.1)',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid rgba(180, 83, 9, 0.2)',
+                                                    width: '100%'
+                                                }}>
+                                                    <div style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>
+                                                        {data?.campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) > 1 ? `${t('total')}: ` : ''}{formatAmount(item.totalRaised)}
+                                                    </div>
+                                                    {isMonthlyUnitMode && (
+                                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                            {t('perMonth')}
+                                                        </div>
+                                                    )}
+                                                    {data?.campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) > 1 && (
+                                                        <div style={{ fontSize: '0.75rem', color: '#666', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                            {t('monthly')}: {formatAmount(item.monthlyRaised || (item.totalRaised / (statistics.monthsCalculation || data?.campaign?.defaultHokMonths || 1)))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Progress bar */}
+                                            <div className={styles.fundraiserProgress} style={{ minHeight: '60px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                                <div className={styles.progressBarContainer}>
+                                                    <div
+                                                        className={styles.progressBarFill}
+                                                        style={{
+                                                            width: `${Math.min(progressPercentage, 100)}%`,
+                                                            backgroundColor: accent
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className={styles.progressText}>
+                                                    <span>{progressPercentage.toFixed(0)}%</span>
+                                                    {item.targetAmount > 0 && (
+                                                        <span>{t('goal')}: {formatAmount(item.targetAmount)}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Expandable fundraisers list */}
+                                            {isExpanded && item.members && item.members.length > 0 && (
+                                                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                    {item.members.map((member) => (
+                                                        <div
+                                                            key={member.id}
+                                                            onClick={() => router.push(`${pathname}?fundraiser=${member.id}`)}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'space-between',
+                                                                gap: '0.5rem',
+                                                                padding: '8px 12px',
+                                                                background: '#f8fafc',
+                                                                borderRadius: '8px',
+                                                                border: '1px solid #e2e8f0',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {member.name}
+                                                            </span>
+                                                            <span style={{ fontWeight: 700, color: accent, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                                                {formatAmount(member.totalRaised)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className={styles.fundraiserActions} style={{ marginTop: 'auto' }}>
+                                                <button
+                                                    className={styles.fundraiserShowBtn}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setExpandedCommunityId(isExpanded ? null : item.id);
+                                                    }}
+                                                    disabled={!item.members || item.members.length === 0}
+                                                >
+                                                    {isExpanded ? t('hideFundraisers') : t('showFundraisers')}{item.members?.length ? ` (${item.members.length})` : ''}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
                                 // Fundraiser card - clickable to view donors
                                 if (item.type === 'fundraiser') {
                                     const fundraiserUrl = `${window.location.origin}/public-screen/${campaignId}?fundraiser=${item.id}`;
@@ -2147,13 +2394,20 @@ export default function PublicCampaignScreen() {
                                         {/* Left side: Donor info and content */}
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 0 }}>
                                             {/* Card Header: Donor Name + Avatar */}
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                                                 <div className={styles.donorHeaderRight}>
                                                     <div className={styles.donorAvatar}>
                                                         {item.isAnonymous ? 'א' : getInitials(item.donorFirstName, item.donorLastName)}
                                                     </div>
-                                                    <span className={styles.donorName}>
-                                                        {item.isAnonymous ? 'בעילום שם' : item.donorName}
+                                                    <span className={styles.donorNameWrap}>
+                                                        <span className={styles.donorName}>
+                                                            {item.isAnonymous ? 'בעילום שם' : item.donorName}
+                                                        </span>
+                                                        {!item.isAnonymous && (item.donorName?.length || 0) > 20 && (
+                                                            <span className={styles.nameTooltip} role="tooltip">
+                                                                {item.donorName}
+                                                            </span>
+                                                        )}
                                                     </span>
                                                 </div>
                                             </div>
@@ -2163,7 +2417,8 @@ export default function PublicCampaignScreen() {
                                             {/* Show fundraiser name */}
                                             {item.fundraiserName && (
                                                 <div
-                                                    className={styles.fundraiserInfo}
+                                                    className={styles.donorVia}
+                                                    title={`${t('via')} ${item.fundraiserName}`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const fundraiser = fundraisers?.find(f =>
@@ -2173,7 +2428,6 @@ export default function PublicCampaignScreen() {
                                                             router.push(`${pathname}?fundraiser=${fundraiser.id}`);
                                                         }
                                                     }}
-                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {t('via')} {item.fundraiserName}
                                                 </div>

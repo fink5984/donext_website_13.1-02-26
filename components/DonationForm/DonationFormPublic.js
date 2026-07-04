@@ -92,8 +92,10 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
         const loadData = async () => {
             setIsLoadingData(true);
             try {
-                // Load campaign, fundraisers and ranks from public-stats
-                const publicStatsRes = await fetch(`/api/campaigns/${campaignId}/public-stats`);
+                // Load campaign, fundraisers and ranks from public-stats.
+                // no-store: always read the current campaign config (e.g. defaultHokMonths)
+                // so the default number of payments can't be served from a stale cache.
+                const publicStatsRes = await fetch(`/api/campaigns/${campaignId}/public-stats`, { cache: 'no-store' });
                 const publicStatsData = await publicStatsRes.json();
                 if (publicStatsData.success) {
                     const campaignData = publicStatsData.data?.campaign;
@@ -115,10 +117,14 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         setCreditCardProvider(campaignData.creditCardProvider);
                     }
                     
-                    // Set default payments based on campaign settings (defaultHokMonths) or campaign type
+                    // Set default payments based on campaign settings (defaultHokMonths).
+                    // The campaign default applies to BOTH monthly and project campaigns
+                    // (mirrors the back-office DonationForm). 0 = unlimited (monthly only).
                     const isMonthlyCampaign = campaignData?.donationType === 'monthly';
                     const isDefaultUnlimited = isMonthlyCampaign && campaignData?.defaultHokMonths === 0;
-                    const defaultMonths = campaignData?.defaultHokMonths ?? 12;
+                    const defaultPayments = campaignData?.defaultHokMonths === 0
+                        ? null
+                        : (campaignData?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1));
                     
                     // Check if initialAmount matches any of the donation ranks
                     const ranks = publicStatsData.data?.ranks || [];
@@ -132,7 +138,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     
                     setFormData(prev => ({
                         ...prev,
-                        numberOfPayments: isMonthlyCampaign ? (isDefaultUnlimited ? null : defaultMonths) : 1,
+                        numberOfPayments: defaultPayments,
                         isUnlimited: isDefaultUnlimited,
                         selectedAmount: matchedAmount
                     }));
@@ -203,7 +209,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
 
     const isMonthlyCampaign = campaign?.donationType === 'monthly';
     const isDefaultUnlimitedCampaign = isMonthlyCampaign && campaign?.defaultHokMonths === 0;
-    const defaultNumberOfPayments = isMonthlyCampaign && !isDefaultUnlimitedCampaign ? (campaign?.defaultHokMonths ?? 12) : 1;
+    const defaultNumberOfPayments = isDefaultUnlimitedCampaign
+        ? null
+        : (campaign?.defaultHokMonths ?? (isMonthlyCampaign ? 12 : 1));
 
     // Enforce the minimum donation only on the free (custom) amount field. Fixed ranks are exempt.
     const customAmountValue = formData.selectedAmount === 'custom' ? (parseFloat(formData.customAmount) || 0) : 0;
@@ -440,7 +448,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                 setFormData({
                     selectedAmount: null,
                     customAmount: '',
-                    numberOfPayments: isMonthlyCampaign ? (isDefaultUnlimitedCampaign ? null : (campaign?.defaultHokMonths ?? 12)) : 1,
+                    numberOfPayments: defaultNumberOfPayments,
                     isUnlimited: isDefaultUnlimitedCampaign,
                     paymentMethod: null,
                     note: '',

@@ -442,9 +442,65 @@ export async function GET(request, { params }) {
                 monthlyRaised: monthlyRaised,
                 targetAmount: isMonthlyCampaign ? expectedSum * monthsCalculation : expectedSum,
                 donorCount: donorCount,
+                isOperator: fundraiser.isOperator || false,
+                assignedOperatorId: fundraiser.assignedOperatorId || null,
                 donors: donorsWithDonations.sort((a, b) => b.totalAmount - a.totalAmount)
             };
         }).sort((a, b) => b.totalRaised - a.totalRaised); // Sort by total raised
+
+        // Build "communities" (קהילות): one entry per operator (מפעיל), aggregating the
+        // stats of every fundraiser assigned to that operator (plus the operator's own
+        // fundraising). Only relevant for campaigns that use operators.
+        const formattedById = new Map(formattedFundraisers.map(f => [f.id, f]));
+        const communities = fundraisers
+            .filter(f => f.isOperator)
+            .map(op => {
+                // Members = the operator itself + every fundraiser assigned to it (deduped).
+                const memberIds = new Set([op.id]);
+                fundraisers.forEach(f => {
+                    if (f.assignedOperatorId === op.id) memberIds.add(f.id);
+                });
+
+                let totalRaised = 0;
+                let monthlyRaised = 0;
+                let donorCount = 0;
+                let summedTargets = 0;
+                const members = [];
+                memberIds.forEach(id => {
+                    const mf = formattedById.get(id);
+                    if (!mf) return;
+                    totalRaised += mf.totalRaised;
+                    monthlyRaised += mf.monthlyRaised;
+                    donorCount += mf.donorCount;
+                    summedTargets += mf.targetAmount || 0;
+                    members.push({
+                        id: mf.id,
+                        name: mf.name,
+                        totalRaised: mf.totalRaised,
+                        monthlyRaised: mf.monthlyRaised,
+                        donorCount: mf.donorCount
+                    });
+                });
+
+                // Prefer the operator's own forecast as the community target when set,
+                // otherwise fall back to the sum of its members' targets.
+                const opExpected = Number(op.operatorExpected) || 0;
+                const targetAmount = opExpected > 0
+                    ? (isMonthlyCampaign ? opExpected * monthsCalculation : opExpected)
+                    : summedTargets;
+
+                return {
+                    id: op.id,
+                    name: formattedById.get(op.id)?.name || 'מפעיל ללא שם',
+                    totalRaised,
+                    monthlyRaised,
+                    donorCount,
+                    targetAmount,
+                    fundraiserCount: members.length,
+                    members: members.sort((a, b) => b.totalRaised - a.totalRaised)
+                };
+            })
+            .sort((a, b) => b.totalRaised - a.totalRaised);
 
         return NextResponse.json({
             success: true,
@@ -517,7 +573,8 @@ export async function GET(request, { params }) {
                 promoVideoUrl: publicScreenSettings?.promoVideoUrl || null,
                 recentDonations: formattedRecentDonations,
                 topDonors: donorsWithTotals,
-                fundraisers: formattedFundraisers
+                fundraisers: formattedFundraisers,
+                communities: communities
             }
         });
 
