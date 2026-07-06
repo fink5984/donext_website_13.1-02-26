@@ -8,6 +8,42 @@ import DoNextLoader from '@/app/components/DoNextLoader';
 import DonationFormPublic from '@/components/DonationForm/DonationFormPublic';
 import SiteHeader from '@/app/[locale]/landing/SiteHeader';
 
+const ODOMETER_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+// Odometer-style number for the gauge "raised so far". Each digit is a vertical
+// strip 0-9 that slides (via CSS transform + transition) to the current digit, so
+// the number visibly rolls when it updates. Non-digit characters (commas, currency
+// symbol, unit label) render statically. Works for both money and unit strings.
+// Digits are keyed by position-from-the-right so trailing digits keep their DOM
+// node across updates and animate instead of remounting.
+function OdometerNumber({ value, className }) {
+    const chars = String(value ?? '').split('');
+    const len = chars.length;
+    return (
+        <span className={`${styles.odometer}${className ? ` ${className}` : ''}`}>
+            {chars.map((ch, i) => {
+                if (ch >= '0' && ch <= '9') {
+                    const digit = Number(ch);
+                    const posFromRight = len - i;
+                    return (
+                        <span key={`d${posFromRight}`} className={styles.odometerDigit}>
+                            <span
+                                className={styles.odometerStrip}
+                                style={{ transform: `translateY(-${digit}em)` }}
+                            >
+                                {ODOMETER_DIGITS.map((n) => (
+                                    <span key={n} className={styles.odometerCell}>{n}</span>
+                                ))}
+                            </span>
+                        </span>
+                    );
+                }
+                return <span key={`c${i}`}>{ch === ' ' ? ' ' : ch}</span>;
+            })}
+        </span>
+    );
+}
+
 // Render text where segments wrapped in *asterisks* are shown bold
 function renderRichText(text) {
     if (!text) return null;
@@ -32,7 +68,6 @@ export default function PublicCampaignScreen() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [animatedCollected, setAnimatedCollected] = useState(0);
     const [selectedAmount, setSelectedAmount] = useState(null);
     const [activeTab, setActiveTab] = useState('donors');
     const [searchTerm, setSearchTerm] = useState('');
@@ -312,7 +347,6 @@ export default function PublicCampaignScreen() {
 
                 if (result.success) {
                     setData(result.data);
-                    setAnimatedCollected(result.data.statistics.totalCollected);
                     // Set initial selected amount from first rank
                     if (!selectedAmount && result.data.ranks && result.data.ranks.length > 0) {
                         setSelectedAmount(result.data.ranks[0].amount);
@@ -410,28 +444,6 @@ export default function PublicCampaignScreen() {
             setSelectedFundraiser(fundraiser);
         }
     }, [data, fundraiserId, loading, selectedFundraiser]);
-
-    // Animate collected amount
-    useEffect(() => {
-        if (!data) return;
-        const target = data.statistics.totalCollected;
-        const duration = 1000;
-        const start = Date.now();
-        const initial = animatedCollected;
-
-        const animate = () => {
-            const now = Date.now();
-            const progress = Math.min((now - start) / duration, 1);
-            const current = initial + (target - initial) * progress;
-            setAnimatedCollected(current);
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            }
-        };
-
-        animate();
-    }, [data?.statistics.totalCollected]);
 
     // Setup Pusher for real-time updates
     useEffect(() => {
@@ -695,8 +707,12 @@ export default function PublicCampaignScreen() {
         return label ? `${num} ${label}` : num;
     };
     // In unit mode raised/goal amounts are shown as units; otherwise as formatted currency.
-    // Used for the gauge and for the donor / fundraiser / top-donor cards.
+    // Used for the donor / fundraiser / top-donor cards.
     const formatAmount = (moneyValue) => unitMode ? formatUnits(moneyValue) : formatCurrency(moneyValue);
+    // The main progress gauge ("raised so far" + goal) can opt out of units and show
+    // money even while unit mode is on (settings.unitGaugeInMoney), leaving the cards in units.
+    const gaugeInMoney = unitMode && !!settings?.unitGaugeInMoney;
+    const formatGaugeAmount = (moneyValue) => gaugeInMoney ? formatCurrency(moneyValue) : formatAmount(moneyValue);
 
     // When a monthly campaign is displayed in monthly units (monthsCalculation === 1), every amount on the page
     // represents a monthly figure. We append "לחודש" next to amounts so it stays unambiguous for viewers.
@@ -1301,6 +1317,12 @@ export default function PublicCampaignScreen() {
                                 <div className={styles.liquidGaugeContainer}>
                                     {/* Liquid Fill Gauge */}
                                     <div className={styles.liquidGauge}>
+                                        {/* Subtle breathing glow behind the gauge */}
+                                        <div
+                                            className={styles.circleAmbient}
+                                            style={{ '--ambient-color': data?.publicScreenRanksBackgroundColor || '#b45309' }}
+                                            aria-hidden="true"
+                                        />
                                         <svg viewBox="0 0 200 200" className={styles.gaugeSvg}>
                                             <defs>
                                                 {/* Clip path for circle */}
@@ -1349,13 +1371,13 @@ export default function PublicCampaignScreen() {
                                                 </div>
                                             )}
                                             <div className={styles.gaugeAmount}>
-                                                {formatAmount(animatedCollected)}
+                                                <OdometerNumber value={formatGaugeAmount(statistics.totalCollected)} />
                                             </div>
                                             {!gaugeRaisedOnly && (
                                                 <div className={styles.gaugeTarget}>
                                                     {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
                                                         ? t('outOfMonthlyGoal')
-                                                        : t('outOfGoal')} {formatAmount(statistics.targetAmount)}
+                                                        : t('outOfGoal')} {formatGaugeAmount(statistics.targetAmount)}
                                                 </div>
                                             )}
                                         </div>
@@ -1368,7 +1390,7 @@ export default function PublicCampaignScreen() {
                                         {t('raisedSoFar')}
                                     </div>
                                     <div className={styles.gaugeAmount}>
-                                        {formatAmount(animatedCollected)}
+                                        <OdometerNumber value={formatGaugeAmount(statistics.totalCollected)} />
                                     </div>
                                 </div>
                             )}
@@ -1431,6 +1453,12 @@ export default function PublicCampaignScreen() {
                         <div className={styles.timerSection}>
                             {/* Progress Circle */}
                             <div className={styles.timerCircle}>
+                                {/* Subtle breathing glow behind the timer */}
+                                <div
+                                    className={styles.circleAmbient}
+                                    style={{ '--ambient-color': data?.publicScreenRanksBackgroundColor || '#b45309' }}
+                                    aria-hidden="true"
+                                />
                                 <svg className={styles.timerCircleSvg} viewBox="0 0 200 200">
                                     {/* Background circle */}
                                     <circle
@@ -2726,6 +2754,22 @@ export default function PublicCampaignScreen() {
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {/* Floating donate button - stays fixed and visible while scrolling */}
+            {showDonationDetails !== false && !isDonationFormOpen && !showThankYou && (
+                <button
+                    className={styles.floatingDonateBtn}
+                    style={{ backgroundColor: data?.publicScreenRanksBackgroundColor || '#b45309' }}
+                    onClick={() => {
+                        setSelectedDonationFundraiserId(selectedFundraiser?.id ?? null);
+                        setInitialDonationAmount(null);
+                        setIsDonationFormOpen(true);
+                    }}
+                    aria-label={t('donate')}
+                >
+                    {t('donate')}
+                </button>
             )}
 
             {/* Add Donation Form Modal */}

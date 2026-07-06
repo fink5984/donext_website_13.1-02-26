@@ -39,6 +39,7 @@ export default function AdditionalSettingsPage() {
         promoVideoUrl: '',
         unitMode: false,
         unitDonationMode: false,
+        unitGaugeInMoney: false,
         unitLabel: '',
         unitLabelPlural: '',
         unitPrice: '',
@@ -125,6 +126,7 @@ export default function AdditionalSettingsPage() {
                     promoVideoUrl: data.promoVideoUrl || '',
                     unitMode: data.unitMode ?? false,
                     unitDonationMode: data.unitDonationMode ?? false,
+                    unitGaugeInMoney: data.unitGaugeInMoney ?? false,
                     unitLabel: data.unitLabel || '',
                     unitLabelPlural: data.unitLabelPlural || '',
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
@@ -578,6 +580,26 @@ export default function AdditionalSettingsPage() {
                                     אם לא הוגדר יעד לקמפיין — יוצג רק מספר היחידות שנאספו, ללא יעד.
                                 </p>
                             )}
+
+                            <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                                <label className={styles.toggleLabel}>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.unitGaugeInMoney}
+                                        onChange={(e) => handleInputChange('unitGaugeInMoney', e.target.checked)}
+                                        className={styles.toggleInput}
+                                    />
+                                    <span className={styles.toggleSwitch}></span>
+                                    <span className={styles.toggleText}>
+                                        {formData.unitGaugeInMoney
+                                            ? "מד ההתקדמות ('עד כה נתרם') בסכום כספי"
+                                            : "מד ההתקדמות ('עד כה נתרם') ביחידות (ברירת מחדל)"}
+                                    </span>
+                                </label>
+                                <p className={styles.infoText}>
+                                    כשמופעל, מד ההתקדמות הראשי (&quot;עד כה נתרם&quot; והיעד) יוצג בסכום כספי, בעוד כרטיסי התורמים, המובילים והמתרימים ימשיכו להציג יחידות.
+                                </p>
+                            </div>
 
                             <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
                                 <label className={styles.toggleLabel}>

@@ -29,6 +29,7 @@ export async function GET(request, { params }) {
                 donationsCalculation: 1,
                 unitMode: false,
                 unitDonationMode: false,
+                unitGaugeInMoney: false,
                 unitLabel: '',
                 unitLabelPlural: '',
                 unitPrice: null,
@@ -60,6 +61,7 @@ export async function GET(request, { params }) {
             donationsCalculation: settings.donationsCalculation ?? 1,
             unitMode: settings.unitMode ?? false,
             unitDonationMode: settings.unitDonationMode ?? false,
+            unitGaugeInMoney: settings.unitGaugeInMoney ?? false,
             unitLabel: settings.unitLabel || '',
             unitLabelPlural: settings.unitLabelPlural || '',
             unitPrice: settings.unitPrice != null ? Number(settings.unitPrice) : null,
@@ -91,7 +93,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitGaugeInMoney, unitLabel, unitLabelPlural, unitPrice, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -132,6 +134,7 @@ export async function PUT(request, { params }) {
             promoVideoUrl: promoVideoUrl || null,
             unitMode: unitMode ?? false,
             unitDonationMode: unitDonationMode ?? false,
+            unitGaugeInMoney: unitGaugeInMoney ?? false,
             unitLabel: unitLabel || null,
             unitLabelPlural: unitLabelPlural || null,
             unitPrice: toPositiveNumber(unitPrice),

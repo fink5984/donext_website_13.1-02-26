@@ -535,6 +535,8 @@ export async function GET(request, { params }) {
                     unitMode: publicScreenSettings?.unitMode ?? false,
                     // "Unit donation mode": the donation form itself works in units
                     unitDonationMode: publicScreenSettings?.unitDonationMode ?? false,
+                    // When unit mode is on, show the main progress gauge in money (not units)
+                    unitGaugeInMoney: publicScreenSettings?.unitGaugeInMoney ?? false,
                     unitLabel: publicScreenSettings?.unitLabel || null,
                     unitLabelPlural: publicScreenSettings?.unitLabelPlural || null,
                     unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,

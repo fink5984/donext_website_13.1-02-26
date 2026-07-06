@@ -454,6 +454,7 @@
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
+    z-index: 1;
 }
 
 .timerCircleText {
@@ -610,21 +611,81 @@
 
 .liquidGauge {
     position: relative;
-    width: 280px;
-    height: 280px;
+    width: 320px;
+    height: 320px;
 }
 
 @media (min-width: 768px) {
     .liquidGauge {
-        width: 340px;
-        height: 340px;
+        width: 370px;
+        height: 370px;
     }
 }
 
 .gaugeSvg {
+    position: relative;
+    z-index: 1;
     width: 100%;
     height: 100%;
     filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
+}
+
+/* Ambient motion inside the gauge / timer circles: a soft accent-colored light
+   band that "wipes" diagonally across the whole circle every few seconds, then
+   rests. A very faint static glow (::after) adds depth between wipes. Sits behind
+   the SVG (z-index 0) and shows through the transparent circle interior. */
+.circleAmbient {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* The sweeping light band */
+.circleAmbient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        115deg,
+        transparent 38%,
+        var(--ambient-color, #b45309) 50%,
+        transparent 62%
+    );
+    background-size: 250% 100%;
+    background-repeat: no-repeat;
+    opacity: 0.16;
+    will-change: background-position;
+    animation: circleWipe 10s ease-in-out infinite;
+}
+
+/* Faint resting glow so the circle isn't flat between wipes */
+.circleAmbient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, var(--ambient-color, #b45309), transparent 62%);
+    opacity: 0.05;
+}
+
+@keyframes circleWipe {
+    0%   { background-position: 135% 0; }
+    35%  { background-position: -35% 0; }
+    100% { background-position: -35% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .circleAmbient::before {
+        animation: none;
+        opacity: 0;
+    }
 }
 
 .wave {
@@ -673,6 +734,43 @@
     margin-bottom: 0.25rem;
 }
 
+/* Odometer-style rolling number (gauge "raised so far"). Digit chars roll
+   vertically on update; commas / currency symbol / unit labels stay static. */
+.odometer {
+    display: inline-flex;
+    align-items: baseline;
+    direction: ltr;
+    white-space: nowrap;
+}
+
+.odometerDigit {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    vertical-align: baseline;
+}
+
+.odometerStrip {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+.odometerCell {
+    height: 1em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .odometerStrip {
+        transition: none;
+    }
+}
+
 @media (min-width: 768px) {
     .gaugeAmount {
         font-size: 1.75rem;
@@ -702,8 +800,8 @@
 
 .middleStatsCircle {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 320px;
+    height: 320px;
     border-radius: 50%;
     border: 1px solid rgba(180, 83, 9, 0.15);
     box-shadow:
@@ -724,8 +822,8 @@
 
 @media (min-width: 768px) {
     .middleStatsCircle {
-        width: 340px;
-        height: 340px;
+        width: 370px;
+        height: 370px;
     }
 }
 
@@ -1084,6 +1182,61 @@ a.donateInfoValue:hover {
 .shareIcon {
     width: 20px;
     height: 20px;
+}
+
+/* Floating donate button — fixed to the viewport so it stays visible while scrolling */
+.floatingDonateBtn {
+    position: fixed;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 2.5rem;
+    border: none;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: floatingDonateIn 0.4s ease;
+}
+
+.floatingDonateBtn:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.36);
+}
+
+.floatingDonateBtn:active {
+    transform: translateX(-50%) translateY(0);
+}
+
+.floatingDonateIcon {
+    width: 20px;
+    height: 20px;
+}
+
+@keyframes floatingDonateIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (min-width: 768px) {
+    .floatingDonateBtn {
+        bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+        padding: 1rem 3rem;
+        font-size: 1.15rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .floatingDonateBtn {
+        animation: none;
+    }
 }
 
 /* Tabs Section */

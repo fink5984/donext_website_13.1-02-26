@@ -706,6 +706,7 @@ model PublicScreenSettings {
   donationsCalculation Int       @default(1) @map("donations_calculation")
   unitMode             Boolean   @default(false) @map("unit_mode")
   unitDonationMode     Boolean   @default(false) @map("unit_donation_mode")
+  unitGaugeInMoney     Boolean   @default(false) @map("unit_gauge_in_money")
   unitLabel            String?   @map("unit_label")
   unitLabelPlural      String?   @map("unit_label_plural")
   unitPrice            Decimal?  @map("unit_price")
