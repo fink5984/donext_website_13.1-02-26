@@ -2912,22 +2912,22 @@ a.donateInfoValue:hover {
     }
     
     .statsContainer {
-        gap: 1.5rem;
+        gap: 1rem;
     }
-    
+
     .timerSection {
         margin-left: 0;
         width: 100%;
         align-items: center;
     }
-    
+
     .timerCircle {
-        width: 220px;
-        height: 220px;
+        width: 300px;
+        height: 300px;
     }
-    
+
     .timerCircleText {
-        top: 50px;
+        top: 66px;
     }
     
     .timerCircleLabel {
@@ -2949,25 +2949,25 @@ a.donateInfoValue:hover {
     }
     
     .liquidGauge {
-        width: 220px;
-        height: 220px;
+        width: 300px;
+        height: 300px;
     }
-    
+
     .gaugePercent {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
-    
+
     .gaugeAmount {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
     }
-    
+
     .gaugeTarget {
         font-size: 0.75rem;
     }
-    
+
     .middleStatsCircle {
-        width: 220px;
-        height: 220px;
+        width: 300px;
+        height: 300px;
     }
 
     .middleStatsIconWrap {
@@ -3182,12 +3182,12 @@ a.donateInfoValue:hover {
     }
     
     .timerCircle {
-        width: 180px;
-        height: 180px;
+        width: 260px;
+        height: 260px;
     }
-    
+
     .timerCircleText {
-        top: 40px;
+        top: 57px;
     }
     
     .timerValue {
@@ -3202,21 +3202,21 @@ a.donateInfoValue:hover {
     }
     
     .liquidGauge {
-        width: 180px;
-        height: 180px;
+        width: 260px;
+        height: 260px;
     }
-    
+
     .gaugePercent {
-        font-size: 1.75rem;
+        font-size: 2.25rem;
     }
-    
+
     .gaugeAmount {
-        font-size: 1rem;
+        font-size: 1.2rem;
     }
-    
+
     .middleStatsCircle {
-        width: 180px;
-        height: 180px;
+        width: 260px;
+        height: 260px;
     }
     
     .tab {
@@ -3247,18 +3247,22 @@ a.donateInfoValue:hover {
 /* Very Small Phones (less than 320px) */
 @media (max-width: 320px) {
     .timerCircle {
-        width: 160px;
-        height: 160px;
+        width: 220px;
+        height: 220px;
     }
-    
+
+    .timerCircleText {
+        top: 48px;
+    }
+
     .liquidGauge {
-        width: 160px;
-        height: 160px;
+        width: 220px;
+        height: 220px;
     }
-    
+
     .middleStatsCircle {
-        width: 160px;
-        height: 160px;
+        width: 220px;
+        height: 220px;
     }
     
     .gaugePercent {
