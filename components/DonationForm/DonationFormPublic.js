@@ -109,7 +109,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         active: !!s.unitDonationMode && unitPrice > 0,
                         price: unitPrice,
                         labelSingular: s.unitLabel || '',
-                        labelPlural: s.unitLabelPlural || s.unitLabel || ''
+                        labelPlural: s.unitLabelPlural || s.unitLabel || '',
+                        otherInMoney: !!s.otherAmountInMoney
                     });
                     
                     // Set credit card provider from campaign
@@ -746,6 +747,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                                 unitPrice={unitConfig.price}
                                 unitLabelSingular={unitConfig.labelSingular}
                                 unitLabelPlural={unitConfig.labelPlural}
+                                otherAmountInMoney={unitConfig.otherInMoney}
                             />
 
                             {belowMinimum && (

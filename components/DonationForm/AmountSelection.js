@@ -15,7 +15,8 @@ const AmountSelection = ({
     unitMode = false,
     unitPrice = 0,
     unitLabelSingular = '',
-    unitLabelPlural = ''
+    unitLabelPlural = '',
+    otherAmountInMoney = false
 }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
@@ -25,6 +26,9 @@ const AmountSelection = ({
     // Unit-donation mode: show amounts as units (e.g. meters) and let the donor enter a
     // quantity. The value pushed up via onCustomAmountChange stays in money (units × price).
     const unitActive = unitMode && unitPrice > 0;
+    // The preset rank buttons always follow unit mode, but the "other amount" field can be
+    // configured to ask for a plain money amount instead of a quantity of units.
+    const customUnitActive = unitActive && !otherAmountInMoney;
     const labelFor = (count) => (count === 1 ? unitLabelSingular : (unitLabelPlural || unitLabelSingular));
     const moneyToUnits = (money) => {
         const units = (Number(money) || 0) / unitPrice;
@@ -43,10 +47,10 @@ const AmountSelection = ({
     const [unitInput, setUnitInput] = React.useState('');
     useEffect(() => {
         // Reset the quantity field when the custom amount is cleared externally (e.g. a rank was picked)
-        if (unitActive && (customAmount === '' || customAmount == null)) {
+        if (customUnitActive && (customAmount === '' || customAmount == null)) {
             setUnitInput('');
         }
-    }, [customAmount, unitActive]);
+    }, [customAmount, customUnitActive]);
 
     const handleUnitInputChange = (e) => {
         let value = e.target.value.replace(/[^0-9.]/g, '');
@@ -67,7 +71,7 @@ const AmountSelection = ({
     // The custom field placeholder. In unit mode it asks for a quantity; the unit word is
     // shown here (not as an overlay symbol) so the long label doesn't collide with the text.
     const unitWord = unitLabelPlural || unitLabelSingular || (isRTL ? 'יחידות' : 'units');
-    const customPlaceholder = unitActive
+    const customPlaceholder = customUnitActive
         ? (isRTL ? `כמות ${unitWord}` : `Quantity (${unitWord})`)
         : t('otherAmount');
 
@@ -168,9 +172,9 @@ const AmountSelection = ({
                     <input
                         type="text"
                         className={styles.customAmountField}
-                        placeholder={unitActive ? (isRTL ? 'כמות אחרת' : 'Other quantity') : t('otherAmount')}
-                        value={unitActive ? unitInput : customAmount}
-                        onChange={unitActive ? handleUnitInputChange : handleCustomAmountChange}
+                        placeholder={customUnitActive ? (isRTL ? 'כמות אחרת' : 'Other quantity') : t('otherAmount')}
+                        value={customUnitActive ? unitInput : customAmount}
+                        onChange={customUnitActive ? handleUnitInputChange : handleCustomAmountChange}
                         onFocus={() => !readOnly && onAmountSelect('custom')}
                         readOnly={readOnly}
                         style={readOnly ? { cursor: 'default' } : undefined}
@@ -178,7 +182,7 @@ const AmountSelection = ({
                     {selectedAmount === 'custom' ? (
                         // In unit mode the unit word is conveyed via the placeholder, so we skip the
                         // overlay symbol (the long label would collide with the centered input text).
-                        unitActive ? null : <div className={styles.currencySymbol}>{currencySymbol}</div>
+                        customUnitActive ? null : <div className={styles.currencySymbol}>{currencySymbol}</div>
                     ) : (
                         <div className={styles.editIcon}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

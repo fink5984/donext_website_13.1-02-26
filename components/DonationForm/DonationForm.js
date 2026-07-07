@@ -203,7 +203,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
 
     // Unit-donation mode: the donor picks a number of units; the charged amount stays in money.
     // Mirrors the public form so the backoffice /donations form shows unit tiers when configured.
-    const [unitConfig, setUnitConfig] = useState({ active: false, price: 0, labelSingular: '', labelPlural: '' });
+    const [unitConfig, setUnitConfig] = useState({ active: false, price: 0, labelSingular: '', labelPlural: '', otherInMoney: false });
 
     // Compute the effective payment amount: use partialFulfillAmount when fulfilling a commitment
     const paymentAmount = isEditingPaymentMethod
@@ -318,7 +318,8 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     active: !!s.unitDonationMode && unitPrice > 0,
                     price: unitPrice,
                     labelSingular: s.unitLabel || '',
-                    labelPlural: s.unitLabelPlural || s.unitLabel || ''
+                    labelPlural: s.unitLabelPlural || s.unitLabel || '',
+                    otherInMoney: !!s.otherAmountInMoney
                 });
             } catch (error) {
                 console.error('Error loading unit-donation config:', error);
@@ -1427,6 +1428,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                                 unitPrice={unitConfig.price}
                                 unitLabelSingular={unitConfig.labelSingular}
                                 unitLabelPlural={unitConfig.labelPlural}
+                                otherAmountInMoney={unitConfig.otherInMoney}
                             />
 
                             <PaymentFrequency

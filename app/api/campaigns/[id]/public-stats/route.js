@@ -540,6 +540,8 @@ export async function GET(request, { params }) {
                     unitLabel: publicScreenSettings?.unitLabel || null,
                     unitLabelPlural: publicScreenSettings?.unitLabelPlural || null,
                     unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,
+                    // In unit-donation mode, ask for money (not units) in the "other amount" field
+                    otherAmountInMoney: publicScreenSettings?.otherAmountInMoney ?? false,
                     minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null,
                     // Gauge display: show only the raised amount (no % / no goal line)
                     gaugeRaisedOnly: publicScreenSettings?.gaugeRaisedOnly ?? false,

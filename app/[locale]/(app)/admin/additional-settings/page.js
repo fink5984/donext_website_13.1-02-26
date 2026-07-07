@@ -43,6 +43,7 @@ export default function AdditionalSettingsPage() {
         unitLabel: '',
         unitLabelPlural: '',
         unitPrice: '',
+        otherAmountInMoney: false,
         minDonationAmount: '',
         gaugeRaisedOnly: false,
         showOnlyProgressCircle: false,
@@ -130,6 +131,7 @@ export default function AdditionalSettingsPage() {
                     unitLabel: data.unitLabel || '',
                     unitLabelPlural: data.unitLabelPlural || '',
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
+                    otherAmountInMoney: data.otherAmountInMoney ?? false,
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
                     gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
                     showOnlyProgressCircle: data.showOnlyProgressCircle ?? false,
@@ -620,6 +622,28 @@ export default function AdditionalSettingsPage() {
                                     כשמופעל, התורם בוחר כמה יחידות לתרום והסכום מחושב אוטומטית (כמות × מחיר ליחידה).
                                 </p>
                             </div>
+
+                            {formData.unitDonationMode && (
+                                <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                                    <label className={styles.toggleLabel}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.otherAmountInMoney}
+                                            onChange={(e) => handleInputChange('otherAmountInMoney', e.target.checked)}
+                                            className={styles.toggleInput}
+                                        />
+                                        <span className={styles.toggleSwitch}></span>
+                                        <span className={styles.toggleText}>
+                                            {formData.otherAmountInMoney
+                                                ? 'שדה "סכום אחר" מבקש סכום כספי (₪)'
+                                                : 'שדה "סכום אחר" מבקש כמות יחידות (ברירת מחדל)'}
+                                        </span>
+                                    </label>
+                                    <p className={styles.infoText}>
+                                        קובע איזה סוג ערך התורם יזין בשדה &quot;סכום אחר&quot;: כמות יחידות (כמו הסכומים המוגדרים מראש) או סכום כספי ישיר בשקלים. כפתורי הסכומים המוגדרים מראש ימשיכו להציג יחידות בכל מקרה.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
