@@ -411,9 +411,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const enteredAmountValue = formData.selectedAmount === 'custom'
         ? parseFloat(formData.customAmount) || 0
         : formData.selectedAmount || 0;
+    const isCustomMoneyAmount = formData.selectedAmount === 'custom' && unitConfig.active && unitConfig.otherInMoney;
     const providerAmount = (() => {
-        const isCustomMoney = formData.selectedAmount === 'custom' && unitConfig.active && unitConfig.otherInMoney;
-        if (!isCustomMoney) return enteredAmountValue;
+        if (!isCustomMoneyAmount) return enteredAmountValue;
         const paymentsCount = (formData.isUnlimited ? null : formData.numberOfPayments) || 1;
         if (isMonthlyCampaign && unitConfig.otherIsTotal) {
             // Entered value is the total, provider expects per-payment
@@ -792,8 +792,10 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             />
 
                             <DonationSummary
-                                isMonthlyCampaign={isMonthlyCampaign}
-                                selectedAmount={providerAmount}
+                                // הסיכום מנוסח לפי משמעות הסכום שהוזן: סכום כספי ב"סכום אחר" במצב
+                                // הכפלה = סכום לכל תשלום (נוסח חודשי), במצב חלוקה = סך הכל (נוסח פרויקטלי)
+                                isMonthlyCampaign={isCustomMoneyAmount ? !unitConfig.otherIsTotal : isMonthlyCampaign}
+                                selectedAmount={enteredAmountValue}
                                 numberOfPayments={formData.numberOfPayments}
                                 isUnlimited={formData.isUnlimited}
                                 campaign={campaign}
