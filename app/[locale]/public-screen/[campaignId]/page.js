@@ -708,7 +708,12 @@ export default function PublicCampaignScreen() {
     };
     // In unit mode raised/goal amounts are shown as units; otherwise as formatted currency.
     // Used for the donor / fundraiser / top-donor cards.
-    const formatAmount = (moneyValue) => unitMode ? formatUnits(moneyValue) : formatCurrency(moneyValue);
+    // Amounts below a single unit fall back to currency so cards never show a fraction of a unit.
+    const formatAmount = (moneyValue) => {
+        if (!unitMode) return formatCurrency(moneyValue);
+        const units = (Number(moneyValue) || 0) / unitPrice;
+        return units >= 1 ? formatUnits(moneyValue) : formatCurrency(moneyValue);
+    };
     // The main progress gauge ("raised so far" + goal) can opt out of units and show
     // money even while unit mode is on (settings.unitGaugeInMoney), leaving the cards in units.
     const gaugeInMoney = unitMode && !!settings?.unitGaugeInMoney;
