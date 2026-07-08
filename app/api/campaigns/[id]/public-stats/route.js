@@ -206,11 +206,26 @@ export async function GET(request, { params }) {
                         id: true,
                         isAnonymous: true,
                         displayName: true,
-                        person: true,
+                        person: {
+                            select: {
+                                firstName: true,
+                                lastName: true
+                            }
+                        },
                         fundraiser: {
-                            include: {
-                                person: true,
-                                user: true
+                            select: {
+                                person: {
+                                    select: {
+                                        firstName: true,
+                                        lastName: true
+                                    }
+                                },
+                                user: {
+                                    select: {
+                                        name: true,
+                                        phone: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -253,6 +268,9 @@ export async function GET(request, { params }) {
             take: 100 // Get more to calculate totals
         });
 
+        // תורם אנונימי: אסור שהשם האמיתי יצא מה-API הציבורי — המיסוך חייב להיות בצד השרת
+        const maskName = (isAnonymous, name) => (isAnonymous ? '' : name);
+
         // Calculate total per donor (using card-display amount) and sort
         const donorsWithTotals = topDonors.map(donor => {
             // סינון תרומות נמוכות גם ברשימת ה-Top Donors
@@ -268,17 +286,18 @@ export async function GET(request, { params }) {
                 return Math.max(max, donation.numberOfPayments || 1);
             }, 1);
 
+            const isAnonymous = donor.isAnonymous || false;
             return {
                 id: donor.id,
-                firstName: donor.person?.firstName || '',
-                lastName: donor.person?.lastName || '',
-                donorName: donor.displayName
-                    || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim()
+                firstName: maskName(isAnonymous, donor.person?.firstName || ''),
+                lastName: maskName(isAnonymous, donor.person?.lastName || ''),
+                donorName: maskName(isAnonymous, donor.displayName
+                    || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim())
                     || 'אנונימי',
                 totalAmount: total,
                 monthlyAmount: latestAmounts.monthlyDisplay,
                 numberOfPayments: totalPayments,
-                isAnonymous: donor.isAnonymous || false
+                isAnonymous
             };
         }).filter(d => d.totalAmount > 0)
           .sort((a, b) => b.totalAmount - a.totalAmount)
@@ -301,15 +320,16 @@ export async function GET(request, { params }) {
                 // Use the shared computation so display matches the gauge
                 const { totalAmount, monthlyDisplay } = computeAmounts(donation);
 
+                const isAnonymous = donation.donor?.isAnonymous || false;
                 return {
                     id: donation.id,
                     donorId: donation.donor?.id || null,
-                    donorName: donation.donor?.displayName
-                        || `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim()
+                    donorName: maskName(isAnonymous, donation.donor?.displayName
+                        || `${donation.donor?.person?.firstName || ''} ${donation.donor?.person?.lastName || ''}`.trim())
                         || 'אנונימי',
-                    donorFirstName: donation.donor?.person?.firstName || '',
-                    donorLastName: donation.donor?.person?.lastName || '',
-                    isAnonymous: donation.donor?.isAnonymous || false,
+                    donorFirstName: maskName(isAnonymous, donation.donor?.person?.firstName || ''),
+                    donorLastName: maskName(isAnonymous, donation.donor?.person?.lastName || ''),
+                    isAnonymous,
                     amount: monthlyAmount,
                     monthlyAmount: monthlyDisplay,
                     numberOfPayments: payments,
@@ -411,14 +431,15 @@ export async function GET(request, { params }) {
                 // Any unlimited donation marks the donor as having an unlimited commitment
                 const hasUnlimited = donor.donations.some(d => d.isUnlimited);
 
+                const isAnonymous = donor.isAnonymous || false;
                 return {
                     id: donor.id,
-                    firstName: donor.person?.firstName || '',
-                    lastName: donor.person?.lastName || '',
-                    donorName: donor.displayName
-                        || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim()
+                    firstName: maskName(isAnonymous, donor.person?.firstName || ''),
+                    lastName: maskName(isAnonymous, donor.person?.lastName || ''),
+                    donorName: maskName(isAnonymous, donor.displayName
+                        || `${donor.person?.firstName || ''} ${donor.person?.lastName || ''}`.trim())
                         || 'אנונימי',
-                    isAnonymous: donor.isAnonymous || false,
+                    isAnonymous,
                     totalAmount: totalAmount,
                     monthlyAmount: monthlyAmount,
                     numberOfPayments: totalPayments,
