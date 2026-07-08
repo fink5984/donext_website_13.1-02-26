@@ -110,7 +110,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         price: unitPrice,
                         labelSingular: s.unitLabel || '',
                         labelPlural: s.unitLabelPlural || s.unitLabel || '',
-                        otherInMoney: !!s.otherAmountInMoney
+                        otherInMoney: !!s.otherAmountInMoney,
+                        otherIsTotal: !!s.otherAmountIsTotal
                     });
                     
                     // Set credit card provider from campaign
@@ -389,22 +390,51 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
         setIsLoading(false);
     };
 
-    const saveDonation = async (additionalData = {}) => {
-        const selectedAmountValue = formData.selectedAmount === 'custom' 
-            ? parseFloat(formData.customAmount) || 0 
-            : formData.selectedAmount || 0;
-        
-        const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
-        
-        // Calculate monthly amount
-        let monthlyAmount;
-        if (isMonthlyCampaign) {
-            monthlyAmount = selectedAmountValue;
-        } else {
-            monthlyAmount = numberOfPayments && numberOfPayments > 0
-                ? selectedAmountValue / numberOfPayments
-                : selectedAmountValue;
+    // Convert the amount the donor picked into the per-payment amount that gets charged.
+    // Monthly campaigns treat it as per-payment, project campaigns as the total — except
+    // the custom "other amount" in money mode, where otherAmountIsTotal decides for BOTH
+    // campaign types: total (divided by payments) or per-payment (multiplied, the default).
+    const computeMonthlyAmount = (selectedAmountValue, numberOfPayments, isCustomAmount) => {
+        const dividedByPayments = numberOfPayments && numberOfPayments > 0
+            ? Math.round((selectedAmountValue / numberOfPayments) * 100) / 100
+            : selectedAmountValue;
+        if (isCustomAmount && unitConfig.active && unitConfig.otherInMoney) {
+            return unitConfig.otherIsTotal ? dividedByPayments : selectedAmountValue;
         }
+        return isMonthlyCampaign ? selectedAmountValue : dividedByPayments;
+    };
+
+    // Amount handed to the payment providers (and the summary), normalized to what they
+    // expect: monthly campaign → the per-payment amount, project campaign → the total.
+    // Only the custom money amount can carry flipped semantics (otherAmountIsTotal), so
+    // every other path passes the entered value through untouched, exactly as before.
+    const enteredAmountValue = formData.selectedAmount === 'custom'
+        ? parseFloat(formData.customAmount) || 0
+        : formData.selectedAmount || 0;
+    const providerAmount = (() => {
+        const isCustomMoney = formData.selectedAmount === 'custom' && unitConfig.active && unitConfig.otherInMoney;
+        if (!isCustomMoney) return enteredAmountValue;
+        const paymentsCount = (formData.isUnlimited ? null : formData.numberOfPayments) || 1;
+        if (isMonthlyCampaign && unitConfig.otherIsTotal) {
+            // Entered value is the total, provider expects per-payment
+            return Math.round((enteredAmountValue / paymentsCount) * 100) / 100;
+        }
+        if (!isMonthlyCampaign && !unitConfig.otherIsTotal) {
+            // Entered value is per-payment, provider expects the total
+            return enteredAmountValue * paymentsCount;
+        }
+        return enteredAmountValue;
+    })();
+
+    const saveDonation = async (additionalData = {}) => {
+        const selectedAmountValue = formData.selectedAmount === 'custom'
+            ? parseFloat(formData.customAmount) || 0
+            : formData.selectedAmount || 0;
+
+        const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
+
+        // Calculate monthly amount
+        const monthlyAmount = computeMonthlyAmount(selectedAmountValue, numberOfPayments, formData.selectedAmount === 'custom');
 
         // Determine which donor to use - existing donor from phone search or new donor
         const donorToUse = existingDonor ? existingDonor : selectedDonor;
@@ -484,16 +514,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
             : formData.selectedAmount || 0;
         
         const numberOfPayments = formData.isUnlimited ? null : formData.numberOfPayments;
-        
+
         // Calculate monthly amount
-        let monthlyAmount;
-        if (isMonthlyCampaign) {
-            monthlyAmount = selectedAmountValue;
-        } else {
-            monthlyAmount = numberOfPayments && numberOfPayments > 0
-                ? selectedAmountValue / numberOfPayments
-                : selectedAmountValue;
-        }
+        const monthlyAmount = computeMonthlyAmount(selectedAmountValue, numberOfPayments, formData.selectedAmount === 'custom');
 
         setIsLoading(true);
         setStripeError('');
@@ -770,7 +793,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
 
                             <DonationSummary
                                 isMonthlyCampaign={isMonthlyCampaign}
-                                selectedAmount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) || 0 : formData.selectedAmount || 0}
+                                selectedAmount={providerAmount}
                                 numberOfPayments={formData.numberOfPayments}
                                 isUnlimited={formData.isUnlimited}
                                 campaign={campaign}
@@ -804,7 +827,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                                     />
                                     <StripePaymentHandler
                                         ref={stripePaymentHandlerRef}
-                                        amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                        amount={providerAmount}
                                         donorName={getDonorFullName()}
                                         donorEmail={selectedDonor?.email || ''}
                                         donorPhone={selectedDonor?.phone || ''}
@@ -823,7 +846,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             <div style={{ display: formData.paymentMethod === 'CREDIT' ? 'block' : 'none' }}>
                                 <BevelPayment
                                     ref={bevelPaymentRef}
-                                    amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                    amount={providerAmount}
                                     campaignId={campaignId}
                                     donorName={getDonorFullName()}
                                     donorEmail={selectedDonor?.email || ''}
@@ -844,7 +867,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             <div style={{ display: formData.paymentMethod === 'CREDIT' ? 'block' : 'none' }}>
                                 <NedarimPlusPayment
                                     ref={nedarimPlusPaymentRef}
-                                    amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                    amount={providerAmount}
                                     campaignId={campaignId}
                                     donorName={getDonorFullName()}
                                     donorEmail={selectedDonor?.email || ''}
@@ -867,7 +890,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                             <div style={{ display: formData.paymentMethod === 'CREDIT' ? 'block' : 'none' }}>
                                 <KesherHkPayment
                                     ref={kesherHkPaymentRef}
-                                    amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                    amount={providerAmount}
                                     campaignId={campaignId}
                                     donorName={getDonorFullName()}
                                     donorFirstName={selectedDonor?.firstName || ''}
@@ -891,7 +914,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         <div style={{ display: formData.paymentMethod === 'PLEDGER' ? 'block' : 'none' }}>
                             <PledgerPayment
                                 ref={pledgerPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={providerAmount}
                                 campaignId={campaignId}
                                 donorName={getDonorFullName()}
                                 donorEmail={selectedDonor?.email || ''}
@@ -910,7 +933,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         <div style={{ display: formData.paymentMethod === 'MATBIA' ? 'block' : 'none' }}>
                             <MatbiaPayment
                                 ref={matbiaPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={providerAmount}
                                 campaignId={campaignId}
                                 donorName={getDonorFullName()}
                                 donorEmail={selectedDonor?.email || ''}
@@ -929,7 +952,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         <div style={{ display: formData.paymentMethod === 'OJC' ? 'block' : 'none' }}>
                             <OJCPayment
                                 ref={ojcPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={providerAmount}
                                 campaignId={campaignId}
                                 donorName={getDonorFullName()}
                                 donorEmail={selectedDonor?.email || ''}
@@ -948,7 +971,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         <div style={{ display: formData.paymentMethod === 'MERKAZ_HATZEDAKA' ? 'block' : 'none' }}>
                             <MerkazHatzedakaPayment
                                 ref={merkazHatzedakaPaymentRef}
-                                amount={formData.selectedAmount === 'custom' ? parseFloat(formData.customAmount) : formData.selectedAmount}
+                                amount={providerAmount}
                                 campaignId={campaignId}
                                 donorName={getDonorFullName()}
                                 donorEmail={selectedDonor?.email || ''}

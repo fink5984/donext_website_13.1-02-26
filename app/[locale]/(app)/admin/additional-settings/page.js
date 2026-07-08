@@ -44,6 +44,7 @@ export default function AdditionalSettingsPage() {
         unitLabelPlural: '',
         unitPrice: '',
         otherAmountInMoney: false,
+        otherAmountIsTotal: false,
         minDonationAmount: '',
         gaugeRaisedOnly: false,
         showOnlyProgressCircle: false,
@@ -132,6 +133,7 @@ export default function AdditionalSettingsPage() {
                     unitLabelPlural: data.unitLabelPlural || '',
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
                     otherAmountInMoney: data.otherAmountInMoney ?? false,
+                    otherAmountIsTotal: data.otherAmountIsTotal ?? false,
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
                     gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
                     showOnlyProgressCircle: data.showOnlyProgressCircle ?? false,
@@ -641,6 +643,28 @@ export default function AdditionalSettingsPage() {
                                     </label>
                                     <p className={styles.infoText}>
                                         קובע איזה סוג ערך התורם יזין בשדה &quot;סכום אחר&quot;: כמות יחידות (כמו הסכומים המוגדרים מראש) או סכום כספי ישיר בשקלים. כפתורי הסכומים המוגדרים מראש ימשיכו להציג יחידות בכל מקרה.
+                                    </p>
+                                </div>
+                            )}
+
+                            {formData.unitDonationMode && formData.otherAmountInMoney && (
+                                <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                                    <label className={styles.toggleLabel}>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.otherAmountIsTotal}
+                                            onChange={(e) => handleInputChange('otherAmountIsTotal', e.target.checked)}
+                                            className={styles.toggleInput}
+                                        />
+                                        <span className={styles.toggleSwitch}></span>
+                                        <span className={styles.toggleText}>
+                                            {formData.otherAmountIsTotal
+                                                ? 'הסכום שהוזן הוא סך התרומה הכולל (יתחלק בכמות התשלומים)'
+                                                : 'הסכום שהוזן הוא לכל תשלום (יוכפל בכמות התשלומים - ברירת מחדל)'}
+                                        </span>
+                                    </label>
+                                    <p className={styles.infoText}>
+                                        קובע איך הסכום הכספי שהתורם מזין בשדה &quot;סכום אחר&quot; מתייחס לכמות התשלומים: ברירת המחדל - הסכום נגבה בכל תשלום (סך הכל = סכום × תשלומים); כשמופעל - הסכום הוא סך התרומה הכולל והוא מתחלק בין התשלומים. חל גם על קמפיינים פרויקטליים.
                                     </p>
                                 </div>
                             )}

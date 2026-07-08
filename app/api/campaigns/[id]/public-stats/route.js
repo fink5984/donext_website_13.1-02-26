@@ -563,6 +563,9 @@ export async function GET(request, { params }) {
                     unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,
                     // In unit-donation mode, ask for money (not units) in the "other amount" field
                     otherAmountInMoney: publicScreenSettings?.otherAmountInMoney ?? false,
+                    // When the "other amount" is money: true = it's the TOTAL donation (divided by
+                    // the number of payments), false = it's charged per payment (multiplied)
+                    otherAmountIsTotal: publicScreenSettings?.otherAmountIsTotal ?? false,
                     minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null,
                     // Gauge display: show only the raised amount (no % / no goal line)
                     gaugeRaisedOnly: publicScreenSettings?.gaugeRaisedOnly ?? false,
