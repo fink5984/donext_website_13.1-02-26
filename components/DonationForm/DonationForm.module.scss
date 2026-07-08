@@ -642,6 +642,7 @@
 
       .summaryLine {
         color: var(--Text-disable-Text, #C5D7F8);
+        font-weight: 400;
       }
     }
 
@@ -653,8 +654,10 @@
       gap: 4px;
     }
 
+    // חד וקריא כמו מספר החודשים הפעיל - לא צבע רקע דהוי
     .summaryLine {
-      color: var(--Text-header, #9DBDF3);
+      color: var(--Text-able-Text, #0C4AD5);
+      font-weight: 600;
       display: flex;
       justify-content: center;
     }
