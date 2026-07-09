@@ -727,6 +727,27 @@ export default function PublicCampaignScreen() {
     // Display percentage - can be above 100%
     const displayPercent = statistics.progressPercentage;
 
+    // קונפטי עדין סביב עיגול היעד אחרי הגעה ל-100%. החלקיקים מפוזרים סביב טבעת
+    // העיגול בעזרת נוסחאות דטרמיניסטיות לפי אינדקס (ולא Math.random) כדי שהפיזור
+    // יהיה יציב בין רינדורים ולא יקפוץ בכל רענון נתונים.
+    const goalReached = statistics.progressPercentage >= 100;
+    const confettiColors = ['#f59e0b', '#fbbf24', '#34d399', '#60a5fa', '#f472b6', '#a78bfa'];
+    const confettiPieces = goalReached ? Array.from({ length: 28 }, (_, i) => {
+        const angle = ((i * 360) / 28 + ((i * 47) % 14) - 7) * (Math.PI / 180);
+        const radius = 45 + ((i * 29) % 9); // % מהמרכז - מעט מחוץ לטבעת העיגול
+        return {
+            left: 50 + radius * Math.cos(angle),
+            top: 50 + radius * Math.sin(angle),
+            size: 6 + ((i * 13) % 5),
+            delay: ((i * 37) % 32) / 10,
+            duration: 2.8 + ((i * 17) % 16) / 10,
+            driftX: ((i * 11) % 13) - 6,
+            maxOpacity: 0.55 + (((i * 7) % 3) / 10),
+            color: confettiColors[i % confettiColors.length],
+            round: i % 3 === 0
+        };
+    }) : [];
+
     // Gauge display option: show only the raised amount (no percentage, no "out of goal" line)
     const gaugeRaisedOnly = !!settings?.gaugeRaisedOnly;
     // Layout option: hide the time + statistics circles, leaving only the progress gauge
@@ -1328,6 +1349,27 @@ export default function PublicCampaignScreen() {
                                             style={{ '--ambient-color': data?.publicScreenRanksBackgroundColor || '#b45309' }}
                                             aria-hidden="true"
                                         />
+                                        {goalReached && (
+                                            <div className={styles.goalConfetti} aria-hidden="true">
+                                                {confettiPieces.map((p, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className={styles.confettiPiece}
+                                                        style={{
+                                                            left: `${p.left}%`,
+                                                            top: `${p.top}%`,
+                                                            '--size': `${p.size}px`,
+                                                            '--delay': `${p.delay}s`,
+                                                            '--duration': `${p.duration}s`,
+                                                            '--drift-x': `${p.driftX}px`,
+                                                            '--max-opacity': p.maxOpacity,
+                                                            '--confetti-color': p.color,
+                                                            borderRadius: p.round ? '50%' : '1px'
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                         <svg viewBox="0 0 200 200" className={styles.gaugeSvg}>
                                             <defs>
                                                 {/* Clip path for circle */}

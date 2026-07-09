@@ -688,6 +688,50 @@
     }
 }
 
+/* קונפטי עדין סביב עיגול היעד - מוצג רק אחרי הגעה ל-100% מהיעד.
+   חלקיקים קטנים בשקיפות נמוכה שמרחפים לאט סביב הטבעת, נכנסים ונעלמים
+   בהדרגה כדי שהאפקט יורגש בלי למשוך את העין מהמספרים. */
+.goalConfetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.confettiPiece {
+    position: absolute;
+    width: var(--size, 6px);
+    height: calc(var(--size, 6px) * 1.6);
+    background: var(--confetti-color, #f59e0b);
+    opacity: 0;
+    animation: confettiFloat var(--duration, 5s) ease-in-out var(--delay, 0s) infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes confettiFloat {
+    0% {
+        transform: translate3d(0, 8px, 0) rotate(0deg) scale(0.7);
+        opacity: 0;
+    }
+    25% {
+        opacity: var(--max-opacity, 0.5);
+    }
+    70% {
+        opacity: calc(var(--max-opacity, 0.5) * 0.7);
+    }
+    100% {
+        transform: translate3d(var(--drift-x, 4px), -30px, 0) rotate(220deg) scale(1);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .confettiPiece {
+        animation: none;
+        opacity: 0;
+    }
+}
+
 .wave {
     animation: wave 3s ease-in-out infinite;
     transition: d 2s cubic-bezier(0.4, 0, 0.2, 1);
