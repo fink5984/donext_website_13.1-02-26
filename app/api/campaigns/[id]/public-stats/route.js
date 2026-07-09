@@ -233,8 +233,7 @@ export async function GET(request, { params }) {
             },
             orderBy: {
                 created_at: 'desc'
-            },
-            take: 1000 // Get up to 1000 donations for display
+            }
         });
 
         // Get top donors (by total donation amount)
