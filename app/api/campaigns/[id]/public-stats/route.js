@@ -309,6 +309,16 @@ export async function GET(request, { params }) {
         const progressPercentage = targetAmount > 0 ? (progressBase / targetAmount) * 100 : 0;
         const remainingAmount = Math.max(targetAmount - progressBase, 0);
 
+        // יעד בונוס: סכום נוסף מעבר ליעד המקורי. מוצג לסירוגין בעיגול היעד אחרי
+        // שהקמפיין עבר 100% מהיעד המקורי - הלקוח מציג את מה שנאסף מעבר ליעד המקורי
+        // מתוך סכום הבונוס. מוכפל בחודשים כמו היעד הרגיל, כדי ששניהם באותה סקאלה.
+        const bonusGoalBase = publicScreenSettings?.bonusGoalEnabled && publicScreenSettings?.bonusGoalAmount != null
+            ? Number(publicScreenSettings.bonusGoalAmount)
+            : 0;
+        const bonusTargetAmount = bonusGoalBase > 0
+            ? (isMonthlyCampaign ? bonusGoalBase * monthsCalculation : bonusGoalBase)
+            : 0;
+
         // Format recent donations for response (סינון תרומות נמוכות מהדרגה התחתונה אם מוגדר HIDE)
         const formattedRecentDonations = recentDonations
             .filter(donation => !isLowDonation(donation))
@@ -568,6 +578,8 @@ export async function GET(request, { params }) {
                     minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null,
                     // Gauge display: show only the raised amount (no % / no goal line)
                     gaugeRaisedOnly: publicScreenSettings?.gaugeRaisedOnly ?? false,
+                    // Bonus goal: alternate the gauge with bonus-goal progress once past 100%
+                    bonusGoalEnabled: publicScreenSettings?.bonusGoalEnabled ?? false,
                     // Hide the time + statistics circles, leaving only the progress gauge
                     showOnlyProgressCircle: publicScreenSettings?.showOnlyProgressCircle ?? false
                 },
@@ -575,6 +587,7 @@ export async function GET(request, { params }) {
                     totalCollected: totalCollected,
                     monthlyCollected: monthlyCollected,
                     targetAmount: targetAmount,
+                    bonusTargetAmount: bonusTargetAmount,
                     remainingAmount: remainingAmount,
                     progressPercentage: Math.round(progressPercentage * 100) / 100,
                     donorCount: donorCount,

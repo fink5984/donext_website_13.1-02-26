@@ -23,7 +23,9 @@ export default function AdditionalSettingsPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    
+    // היעד המקורי של הקמפיין (לתצוגה בלבד, ליד הגדרת יעד הבונוס)
+    const [baseGoal, setBaseGoal] = useState(0);
+
     // State for form fields
     const [formData, setFormData] = useState({
         publicScreenRanks: [],
@@ -48,6 +50,8 @@ export default function AdditionalSettingsPage() {
         minDonationAmount: '',
         gaugeRaisedOnly: false,
         showOnlyProgressCircle: false,
+        bonusGoalEnabled: false,
+        bonusGoalAmount: '',
         bankName: '',
         bankBranch: '',
         bankAccountNumber: '',
@@ -113,6 +117,7 @@ export default function AdditionalSettingsPage() {
             const response = await fetchWithAuth(`/api/campaigns/${campaignId}/additional-settings`);
             if (response.ok) {
                 const data = await response.json();
+                setBaseGoal(Number(data.baseGoal) || 0);
                 setFormData({
                     publicScreenRanks: data.publicScreenRanks || [],
                     publicScreenAbout: data.publicScreenAbout || '',
@@ -137,6 +142,8 @@ export default function AdditionalSettingsPage() {
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
                     gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
                     showOnlyProgressCircle: data.showOnlyProgressCircle ?? false,
+                    bonusGoalEnabled: data.bonusGoalEnabled ?? false,
+                    bonusGoalAmount: data.bonusGoalAmount != null ? String(data.bonusGoalAmount) : '',
                     bankName: data.bankName || '',
                     bankBranch: data.bankBranch || '',
                     bankAccountNumber: data.bankAccountNumber || '',
@@ -736,6 +743,65 @@ export default function AdditionalSettingsPage() {
                             </span>
                         </label>
                     </div>
+                </div>
+
+                {/* יעד בונוס */}
+                <div className={styles.settingsSection}>
+                    <h2><ScreensIcon className={styles.sectionTitleIcon} />יעד בונוס</h2>
+                    <p className={styles.sectionDesc}>
+                        יעד הבונוס הוא סכום נוסף מעבר ליעד המקורי. כשהקמפיין עובר 100% מהיעד המקורי,
+                        עיגול ההתקדמות במסך הציבורי יתחלף כל 10 שניות בין תצוגת היעד המקורי לבין תצוגת
+                        יעד הבונוס - שמציגה רק את מה שנאסף מעבר ליעד המקורי, מתוך סכום הבונוס.
+                    </p>
+
+                    <div className={styles.toggleContainer}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.bonusGoalEnabled}
+                                onChange={(e) => handleInputChange('bonusGoalEnabled', e.target.checked)}
+                                className={styles.toggleInput}
+                            />
+                            <span className={styles.toggleSwitch}></span>
+                            <span className={styles.toggleText}>
+                                {formData.bonusGoalEnabled
+                                    ? 'יעד בונוס מופעל'
+                                    : 'יעד בונוס כבוי (ברירת מחדל)'}
+                            </span>
+                        </label>
+                    </div>
+
+                    {formData.bonusGoalEnabled && (
+                        <div className={styles.contactForm} style={{ marginTop: '1rem' }}>
+                            <div className={styles.formGroup}>
+                                <label>היעד המקורי (₪)</label>
+                                <input
+                                    type="text"
+                                    value={baseGoal > 0 ? baseGoal.toLocaleString('he-IL') : 'לא הוגדר יעד'}
+                                    disabled
+                                    className={styles.input}
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>יעד בונוס (₪) - סכום נוסף מעבר ליעד המקורי</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="any"
+                                    placeholder="לדוגמה: 50,000"
+                                    value={formData.bonusGoalAmount}
+                                    onChange={(e) => handleInputChange('bonusGoalAmount', e.target.value)}
+                                    className={styles.input}
+                                />
+                            </div>
+                            {baseGoal > 0 && Number(formData.bonusGoalAmount) > 0 && (
+                                <p className={styles.infoText}>
+                                    בתצוגת הבונוס במסך הציבורי יוצג הסכום שנאסף מעבר ל-{baseGoal.toLocaleString('he-IL')} ₪,
+                                    מתוך יעד בונוס של {Number(formData.bonusGoalAmount).toLocaleString('he-IL')} ₪.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* לוגואים בבאנר העליון */}

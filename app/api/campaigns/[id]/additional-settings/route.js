@@ -15,6 +15,19 @@ export async function GET(request, { params }) {
             where: { campaignId: campaignId }
         });
 
+        // היעד המקורי של הקמפיין - לתצוגה ליד הגדרת יעד הבונוס (אותו חישוב כמו במסך הציבורי)
+        const [campaignGoal, screenSettingGoal] = await Promise.all([
+            prisma.campaign.findUnique({
+                where: { id: campaignId },
+                select: { targetAmount: true }
+            }),
+            prisma.campaignScreenSetting.findUnique({
+                where: { campaignId },
+                select: { goal: true }
+            })
+        ]);
+        const baseGoal = Number(screenSettingGoal?.goal || campaignGoal?.targetAmount || 0);
+
         // אם אין הגדרות, נחזיר ערכים ריקים
         if (!settings) {
             return NextResponse.json({
@@ -38,6 +51,9 @@ export async function GET(request, { params }) {
                 minDonationAmount: null,
                 gaugeRaisedOnly: false,
                 showOnlyProgressCircle: false,
+                bonusGoalEnabled: false,
+                bonusGoalAmount: null,
+                baseGoal,
                 publicScreenHeaderLogos: [],
                 bankName: '',
                 bankBranch: '',
@@ -72,6 +88,9 @@ export async function GET(request, { params }) {
             minDonationAmount: settings.minDonationAmount != null ? Number(settings.minDonationAmount) : null,
             gaugeRaisedOnly: settings.gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: settings.showOnlyProgressCircle ?? false,
+            bonusGoalEnabled: settings.bonusGoalEnabled ?? false,
+            bonusGoalAmount: settings.bonusGoalAmount != null ? Number(settings.bonusGoalAmount) : null,
+            baseGoal,
             publicScreenHeaderLogos: settings.headerLogos || [],
             bankName: settings.bankName || '',
             bankBranch: settings.bankBranch || '',
@@ -97,7 +116,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitGaugeInMoney, unitLabel, unitLabelPlural, unitPrice, otherAmountInMoney, otherAmountIsTotal, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitGaugeInMoney, unitLabel, unitLabelPlural, unitPrice, otherAmountInMoney, otherAmountIsTotal, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, bonusGoalEnabled, bonusGoalAmount, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -147,6 +166,8 @@ export async function PUT(request, { params }) {
             minDonationAmount: toPositiveNumber(minDonationAmount),
             gaugeRaisedOnly: gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: showOnlyProgressCircle ?? false,
+            bonusGoalEnabled: bonusGoalEnabled ?? false,
+            bonusGoalAmount: toPositiveNumber(bonusGoalAmount),
             headerLogos: Array.isArray(publicScreenHeaderLogos) ? publicScreenHeaderLogos : [],
             bankName: bankName?.trim() || null,
             bankBranch: bankBranch?.trim() || null,
