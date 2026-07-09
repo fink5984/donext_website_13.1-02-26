@@ -764,23 +764,18 @@
     to { opacity: 1; }
 }
 
-/* תווית "יעד בונוס" בראש עיגול היעד כשמוצגת ההתקדמות אל יעד הבונוס */
-.bonusGoalLabel {
-    display: inline-block;
-    font-size: 1rem;
+/* שורת "היעד הנוסף" בתצוגת הבונוס - מודגשת מעט יותר משורת האחוז מעליה */
+.bonusExtendedTarget {
     font-weight: 700;
-    color: #b45309;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 9999px;
-    padding: 0.2rem 0.9rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.2rem;
 }
+
 
 .gaugePercent {
     font-size: 3rem;
     font-weight: 800;
     color: #1e293b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     line-height: 1;
 }
 
@@ -791,10 +786,10 @@
 }
 
 .gaugeAmount {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 2rem;
+    font-weight: 800;
     color: #1e293b;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.75rem;
 }
 
 /* Odometer-style rolling number (gauge "raised so far"). Digit chars roll
@@ -836,7 +831,7 @@
 
 @media (min-width: 768px) {
     .gaugeAmount {
-        font-size: 1.75rem;
+        font-size: 2.25rem;
     }
 }
 
@@ -3021,7 +3016,7 @@ a.donateInfoValue:hover {
     }
 
     .gaugeAmount {
-        font-size: 1.3rem;
+        font-size: 1.7rem;
     }
 
     .gaugeTarget {
@@ -3274,7 +3269,7 @@ a.donateInfoValue:hover {
     }
 
     .gaugeAmount {
-        font-size: 1.2rem;
+        font-size: 1.55rem;
     }
 
     .middleStatsCircle {
@@ -3333,7 +3328,7 @@ a.donateInfoValue:hover {
     }
     
     .gaugeAmount {
-        font-size: 0.9rem;
+        font-size: 1.15rem;
     }
     
     .tab {

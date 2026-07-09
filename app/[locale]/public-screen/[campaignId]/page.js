@@ -92,23 +92,6 @@ export default function PublicCampaignScreen() {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
 
-    // יעד בונוס: כשהקמפיין עבר 100% מהיעד המקורי ומוגדר יעד בונוס, עיגול היעד
-    // מתחלף כל 10 שניות בין תצוגת היעד המקורי לתצוגת ההתקדמות אל יעד הבונוס.
-    const [showBonusGoal, setShowBonusGoal] = useState(false);
-    const bonusGoalActive = !!(
-        data?.settings?.bonusGoalEnabled &&
-        Number(data?.statistics?.bonusTargetAmount) > 0 &&
-        (data?.statistics?.progressPercentage || 0) >= 100
-    );
-    useEffect(() => {
-        if (!bonusGoalActive) {
-            setShowBonusGoal(false);
-            return;
-        }
-        const interval = setInterval(() => setShowBonusGoal(prev => !prev), 10000);
-        return () => clearInterval(interval);
-    }, [bonusGoalActive]);
-
     // Confetti burst while the thank-you overlay is visible (same feel as campaign 179).
     useEffect(() => {
         if (!showThankYou) return;
@@ -174,8 +157,8 @@ export default function PublicCampaignScreen() {
             hideFundraisers: 'הסתר מתרימים',
             outOfGoal: 'מתוך יעד של',
             outOfMonthlyGoal: 'מתוך יעד חודשי של',
-            outOfBonusGoal: 'מתוך יעד בונוס של',
-            bonusGoal: 'יעד בונוס',
+            originalGoal: 'היעד המקורי',
+            additionalGoal: 'יעד בונוס',
             raisedSoFar: 'עד כה נתרם',
             perMonth: 'לחודש',
             timeToStart: 'זמן לתחילה',
@@ -264,8 +247,8 @@ export default function PublicCampaignScreen() {
             hideFundraisers: 'Hide fundraisers',
             outOfGoal: 'out of a goal of',
             outOfMonthlyGoal: 'out of a monthly goal of',
-            outOfBonusGoal: 'out of a bonus goal of',
-            bonusGoal: 'Bonus goal',
+            originalGoal: 'Original goal',
+            additionalGoal: 'Bonus goal',
             raisedSoFar: 'Raised so far',
             perMonth: '/ month',
             timeToStart: 'Time to start',
@@ -737,28 +720,37 @@ export default function PublicCampaignScreen() {
     };
     // The main progress gauge ("raised so far" + goal) can opt out of units and show
     // money even while unit mode is on (settings.unitGaugeInMoney), leaving the cards in units.
+    // Gauge amounts are rounded to whole shekels - no agorot on the main gauge.
     const gaugeInMoney = unitMode && !!settings?.unitGaugeInMoney;
-    const formatGaugeAmount = (moneyValue) => gaugeInMoney ? formatCurrency(moneyValue) : formatAmount(moneyValue);
+    const formatGaugeAmount = (moneyValue) => {
+        const wholeValue = Math.round(Number(moneyValue) || 0);
+        return gaugeInMoney ? formatCurrency(wholeValue) : formatAmount(wholeValue);
+    };
 
     // When a monthly campaign is displayed in monthly units (monthsCalculation === 1), every amount on the page
     // represents a monthly figure. We append "לחודש" next to amounts so it stays unambiguous for viewers.
     const isMonthlyUnitMode = campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1;
-    // יעד הבונוס הוא תוספת מעבר ליעד המקורי: בתצוגת הבונוס מוצג רק מה שנאסף
-    // מעבר ליעד המקורי (bonusCollected) מתוך סכום הבונוס עצמו, לא הסכום הכולל.
+    // יעד הבונוס הוא תוספת מעבר ליעד המקורי. אחרי שהקמפיין עובר 100% מהיעד המקורי,
+    // העיגול עובר לתצוגת בונוס קבועה: האחוז הגדול נשאר מול היעד המקורי, ומתחת לסכום
+    // מוצגים היעד המקורי (ללא אחוז) וסכום יעד הבונוס עצמו. מילוי הנוזל עובר לסקאלת
+    // היעד המורחב (מקורי + בונוס) כדי לשקף את הדרך שנותרה ליעד הנוסף.
     const bonusTargetAmount = Number(statistics.bonusTargetAmount) || 0;
-    const bonusCollected = Math.max(statistics.totalCollected - (statistics.targetAmount || 0), 0);
-    const bonusPercentage = bonusTargetAmount > 0 ? (bonusCollected / bonusTargetAmount) * 100 : 0;
-    const gaugeShowsBonus = bonusGoalActive && showBonusGoal;
-    const activePercentage = gaugeShowsBonus ? bonusPercentage : statistics.progressPercentage;
+    const bonusGoalEnabled = !!(settings?.bonusGoalEnabled && bonusTargetAmount > 0);
+    const bonusExtendedTarget = (statistics.targetAmount || 0) + bonusTargetAmount;
+    const bonusPercentage = bonusExtendedTarget > 0 ? (statistics.totalCollected / bonusExtendedTarget) * 100 : 0;
+    const gaugeShowsBonus = bonusGoalEnabled && (statistics.progressPercentage || 0) >= 100;
     // progressPercent for visual fill (capped at 100 for the wave)
-    const progressPercent = Math.min(activePercentage, 100);
+    const progressPercent = Math.min(gaugeShowsBonus ? bonusPercentage : statistics.progressPercentage, 100);
     // Display percentage - can be above 100%
-    const displayPercent = activePercentage;
+    const displayPercent = statistics.progressPercentage;
 
     // קונפטי עדין סביב עיגול היעד אחרי הגעה ל-100%. החלקיקים מפוזרים סביב טבעת
     // העיגול בעזרת נוסחאות דטרמיניסטיות לפי אינדקס (ולא Math.random) כדי שהפיזור
     // יהיה יציב בין רינדורים ולא יקפוץ בכל רענון נתונים.
-    const goalReached = statistics.progressPercentage >= 100;
+    // כשיעד בונוס מופעל - הקונפטי מופיע רק אחרי הגעה ליעד הבונוס (היעד המורחב).
+    const goalReached = bonusGoalEnabled
+        ? bonusExtendedTarget > 0 && statistics.totalCollected >= bonusExtendedTarget
+        : statistics.progressPercentage >= 100;
     const confettiColors = ['#f59e0b', '#fbbf24', '#34d399', '#60a5fa', '#f472b6', '#a78bfa'];
     const confettiPieces = goalReached ? Array.from({ length: 28 }, (_, i) => {
         const angle = ((i * 360) / 28 + ((i * 47) % 14) - 7) * (Math.PI / 180);
@@ -1434,11 +1426,6 @@ export default function PublicCampaignScreen() {
                                         
                                         {/* Text overlay - keyed by view so switching to/from the bonus goal fades in */}
                                         <div className={styles.gaugeContent} key={gaugeShowsBonus ? 'bonus' : 'main'}>
-                                            {gaugeShowsBonus && (
-                                                <div className={styles.bonusGoalLabel}>
-                                                    🎯 {t('bonusGoal')}
-                                                </div>
-                                            )}
                                             {/* When "raised only" is set we drop the percentage and the goal line,
                                                 showing a "raised so far" label above just the raised amount. */}
                                             {gaugeRaisedOnly ? (
@@ -1451,17 +1438,24 @@ export default function PublicCampaignScreen() {
                                                 </div>
                                             )}
                                             <div className={styles.gaugeAmount}>
-                                                <OdometerNumber value={formatGaugeAmount(gaugeShowsBonus ? bonusCollected : statistics.totalCollected)} />
+                                                <OdometerNumber value={formatGaugeAmount(statistics.totalCollected)} />
                                             </div>
-                                            {!gaugeRaisedOnly && (
+                                            {!gaugeRaisedOnly && (gaugeShowsBonus ? (
+                                                <>
+                                                    <div className={styles.gaugeTarget}>
+                                                        {t('originalGoal')} {formatGaugeAmount(statistics.targetAmount)}
+                                                    </div>
+                                                    <div className={`${styles.gaugeTarget} ${styles.bonusExtendedTarget}`}>
+                                                        {t('additionalGoal')} {formatGaugeAmount(bonusTargetAmount)}
+                                                    </div>
+                                                </>
+                                            ) : (
                                                 <div className={styles.gaugeTarget}>
-                                                    {gaugeShowsBonus
-                                                        ? t('outOfBonusGoal')
-                                                        : (campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
-                                                            ? t('outOfMonthlyGoal')
-                                                            : t('outOfGoal'))} {formatGaugeAmount(gaugeShowsBonus ? bonusTargetAmount : statistics.targetAmount)}
+                                                    {campaign?.donationType === 'monthly' && (statistics.monthsCalculation || 1) === 1
+                                                        ? t('outOfMonthlyGoal')
+                                                        : t('outOfGoal')} {formatGaugeAmount(statistics.targetAmount)}
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

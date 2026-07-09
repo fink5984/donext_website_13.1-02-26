@@ -750,8 +750,9 @@ export default function AdditionalSettingsPage() {
                     <h2><ScreensIcon className={styles.sectionTitleIcon} />יעד בונוס</h2>
                     <p className={styles.sectionDesc}>
                         יעד הבונוס הוא סכום נוסף מעבר ליעד המקורי. כשהקמפיין עובר 100% מהיעד המקורי,
-                        עיגול ההתקדמות במסך הציבורי יתחלף כל 10 שניות בין תצוגת היעד המקורי לבין תצוגת
-                        יעד הבונוס - שמציגה רק את מה שנאסף מעבר ליעד המקורי, מתוך סכום הבונוס.
+                        עיגול ההתקדמות במסך הציבורי עובר לתצוגת יעד בונוס קבועה: הסכום הכולל שנאסף,
+                        האחוז מהיעד המקורי, והיעד הנוסף (היעד המקורי + הבונוס). כשיעד בונוס מופעל,
+                        הקונפטי סביב העיגול יופיע רק אחרי הגעה ליעד הנוסף.
                     </p>
 
                     <div className={styles.toggleContainer}>
@@ -796,8 +797,8 @@ export default function AdditionalSettingsPage() {
                             </div>
                             {baseGoal > 0 && Number(formData.bonusGoalAmount) > 0 && (
                                 <p className={styles.infoText}>
-                                    בתצוגת הבונוס במסך הציבורי יוצג הסכום שנאסף מעבר ל-{baseGoal.toLocaleString('he-IL')} ₪,
-                                    מתוך יעד בונוס של {Number(formData.bonusGoalAmount).toLocaleString('he-IL')} ₪.
+                                    בתצוגת הבונוס במסך הציבורי יוצגו: האחוז מהיעד המקורי, הסכום הכולל שנאסף,
+                                    היעד המקורי ({baseGoal.toLocaleString('he-IL')} ₪) ויעד הבונוס ({Number(formData.bonusGoalAmount).toLocaleString('he-IL')} ₪).
                                 </p>
                             )}
                         </div>

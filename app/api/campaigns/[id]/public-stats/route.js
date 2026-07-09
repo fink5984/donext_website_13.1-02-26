@@ -309,9 +309,10 @@ export async function GET(request, { params }) {
         const progressPercentage = targetAmount > 0 ? (progressBase / targetAmount) * 100 : 0;
         const remainingAmount = Math.max(targetAmount - progressBase, 0);
 
-        // יעד בונוס: סכום נוסף מעבר ליעד המקורי. מוצג לסירוגין בעיגול היעד אחרי
-        // שהקמפיין עבר 100% מהיעד המקורי - הלקוח מציג את מה שנאסף מעבר ליעד המקורי
-        // מתוך סכום הבונוס. מוכפל בחודשים כמו היעד הרגיל, כדי ששניהם באותה סקאלה.
+        // יעד בונוס: סכום נוסף מעבר ליעד המקורי. אחרי שהקמפיין עבר 100% מהיעד המקורי
+        // עיגול היעד עובר לתצוגת בונוס קבועה: הסכום הכולל שנאסף, האחוז מהיעד המקורי,
+        // ו"היעד הנוסף" (יעד מקורי + בונוס). הקונפטי במצב זה מופיע רק אחרי הגעה
+        // ליעד הנוסף. מוכפל בחודשים כמו היעד הרגיל, כדי ששניהם באותה סקאלה.
         const bonusGoalBase = publicScreenSettings?.bonusGoalEnabled && publicScreenSettings?.bonusGoalAmount != null
             ? Number(publicScreenSettings.bonusGoalAmount)
             : 0;
