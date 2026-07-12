@@ -26,7 +26,7 @@ import { StripeCardFields } from './StripeCardFields';
 import { StripePaymentHandler } from './StripePaymentHandler';
 import { useTranslations, useLocale } from 'next-intl';
 
-const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, initialAmount, isOpen, onClose, onSuccess }) => {
+const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, initialAmount, isOpen, onClose, onSuccess, hideDonorDetails = false }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const [isLoading, setIsLoading] = useState(false);
@@ -749,6 +749,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         onDonorChange={handleDonorChange}
                         isAnonymous={formData.isAnonymous}
                         onAnonymousChange={(checked) => setFormData(prev => ({ ...prev, isAnonymous: checked }))}
+                        hideDonorDetails={hideDonorDetails}
                     />
                     
                     {isLoadingData ? (
@@ -1005,7 +1006,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     {/* בחירת מתרים - מופיע תמיד כשהגיעו לטופס ללא הפנייה ממתרים דרך ה-URL.
                         אם נמצא תורם קיים עם מתרים, הערך הראשוני נקבע אוטומטית ב-searchDonor.
                         תפריט מותאם עם חיפוש וגלילה פנימית כדי לא לגלוש מגבולות הטופס. */}
-                    {!initialFundraiserId && fundraisers.length > 0 && (() => {
+                    {!hideDonorDetails && !initialFundraiserId && fundraisers.length > 0 && (() => {
                         const selectedFundraiserName = fundraisers.find(f => f.id === selectedFundraiserId)?.name;
                         const normalizedSearch = fundraiserSearch.trim().toLowerCase();
                         const filteredFundraisers = normalizedSearch
@@ -1091,7 +1092,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                     })()}
                     
                     {/* Show selected fundraiser name */}
-                    {initialFundraiserId && fundraisers.length > 0 && (
+                    {!hideDonorDetails && initialFundraiserId && fundraisers.length > 0 && (
                         <div className={styles.paymentMethodSection}>
                             <div className={styles.row}>
                                 <label className={`${styles.label} headline-3`}>
@@ -1114,7 +1115,9 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         </div>
                     )}
                     
-                    <NoteInputPublic value={formData.note} onChange={handleNoteChange} />
+                    {!hideDonorDetails && (
+                        <NoteInputPublic value={formData.note} onChange={handleNoteChange} />
+                    )}
                     
                     <ValidationWrapperPublic
                         selectedDonor={selectedDonor}

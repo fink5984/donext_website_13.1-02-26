@@ -2854,6 +2854,7 @@ export default function PublicCampaignScreen() {
                 fundraiserId={selectedDonationFundraiserId}
                 initialAmount={initialDonationAmount}
                 isOpen={isDonationFormOpen}
+                hideDonorDetails={showDonationDetails === false}
                 onClose={() => {
                     setIsDonationFormOpen(false);
                     setSelectedDonationFundraiserId(null);

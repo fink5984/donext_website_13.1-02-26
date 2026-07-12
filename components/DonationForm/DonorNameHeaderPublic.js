@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import styles from './DonationForm.module.scss';
 
-const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange }) => {
+const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, hideDonorDetails = false }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRtl = locale === 'he';
@@ -193,6 +193,7 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
             
             {/* Display / receipt name box, with the anonymity toggle inside it.
                 When anonymous is on, the field shows "בעילום שם" and is locked. */}
+            {!hideDonorDetails && (
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -281,6 +282,7 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                     </label>
                 </div>
             </div>
+            )}
         </div>
     );
 };
