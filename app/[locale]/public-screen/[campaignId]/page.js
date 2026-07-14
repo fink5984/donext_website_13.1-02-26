@@ -64,7 +64,10 @@ export default function PublicCampaignScreen() {
     const campaignId = params?.campaignId;
     const locale = params?.locale || 'he';
     const fundraiserId = searchParams.get('fundraiser');
-    
+    // המתרים מה-URL כמספר — משמש כברירת מחדל לשיוך תרומות גם במצב "אודות בלבד"
+    // (showDonationDetails=false), שבו טאב המתרימים מוסתר ו-selectedFundraiser לא נקבע.
+    const urlFundraiserId = fundraiserId && !Number.isNaN(parseInt(fundraiserId)) ? parseInt(fundraiserId) : null;
+
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -2851,7 +2854,7 @@ export default function PublicCampaignScreen() {
             {/* Add Donation Form Modal */}
             <DonationFormPublic
                 campaignId={campaignId}
-                fundraiserId={selectedDonationFundraiserId}
+                fundraiserId={selectedDonationFundraiserId ?? urlFundraiserId}
                 initialAmount={initialDonationAmount}
                 isOpen={isDonationFormOpen}
                 hideDonorDetails={showDonationDetails === false}

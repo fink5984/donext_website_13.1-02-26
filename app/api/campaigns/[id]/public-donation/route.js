@@ -51,6 +51,21 @@ export async function POST(request, { params }) {
             );
         }
 
+        // אימות המתרים: מזהה שמגיע מקישור (?fundraiser=) יכול להיות שגוי או של קמפיין אחר -
+        // במקרה כזה נתעלם ממנו במקום להכשיל את שמירת התרומה (התשלום כבר בוצע בשלב הזה).
+        let validFundraiserId = fundraiserId && !Number.isNaN(parseInt(fundraiserId)) ? parseInt(fundraiserId) : null;
+        if (validFundraiserId) {
+            const fundraiserRecord = await prisma.fundraiser.findFirst({
+                where: {
+                    id: validFundraiserId,
+                    campaignId: parseInt(campaignId),
+                    deleted_at: null
+                },
+                select: { id: true }
+            });
+            if (!fundraiserRecord) validFundraiserId = null;
+        }
+
         let donorRecord;
 
         // אם הפרונטאנד לא העביר existingDonorId, נחפש בכל זאת בצד השרת תורם קיים
@@ -99,7 +114,7 @@ export async function POST(request, { params }) {
 
             // אם התורם תרם דרך קישור של מתרים מסוים והוא משויך כעת למתרים אחר -
             // לעדכן את השיוך למתרים שדרכו תרם בפועל. גם isAnonymous מתעדכן אם השתנה.
-            const incomingFundraiserId = fundraiserId ? parseInt(fundraiserId) : null;
+            const incomingFundraiserId = validFundraiserId;
             const updates = {};
             if (incomingFundraiserId && donorRecord.fundraiserId !== incomingFundraiserId) {
                 updates.fundraiserId = incomingFundraiserId;
@@ -133,7 +148,7 @@ export async function POST(request, { params }) {
                 data: {
                     campaignId: parseInt(campaignId),
                     personId: personRecord.id,
-                    fundraiserId: fundraiserId ? parseInt(fundraiserId) : null,
+                    fundraiserId: validFundraiserId,
                     isAnonymous: isAnonymous || false,
                     displayName: displayName || null,
                     active: true

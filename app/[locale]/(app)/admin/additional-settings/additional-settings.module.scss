@@ -820,6 +820,24 @@
     }
 }
 
+// תפריט בחירת מתרים לקישור אישי
+.fundraiserLinkSelect {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--Border-Radius-sm, 8px);
+    font-size: 13px;
+    font-family: var(--font-ping), sans-serif;
+    color: var(--Text-able-Text, #0C4AD5);
+    background: white;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+        border-color: var(--Donor-default, #0C4AD5);
+    }
+}
+
 .copyButton {
     padding: 8px 16px;
     background: var(--Donor-default, #0C4AD5);

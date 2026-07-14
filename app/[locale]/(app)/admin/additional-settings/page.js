@@ -61,6 +61,11 @@ export default function AdditionalSettingsPage() {
 
     // State for copied link notification
     const [linkCopied, setLinkCopied] = useState(false);
+
+    // בחירת מתרים להצגת קישור אישי לדף הציבורי (?fundraiser=)
+    const [fundraisersList, setFundraisersList] = useState([]);
+    const [selectedLinkFundraiserId, setSelectedLinkFundraiserId] = useState('');
+    const [fundraiserLinkCopied, setFundraiserLinkCopied] = useState(false);
     
     // State for ranks input
     const [newRank, setNewRank] = useState({ name: '', amount: '', image: '' });
@@ -109,6 +114,24 @@ export default function AdditionalSettingsPage() {
         if (campaignId) {
             fetchSettings();
         }
+    }, [campaignId]);
+
+    // טעינת רשימת המתרימים לתפריט הקישור האישי
+    useEffect(() => {
+        if (!campaignId) return;
+        setSelectedLinkFundraiserId('');
+        const fetchFundraisers = async () => {
+            try {
+                const res = await fetchWithAuth('/api/fundraisers?profile=names');
+                if (res?.ok) {
+                    const json = await res.json();
+                    setFundraisersList(json?.data || []);
+                }
+            } catch (e) {
+                // no-op: התפריט פשוט יישאר ריק
+            }
+        };
+        fetchFundraisers();
     }, [campaignId]);
 
     const fetchSettings = async () => {
@@ -500,6 +523,49 @@ export default function AdditionalSettingsPage() {
                                         {linkCopied ? '✓ הועתק!' : '📋 העתק'}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {formData.isEnabled && fundraisersList.length > 0 && (
+                            <div className={styles.publicScreenLink}>
+                                <span className={styles.linkLabel}>קישור אישי למתרים (התרומות דרכו יירשמו על שמו):</span>
+                                <div className={styles.linkContainer}>
+                                    <select
+                                        className={styles.fundraiserLinkSelect}
+                                        value={selectedLinkFundraiserId}
+                                        onChange={(e) => {
+                                            setSelectedLinkFundraiserId(e.target.value);
+                                            setFundraiserLinkCopied(false);
+                                        }}
+                                    >
+                                        <option value="">בחר מתרים...</option>
+                                        {fundraisersList.map(f => (
+                                            <option key={f.id} value={f.id}>
+                                                {`${f.first_name} ${f.last_name}`.trim() || `מתרים ${f.id}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {selectedLinkFundraiserId && (
+                                    <div className={styles.linkContainer} style={{ marginTop: '8px' }}>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/he/public-screen/${campaignId}?fundraiser=${selectedLinkFundraiserId}`}
+                                            className={styles.linkInput}
+                                        />
+                                        <button
+                                            className={styles.copyButton}
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/he/public-screen/${campaignId}?fundraiser=${selectedLinkFundraiserId}`);
+                                                setFundraiserLinkCopied(true);
+                                                setTimeout(() => setFundraiserLinkCopied(false), 2000);
+                                            }}
+                                        >
+                                            {fundraiserLinkCopied ? '✓ הועתק!' : '📋 העתק'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

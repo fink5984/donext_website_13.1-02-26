@@ -46,6 +46,9 @@ async function getFundraisers(params) {
     if (profile === 'light') {
         return getFundraisersLight(campaignId, sortField, sortDirection, offset, limit);
     }
+    if (profile === 'names') {
+        return getFundraiserNames(campaignId);
+    }
 
     if (count === 'true') {
         return getFundraisersWithDonorCount(campaignId);
@@ -110,6 +113,29 @@ async function getFundraiserStatus(fundraiserId) {
             status_forecast: fundraiser.statusForecast
         }] : []
     };
+}
+
+// רשימה קלה של כל המתרימים בקמפיין (מזהה + שם בלבד) - לתפריטי בחירה
+async function getFundraiserNames(campaignId) {
+    const fundraisers = await prisma.fundraiser.findMany({
+        where: {
+            campaignId: campaignId,
+            deleted_at: null,
+            person: { status: null }
+        },
+        select: {
+            id: true,
+            person: { select: { firstName: true, lastName: true } }
+        }
+    });
+    const data = fundraisers
+        .map(f => ({
+            id: f.id,
+            first_name: f.person?.firstName || '',
+            last_name: f.person?.lastName || ''
+        }))
+        .sort((a, b) => `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, 'he'));
+    return { data, total: data.length };
 }
 
 async function getFundraisersLight(campaignId, sortField, sortDirection, offset, limit) {
