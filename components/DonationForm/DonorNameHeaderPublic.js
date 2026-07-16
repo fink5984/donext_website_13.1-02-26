@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import styles from './DonationForm.module.scss';
 
-const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, hideDonorDetails = false, showAddress = false }) => {
+const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, hideDonorDetails = false, showAddress = false, campaignId = null }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRtl = locale === 'he';
@@ -280,6 +280,24 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                             }}
                         />
                     </div>
+                </div>
+            )}
+
+            {/* Campaign 207 only: the coin (matbea) is mailed to the address entered
+                above, so warn the donor to fill it in accurately */}
+            {showAddress && Number(campaignId) === 207 && (
+                <div
+                    dir="rtl"
+                    style={{
+                        width: '100%',
+                        color: 'var(--Text-able-Text, #0C4AD5)',
+                        fontFamily: 'var(--font-ping)',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        textAlign: 'right'
+                    }}
+                >
+                    שימו לב! לכתובת זו תישלח המטבע — הקפידו על כתובת נכונה ומדויקת
                 </div>
             )}
 

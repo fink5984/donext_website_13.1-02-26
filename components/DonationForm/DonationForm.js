@@ -102,8 +102,12 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     const { campaign, stores } = useAppContext();
     const { ranksStore } = stores;
 
+    // השם האמיתי של תורם (פרטי + משפחה) - משמש כברירת מחדל לשם לתצוגה
+    const composeDonorName = (d) => `${d?.firstName || d?.first_name || ''} ${d?.lastName || d?.last_name || ''}`.trim();
+
     const [selectedDonor, setSelectedDonor] = useState(donor);
     const [isAnonymous, setIsAnonymous] = useState(donor?.isAnonymous || false);
+    const [displayName, setDisplayName] = useState(donor?.displayName ?? donation?.donor?.displayName ?? composeDonorName(donor));
     const [noteCompleted, setNoteCompleted] = useState(donation?.noteCompleted || false);
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [showAddNote, setShowAddNote] = useState(false);
@@ -255,7 +259,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
     useEffect(() => {
         setSelectedDonor(donor);
         setIsAnonymous(donor?.isAnonymous || false);
-    }, [donor]);
+        // שם לתצוגה: השם שנבחר בטופס הציבורי אם קיים, אחרת השם האמיתי של התורם
+        setDisplayName(donor?.displayName ?? donation?.donor?.displayName ?? composeDonorName(donor));
+    }, [donor, donation]);
 
     // עדכון פרטי הטופס כאשר donation prop משתנה
     useEffect(() => {
@@ -332,6 +338,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         setSelectedDonor(newDonor);
         // Update isAnonymous to match the newly selected donor's current setting
         setIsAnonymous(newDonor?.isAnonymous || false);
+        setDisplayName(newDonor?.displayName || composeDonorName(newDonor));
     };
 
     const fetchStripeKeys = async () => {
@@ -711,6 +718,11 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
         }
 
         setIsLoading(true);
+        // שם לתצוגה נשמר רק אם הוא שונה מהשם האמיתי; אחרת מנקים אותו (התצוגה תיפול לשם האמיתי)
+        const trimmedDisplayName = (displayName || '').trim();
+        const displayNameToSave = (!trimmedDisplayName || trimmedDisplayName === composeDonorName(selectedDonor))
+            ? null
+            : trimmedDisplayName;
         try {
             const response = await fetchWithAuth('/api/donations', {
                 method: 'POST',
@@ -727,6 +739,7 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     dedication: formData.dedication || null,
                     followUpDate: donation.followUpDate,
                     isAnonymous: isAnonymous,
+                    displayName: displayNameToSave,
                     mode: 'edit'
                 })
             });
@@ -738,6 +751,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                     const donorInStore = stores?.donorsStore?.donors?.find(d => d.id === selectedDonor.id);
                     if (donorInStore && isAnonymous !== undefined) {
                         donorInStore.isAnonymous = isAnonymous;
+                    }
+                    if (donorInStore) {
+                        donorInStore.displayName = displayNameToSave;
                     }
                     
                     await stores.donationsStore.fetchDonations();
@@ -1325,6 +1341,9 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                         onDonorChange={handleDonorChange}
                         isAnonymous={isAnonymous}
                         onAnonymousChange={setIsAnonymous}
+                        displayName={displayName}
+                        onDisplayNameChange={setDisplayName}
+                        showDisplayName={mode === 'edit'}
                     />
                     
                     {/* Full form - shown in both modes, readOnly in edit mode */}

@@ -762,6 +762,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         onAnonymousChange={(checked) => setFormData(prev => ({ ...prev, isAnonymous: checked }))}
                         hideDonorDetails={hideDonorDetails}
                         showAddress={requireAddress}
+                        campaignId={campaignId}
                     />
                     
                     {isLoadingData ? (

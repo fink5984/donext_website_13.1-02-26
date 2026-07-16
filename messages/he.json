@@ -1177,7 +1177,10 @@
     "noResults": "לא נמצאו תורמים",
     "minCharsRequired": "הקלד לפחות 2 תווים לחיפוש",
     "donorNameLabel": "שם התורם",
-    "showAnonymous": "הצג בעילום שם בדף הציבורי"
+    "showAnonymous": "הצג בעילום שם בדף הציבורי",
+    "displayNameLabel": "שם לתצוגה",
+    "displayNamePlaceholder": "השם שיוצג בדף הציבורי",
+    "anonymousName": "בעילום שם"
   },
   "fundraiserManagement": {
     "questionnaireStatus": "מצב שאלון",

@@ -313,8 +313,7 @@ const MerkazHatzedakaPayment = forwardRef(({
       Param2: 'provider:MERKAZ_HATZEDAKA',
       CallBack: `${window.location.origin}/api/payments/nedarim-plus/callback/${campaignId}`,
       CallBackMailError: '',
-      ForceUpdateMatching: '0',
-      ThirdPartyReceipt: '1'
+      ForceUpdateMatching: '0'
     };
 
     if (paymentType === 'HK') {

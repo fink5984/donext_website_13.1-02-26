@@ -69,6 +69,8 @@ export async function GET(request) {
             select: {
                 id: true,
                 expected: true,
+                isAnonymous: true,
+                displayName: true,
                 person: {
                     select: {
                         firstName: true,
@@ -109,7 +111,9 @@ export async function GET(request) {
                 lastName: donor.person?.lastName || '',
                 phone: donor.person?.mainMobile || donor.person?.secondaryMobile || donor.person?.phoneLandline || '',
                 address: address,
-                city: donor.person?.city?.name || ''
+                city: donor.person?.city?.name || '',
+                isAnonymous: donor.isAnonymous || false,
+                displayName: donor.displayName || null
             }
         });
 

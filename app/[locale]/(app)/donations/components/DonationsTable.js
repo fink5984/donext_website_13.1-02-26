@@ -223,7 +223,8 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
             lastName: donation.donor.person?.lastName || '',
             first_name: donation.donor.person?.firstName || '',
             last_name: donation.donor.person?.lastName || '',
-            isAnonymous: donation.donor?.isAnonymous || false
+            isAnonymous: donation.donor?.isAnonymous || false,
+            displayName: donation.donor?.displayName || null
         };
         setSelectedDonor(donorForForm);
         setSelectedDonation(donation);
@@ -1286,7 +1287,7 @@ const DonationsTable = observer(({ activeTab: activeTabProp, onTabChange } = {})
                 onConfirm={handleConfirmDeleteMultiple}
                 onCancel={handleCancelDeleteMultiple}
                 count={selectedDonations.length}
-ב                isLoading={isDeleting}
+                isLoading={isDeleting}
             />
             <FilterComponent
                 ref={filterRef}

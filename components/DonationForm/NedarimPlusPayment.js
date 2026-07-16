@@ -377,8 +377,7 @@ const NedarimPlusPayment = forwardRef(({
       Param2: 'provider:NEDARIM_PLUS',
       CallBack: `${window.location.origin}/api/payments/nedarim-plus/callback/${campaignId}`,
       CallBackMailError: '',
-      ForceUpdateMatching: '0',
-      ThirdPartyReceipt: '1'
+      ForceUpdateMatching: '0'
     };
 
     // Add Day parameter only for HK (standing order)

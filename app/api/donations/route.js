@@ -389,6 +389,7 @@ export async function GET(request) {
                         active: true,
                         trafficLightColor: true,
                         isAnonymous: true,
+                        displayName: true,
                         fundraiser: {
                             select: {
                                 id: true,
@@ -496,6 +497,7 @@ export async function GET(request) {
                             active: true,
                             trafficLightColor: true,
                             isAnonymous: true,
+                            displayName: true,
                             fundraiser: {
                                 select: {
                                     id: true,
@@ -734,7 +736,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, dedication, followUpDate, noteAssignee, isAnonymous, mode = 'add', transactionId } = body;
+        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, dedication, followUpDate, noteAssignee, isAnonymous, displayName, mode = 'add', transactionId } = body;
 
         // זיהוי המשתמש הנוכחי
         const currentUser = getCurrentUserFromRequest(request);
@@ -1015,6 +1017,16 @@ export async function POST(request) {
                 data: { isAnonymous: Boolean(isAnonymous) }
             });
             donation.donor.isAnonymous = Boolean(isAnonymous);
+        }
+
+        // עדכון שם לתצוגה על התורם אם נשלח (undefined = לא לגעת)
+        if (displayName !== undefined && donation?.donor) {
+            const cleanedDisplayName = (displayName || '').trim() || null;
+            await prisma.donor.update({
+                where: { id: donation.donor.id },
+                data: { displayName: cleanedDisplayName }
+            });
+            donation.donor.displayName = cleanedDisplayName;
         }
 
         // בדיקה ושליחה ל-Money API

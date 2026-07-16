@@ -22,7 +22,8 @@
     text-align: center;
 
     display: flex;
-    height: 70px;
+    min-height: 70px;
+    flex-shrink: 0;
     flex-direction: column;
     justify-content: center;
     align-items: center;

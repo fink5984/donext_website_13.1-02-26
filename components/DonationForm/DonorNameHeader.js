@@ -6,7 +6,7 @@ import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import DoNextLoader from '@/app/components/DoNextLoader';
 import { useTranslations, useLocale } from 'next-intl';
 
-const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange }) => {
+const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, displayName, onDisplayNameChange, showDisplayName = false }) => {
     const t = useTranslations('donorNameHeader');
     const locale = useLocale();
     const isRTL = locale === 'he';
@@ -298,6 +298,41 @@ const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange 
         </div>
     );
 
+    // שם לתצוגה (כמו בטופס הציבורי) - מוצג רק בעריכת תרומה.
+    // בעילום שם: מציג "בעילום שם" ונעול לעריכה עד שמכבים את המתג.
+    const displayNameField = showDisplayName ? (
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            width: '100%',
+            maxWidth: '360px',
+            marginTop: '10px'
+        }}>
+            <span className="table-2" style={{ color: 'var(--Text-Default, #6E99EC)' }}>
+                {t('displayNameLabel')}
+            </span>
+            <input
+                type="text"
+                value={isAnonymous ? t('anonymousName') : (displayName || '')}
+                onChange={(e) => onDisplayNameChange?.(e.target.value)}
+                readOnly={isAnonymous}
+                placeholder={t('displayNamePlaceholder')}
+                dir={isRTL ? 'rtl' : 'ltr'}
+                className={styles.donorInput}
+                style={{
+                    textAlign: 'center',
+                    height: '42px',
+                    fontSize: '15px',
+                    color: isAnonymous ? '#94a3b8' : undefined,
+                    backgroundColor: isAnonymous ? '#f1f5f9' : undefined,
+                    cursor: isAnonymous ? 'default' : 'text'
+                }}
+            />
+        </div>
+    ) : null;
+
     if (isEditing || !donor) {
         return (
             <div className={styles.donorNameHeader}>
@@ -368,6 +403,7 @@ const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange 
                     )}
                 </div>
                 {anonymousToggle}
+                {displayNameField}
             </div>
         );
     }
@@ -382,6 +418,7 @@ const DonorNameHeader = ({ donor, onDonorChange, isAnonymous, onAnonymousChange 
                 </button>
             </div>
             {anonymousToggle}
+            {displayNameField}
         </div>
     );
 };
