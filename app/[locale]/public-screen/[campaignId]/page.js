@@ -12,33 +12,64 @@ const ODOMETER_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 // Odometer-style number for the gauge "raised so far". Each digit is a vertical
 // strip 0-9 that slides (via CSS transform + transition) to the current digit, so
-// the number visibly rolls when it updates. Non-digit characters (commas, currency
-// symbol, unit label) render statically. Works for both money and unit strings.
-// Digits are keyed by position-from-the-right so trailing digits keep their DOM
-// node across updates and animate instead of remounting.
+// the number visibly rolls when it updates. Works for both money and unit strings.
+// The string is split into number runs and text runs: only number runs are broken
+// into per-digit spans (inside an LTR inline-flex group), while text runs (unit
+// labels, currency symbols) stay whole, so the bidi algorithm keeps RTL words in
+// the right visual order instead of reversing their letters.
+// Digits are keyed by position-from-the-right within their run so trailing digits
+// keep their DOM node across updates and animate instead of remounting.
 function OdometerNumber({ value, className }) {
-    const chars = String(value ?? '').split('');
-    const len = chars.length;
+    // Capture number runs: digits with internal separators (e.g. "1,234" / "19.2"),
+    // without swallowing a separator that belongs to the surrounding text.
+    const segments = String(value ?? '').split(/(\d(?:[\d.,]*\d)?)/g).filter((s) => s !== '');
     return (
         <span className={`${styles.odometer}${className ? ` ${className}` : ''}`}>
-            {chars.map((ch, i) => {
-                if (ch >= '0' && ch <= '9') {
-                    const digit = Number(ch);
-                    const posFromRight = len - i;
-                    return (
-                        <span key={`d${posFromRight}`} className={styles.odometerDigit}>
-                            <span
-                                className={styles.odometerStrip}
-                                style={{ transform: `translateY(-${digit}em)` }}
-                            >
-                                {ODOMETER_DIGITS.map((n) => (
-                                    <span key={n} className={styles.odometerCell}>{n}</span>
-                                ))}
+            {segments.map((seg, si) => {
+                if (!/^\d/.test(seg)) {
+                    // Word segments (unit labels) render as an inline-block with the
+                    // surrounding whitespace kept outside: the preferred line break is
+                    // between the number and the label, so when space runs out the whole
+                    // label drops to its own line instead of breaking mid-label. Symbol-only
+                    // segments (currency sign + bidi controls) stay plain inline text.
+                    if (/\p{L}/u.test(seg)) {
+                        const lead = seg.match(/^\s*/)[0];
+                        const trail = seg.match(/\s*$/)[0];
+                        return (
+                            <span key={`t${si}`}>
+                                {lead}
+                                <span className={styles.odometerText}>{seg.trim()}</span>
+                                {trail}
                             </span>
-                        </span>
-                    );
+                        );
+                    }
+                    return <span key={`t${si}`}>{seg}</span>;
                 }
-                return <span key={`c${i}`}>{ch === ' ' ? ' ' : ch}</span>;
+                const chars = seg.split('');
+                const len = chars.length;
+                return (
+                    <span key={`n${si}`} className={styles.odometerGroup}>
+                        {chars.map((ch, i) => {
+                            if (ch >= '0' && ch <= '9') {
+                                const digit = Number(ch);
+                                const posFromRight = len - i;
+                                return (
+                                    <span key={`d${posFromRight}`} className={styles.odometerDigit}>
+                                        <span
+                                            className={styles.odometerStrip}
+                                            style={{ transform: `translateY(-${digit}em)` }}
+                                        >
+                                            {ODOMETER_DIGITS.map((n) => (
+                                                <span key={n} className={styles.odometerCell}>{n}</span>
+                                            ))}
+                                        </span>
+                                    </span>
+                                );
+                            }
+                            return <span key={`c${i}`}>{ch}</span>;
+                        })}
+                    </span>
+                );
             })}
         </span>
     );
@@ -162,6 +193,8 @@ export default function PublicCampaignScreen() {
             outOfMonthlyGoal: 'מתוך יעד חודשי של',
             originalGoal: 'היעד המקורי',
             additionalGoal: 'יעד בונוס',
+            unitsRemaining: 'נשארו עוד',
+            goalReachedLabel: 'היעד הושג!',
             raisedSoFar: 'עד כה נתרם',
             perMonth: 'לחודש',
             timeToStart: 'זמן לתחילה',
@@ -252,6 +285,8 @@ export default function PublicCampaignScreen() {
             outOfMonthlyGoal: 'out of a monthly goal of',
             originalGoal: 'Original goal',
             additionalGoal: 'Bonus goal',
+            unitsRemaining: 'Still needed',
+            goalReachedLabel: 'Goal reached!',
             raisedSoFar: 'Raised so far',
             perMonth: '/ month',
             timeToStart: 'Time to start',
@@ -1474,6 +1509,43 @@ export default function PublicCampaignScreen() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Remaining-units circle: optional (settings.unitRemainingCircle), unit-mode
+                            campaigns with a goal only. Shows how many units are still missing to reach
+                            the goal; once the bonus view is active, remaining is measured against the
+                            extended (base + bonus) goal. */}
+                        {unitMode && !!settings?.unitRemainingCircle && (statistics.targetAmount || 0) > 0 && (() => {
+                            const accent = data?.publicScreenRanksBackgroundColor || '#b45309';
+                            const remainingTarget = gaugeShowsBonus ? bonusExtendedTarget : (statistics.targetAmount || 0);
+                            const remainingMoney = Math.max(0, remainingTarget - (statistics.totalCollected || 0));
+                            const remainingUnits = Math.ceil(remainingMoney / unitPrice);
+                            const remainingLabel = remainingUnits === 1 ? unitLabelSingular : unitLabelPlural;
+                            return (
+                                <div className={styles.middleStatsSection}>
+                                    <div
+                                        className={styles.middleStatsCircle}
+                                        style={{
+                                            '--accent': accent,
+                                            background: `radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0.65) 50%, ${accent}1f 100%)`,
+                                            borderColor: `${accent}33`
+                                        }}
+                                    >
+                                        <div className={styles.middleStatsGlow} style={{ background: `radial-gradient(circle, ${accent}55 0%, transparent 70%)` }} />
+                                        <div className={styles.middleStatsContent}>
+                                            <div className={styles.middleStatsIconWrap} style={{ background: `${accent}1a`, color: accent }}>
+                                                <span className={styles.middleStatsIcon}>{SVG_ICONS.trendingUp}</span>
+                                            </div>
+                                            <div className={styles.middleStatsTitle}>{t('unitsRemaining')}</div>
+                                            <div className={styles.middleStatsValue} style={{ color: accent }}>
+                                                {remainingUnits > 0
+                                                    ? `${new Intl.NumberFormat('he-IL').format(remainingUnits)} ${remainingLabel}`.trim()
+                                                    : t('goalReachedLabel')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Middle Circle - Dynamic Stats */}
                         {!showOnlyProgressCircle && dynamicStats.length > 0 && (() => {

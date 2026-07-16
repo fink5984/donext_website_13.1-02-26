@@ -45,6 +45,8 @@ export default function AdditionalSettingsPage() {
         unitLabel: '',
         unitLabelPlural: '',
         unitPrice: '',
+        unitRemainingCircle: false,
+        requireAddress: false,
         otherAmountInMoney: false,
         otherAmountIsTotal: false,
         minDonationAmount: '',
@@ -160,6 +162,8 @@ export default function AdditionalSettingsPage() {
                     unitLabel: data.unitLabel || '',
                     unitLabelPlural: data.unitLabelPlural || '',
                     unitPrice: data.unitPrice != null ? String(data.unitPrice) : '',
+                    unitRemainingCircle: data.unitRemainingCircle ?? false,
+                    requireAddress: data.requireAddress ?? false,
                     otherAmountInMoney: data.otherAmountInMoney ?? false,
                     otherAmountIsTotal: data.otherAmountIsTotal ?? false,
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
@@ -769,6 +773,32 @@ export default function AdditionalSettingsPage() {
                     </div>
                 </div>
 
+                {/* פרטי כתובת בטופס התרומה */}
+                <div className={styles.settingsSection}>
+                    <h2><EyeIcon className={styles.sectionTitleIcon} />פרטי כתובת בטופס התרומה</h2>
+                    <p className={styles.sectionDesc}>
+                        כשמופעל, טופס התרומה בדף הציבורי יבקש מהתורם גם את פרטי הכתובת (עיר, רחוב ומספר בית)
+                        והם יהיו שדות חובה. הפרטים נשמרים בכרטיס התורם.
+                    </p>
+
+                    <div className={styles.toggleContainer}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.requireAddress}
+                                onChange={(e) => handleInputChange('requireAddress', e.target.checked)}
+                                className={styles.toggleInput}
+                            />
+                            <span className={styles.toggleSwitch}></span>
+                            <span className={styles.toggleText}>
+                                {formData.requireAddress
+                                    ? 'מבקש פרטי כתובת בטופס התרומה (חובה)'
+                                    : 'ללא פרטי כתובת בטופס התרומה (ברירת מחדל)'}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 {/* תצוגת עיגול ההתקדמות במסך הציבורי */}
                 <div className={styles.settingsSection}>
                     <h2><ScreensIcon className={styles.sectionTitleIcon} />תצוגת עיגול ההתקדמות</h2>
@@ -809,6 +839,28 @@ export default function AdditionalSettingsPage() {
                             </span>
                         </label>
                     </div>
+
+                    {formData.unitMode && (
+                        <div className={styles.toggleContainer} style={{ marginTop: '1rem' }}>
+                            <label className={styles.toggleLabel}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.unitRemainingCircle}
+                                    onChange={(e) => handleInputChange('unitRemainingCircle', e.target.checked)}
+                                    className={styles.toggleInput}
+                                />
+                                <span className={styles.toggleSwitch}></span>
+                                <span className={styles.toggleText}>
+                                    {formData.unitRemainingCircle
+                                        ? 'מציג עיגול נוסף של "כמה יחידות נשארו"'
+                                        : 'ללא עיגול "כמה יחידות נשארו" (ברירת מחדל)'}
+                                </span>
+                            </label>
+                            <p className={styles.infoText}>
+                                כשמופעל, יוצג במסך הציבורי עיגול נוסף שמראה כמה יחידות עוד חסרות עד היעד (היעד ביחידות = היעד הכספי ÷ מחיר ליחידה). זמין רק בקמפיינים במצב תצוגת יחידות, ודורש יעד מוגדר לקמפיין.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* יעד בונוס */}

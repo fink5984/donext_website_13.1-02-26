@@ -6,7 +6,8 @@ const ValidationWrapperPublic = ({
     selectedDonor,
     formData,
     campaign,
-    onValidationStateChange
+    onValidationStateChange,
+    requireAddress = false
 }) => {
     const t = useTranslations('donationForm');
     const [showValidation, setShowValidation] = useState(false);
@@ -26,6 +27,13 @@ const ValidationWrapperPublic = ({
         // Check if donor has phone
         if (!selectedDonor.phone) {
             return t('phoneRequired');
+        }
+
+        // Address details - required only when the campaign opted in (settings.requireAddress)
+        if (requireAddress) {
+            if (!selectedDonor.city?.trim()) return t('cityRequired');
+            if (!selectedDonor.street?.trim()) return t('streetRequired');
+            if (!selectedDonor.houseNumber?.trim()) return t('houseNumberRequired');
         }
 
         const hasAmount = (formData.selectedAmount && formData.selectedAmount !== 'custom') ||
@@ -56,6 +64,12 @@ const ValidationWrapperPublic = ({
                 currentErrorFixed = true;
             } else if (validationMessage === t('phoneRequired') && selectedDonor && selectedDonor.phone) {
                 currentErrorFixed = true;
+            } else if (validationMessage === t('cityRequired') && selectedDonor?.city?.trim()) {
+                currentErrorFixed = true;
+            } else if (validationMessage === t('streetRequired') && selectedDonor?.street?.trim()) {
+                currentErrorFixed = true;
+            } else if (validationMessage === t('houseNumberRequired') && selectedDonor?.houseNumber?.trim()) {
+                currentErrorFixed = true;
             } else if (validationMessage === t('noAmountSelected')) {
                 const hasAmount = (formData.selectedAmount && formData.selectedAmount !== 'custom') ||
                     (formData.selectedAmount === 'custom' && formData.customAmount && parseFloat(formData.customAmount) > 0);
@@ -72,7 +86,7 @@ const ValidationWrapperPublic = ({
                 setValidationMessage("");
             }
         }
-    }, [formData, selectedDonor, campaign, showValidation, validationMessage, t]);
+    }, [formData, selectedDonor, campaign, requireAddress, showValidation, validationMessage, t]);
 
     // Update validation state
     useEffect(() => {
@@ -89,7 +103,7 @@ const ValidationWrapperPublic = ({
                 setValidationMessage(message || "");
             }
         });
-    }, [formData, selectedDonor, campaign]);
+    }, [formData, selectedDonor, campaign, requireAddress]);
 
     return (
         <>

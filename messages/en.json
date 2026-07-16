@@ -1813,7 +1813,13 @@
     "dedication": "Dedication",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
-    "phoneRequired": "Phone number is required"
+    "phoneRequired": "Phone number is required",
+    "city": "City",
+    "street": "Street",
+    "houseNumber": "House no.",
+    "cityRequired": "City is required",
+    "streetRequired": "Street is required",
+    "houseNumberRequired": "House number is required"
   },
   "donary": {
     "title": "Donary Integration",

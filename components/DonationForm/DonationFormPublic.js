@@ -41,6 +41,8 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
     const [minDonationAmount, setMinDonationAmount] = useState(null);
     // Unit-donation mode: the donor picks a number of units; the charged amount stays in money
     const [unitConfig, setUnitConfig] = useState({ active: false, price: 0, labelSingular: '', labelPlural: '' });
+    // Per-campaign option: the form also asks for address details (city/street/house) as required fields
+    const [requireAddress, setRequireAddress] = useState(false);
     
     // Existing donor state (found by phone)
     const [existingDonor, setExistingDonor] = useState(null);
@@ -113,6 +115,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         otherInMoney: !!s.otherAmountInMoney,
                         otherIsTotal: !!s.otherAmountIsTotal
                     });
+                    setRequireAddress(!!s.requireAddress);
                     
                     // Set credit card provider from campaign
                     if (campaignData?.creditCardProvider) {
@@ -438,6 +441,14 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
 
         // Determine which donor to use - existing donor from phone search or new donor
         const donorToUse = existingDonor ? existingDonor : selectedDonor;
+
+        // פרטי הכתובת מגיעים תמיד ממה שהוקלד בטופס (selectedDonor) - גם כשנמצא תורם
+        // קיים - כדי שהשרת יוכל לעדכן את הכתובת על כרטיס התורם.
+        const addressDetails = requireAddress ? {
+            city: selectedDonor?.city || null,
+            street: selectedDonor?.street || null,
+            houseNumber: selectedDonor?.houseNumber || null
+        } : {};
         
         // המתרים שייוחס לתרומה: זה שנבחר בתפריט/הגיע מ-URL/נטען מתורם קיים.
         // אם המשתמש בחר ידנית - הבחירה שלו גוברת על המתרים השמור על תורם קיים (השרת יעדכן בהתאם).
@@ -450,7 +461,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    donor: donorToUse,
+                    donor: { ...donorToUse, ...addressDetails },
                     existingDonorId: existingDonor?.id || null,
                     amount: monthlyAmount,
                     numberOfPayments: numberOfPayments,
@@ -750,6 +761,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         isAnonymous={formData.isAnonymous}
                         onAnonymousChange={(checked) => setFormData(prev => ({ ...prev, isAnonymous: checked }))}
                         hideDonorDetails={hideDonorDetails}
+                        showAddress={requireAddress}
                     />
                     
                     {isLoadingData ? (
@@ -1124,6 +1136,7 @@ const DonationFormPublic = ({ campaignId, fundraiserId: initialFundraiserId, ini
                         formData={formData}
                         campaign={campaign}
                         onValidationStateChange={setValidationState}
+                        requireAddress={requireAddress}
                     />
                     
                     <Button

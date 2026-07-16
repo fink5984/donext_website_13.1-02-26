@@ -753,7 +753,9 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    width: 100%;
+    /* Narrower than the circle diameter so long strings (unit labels) wrap
+       onto extra lines instead of spilling past the ring. */
+    width: 78%;
     z-index: 10;
     /* מופעל בכל החלפה בין תצוגת היעד הרגיל ליעד הבונוס (ה-key משתנה והתוכן נטען מחדש) */
     animation: gaugeContentFade 0.8s ease;
@@ -790,15 +792,34 @@
     font-weight: 800;
     color: #1e293b;
     margin-bottom: 0.75rem;
+    /* Tight lines so a wrapped amount + unit label still fits inside the ring */
+    line-height: 1.15;
 }
 
 /* Odometer-style rolling number (gauge "raised so far"). Digit chars roll
    vertically on update; commas / currency symbol / unit labels stay static. */
 .odometer {
+    /* Normal inline so the bidi algorithm orders text runs (RTL unit labels)
+       correctly and long unit labels can wrap onto a new line inside the gauge;
+       only the digit runs inside .odometerGroup are forced LTR. The number itself
+       never breaks mid-digits because the group is an atomic inline-flex. */
+    white-space: normal;
+}
+
+.odometerGroup {
     display: inline-flex;
     align-items: baseline;
     direction: ltr;
-    white-space: nowrap;
+    unicode-bidi: isolate;
+}
+
+/* Unit label rendered as one unbreakable-preferred block: when the line is too
+   narrow, the whole label wraps to its own line under the number instead of
+   breaking in the middle of the label. It can still wrap internally if the
+   label alone is wider than the gauge. */
+.odometerText {
+    display: inline-block;
+    max-width: 100%;
 }
 
 .odometerDigit {

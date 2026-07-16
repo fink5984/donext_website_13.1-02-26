@@ -11,6 +11,44 @@ function getLast9Digits(phone) {
     return digits.length >= 9 ? digits.slice(-9) : null;
 }
 
+// חיפוש או יצירת עיר לפי שם (אותו דפוס כמו בייבוא אקסל)
+async function findOrCreateCity(cityName) {
+    const normalizedName = typeof cityName === 'string' ? cityName.trim() : '';
+    if (!normalizedName) return null;
+    let city = await prisma.city.findFirst({ where: { name: normalizedName } });
+    if (!city) {
+        city = await prisma.city.create({ data: { name: normalizedName } });
+    }
+    return city;
+}
+
+// חיפוש או יצירת רחוב לפי שם בתוך עיר
+async function findOrCreateStreet(streetName, cityId) {
+    const normalizedName = typeof streetName === 'string' ? streetName.trim() : '';
+    if (!normalizedName || !cityId) return null;
+    let street = await prisma.street.findFirst({
+        where: { name: normalizedName, cityId }
+    });
+    if (!street) {
+        street = await prisma.street.create({ data: { name: normalizedName, cityId } });
+    }
+    return street;
+}
+
+// פרטי כתובת מהטופס הציבורי (כשהקמפיין מוגדר לבקש כתובת): מחזיר שדות עדכון
+// ל-person - עיר/רחוב נפתרים ל-IDs (עם יצירה בעת הצורך) ומספר בית כטקסט.
+async function resolveAddressUpdates(donor, fallbackCityId = null) {
+    const updates = {};
+    const cityRecord = await findOrCreateCity(donor?.city);
+    if (cityRecord) updates.cityId = cityRecord.id;
+    // הרחוב נקשר לעיר שהוקלדה, ואם לא הוקלדה - לעיר הקיימת על התורם
+    const streetRecord = await findOrCreateStreet(donor?.street, cityRecord?.id || fallbackCityId);
+    if (streetRecord) updates.streetId = streetRecord.id;
+    const houseNumber = typeof donor?.houseNumber === 'string' ? donor.houseNumber.trim() : '';
+    if (houseNumber) updates.houseNumber = houseNumber;
+    return updates;
+}
+
 export async function POST(request, { params }) {
     try {
         const { id: campaignId } = await params;
@@ -112,6 +150,9 @@ export async function POST(request, { params }) {
                 );
             }
 
+            // העיר הקיימת על התורם - נשמרת לפני עדכון ה-donor (שמחזיר רשומה בלי person)
+            const existingPersonCityId = donorRecord.person?.cityId ?? null;
+
             // אם התורם תרם דרך קישור של מתרים מסוים והוא משויך כעת למתרים אחר -
             // לעדכן את השיוך למתרים שדרכו תרם בפועל. גם isAnonymous מתעדכן אם השתנה.
             const incomingFundraiserId = validFundraiserId;
@@ -132,15 +173,28 @@ export async function POST(request, { params }) {
                     data: updates
                 });
             }
+
+            // פרטי כתובת שהוקלדו בטופס (בקמפיינים שמבקשים כתובת) מעדכנים את כרטיס התורם הקיים
+            if (donor && (donor.city || donor.street || donor.houseNumber)) {
+                const addressUpdates = await resolveAddressUpdates(donor, existingPersonCityId);
+                if (Object.keys(addressUpdates).length > 0) {
+                    await prisma.person.update({
+                        where: { id: donorRecord.personId },
+                        data: addressUpdates
+                    });
+                }
+            }
         } else {
             // אין תורם קיים תואם - יצירת תורם חדש לפי הפרטים מהטופס
+            const addressUpdates = await resolveAddressUpdates(donor);
             let personRecord = await prisma.person.create({
                 data: {
                     clientId: campaign.clientId,
                     firstName: donor.firstName,
                     lastName: donor.lastName || '',
                     email: donor.email || null,
-                    mainMobile: donor.phone || null
+                    mainMobile: donor.phone || null,
+                    ...addressUpdates
                 }
             });
 

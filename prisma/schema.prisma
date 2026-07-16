@@ -710,6 +710,8 @@ model PublicScreenSettings {
   unitLabel            String?   @map("unit_label")
   unitLabelPlural      String?   @map("unit_label_plural")
   unitPrice            Decimal?  @map("unit_price")
+  unitRemainingCircle  Boolean   @default(false) @map("unit_remaining_circle")
+  requireAddress       Boolean   @default(false) @map("require_address")
   otherAmountInMoney   Boolean   @default(false) @map("other_amount_in_money")
   otherAmountIsTotal   Boolean   @default(false) @map("other_amount_is_total")
   minDonationAmount    Decimal?  @map("min_donation_amount")

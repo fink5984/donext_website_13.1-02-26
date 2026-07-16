@@ -571,6 +571,10 @@ export async function GET(request, { params }) {
                     unitLabel: publicScreenSettings?.unitLabel || null,
                     unitLabelPlural: publicScreenSettings?.unitLabelPlural || null,
                     unitPrice: publicScreenSettings?.unitPrice != null ? Number(publicScreenSettings.unitPrice) : null,
+                    // Optional extra circle showing how many units remain until the goal
+                    unitRemainingCircle: publicScreenSettings?.unitRemainingCircle ?? false,
+                    // Donation form also asks for address details (city/street/house) as required fields
+                    requireAddress: publicScreenSettings?.requireAddress ?? false,
                     // In unit-donation mode, ask for money (not units) in the "other amount" field
                     otherAmountInMoney: publicScreenSettings?.otherAmountInMoney ?? false,
                     // When the "other amount" is money: true = it's the TOTAL donation (divided by

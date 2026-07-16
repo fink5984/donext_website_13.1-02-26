@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import styles from './DonationForm.module.scss';
 
-const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, hideDonorDetails = false }) => {
+const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousChange, hideDonorDetails = false, showAddress = false }) => {
     const t = useTranslations('donationForm');
     const locale = useLocale();
     const isRtl = locale === 'he';
@@ -15,6 +15,11 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
     const [lastName, setLastName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
+    // Address details (city / street / house number) - shown and required only
+    // when the campaign opted in (settings.requireAddress)
+    const [city, setCity] = useState('');
+    const [street, setStreet] = useState('');
+    const [houseNumber, setHouseNumber] = useState('');
     // Public display / receipt name: auto-filled from first + last name until the
     // donor edits it manually, after which we stop overriding their choice.
     const [displayName, setDisplayName] = useState('');
@@ -26,6 +31,9 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
         setLastName(donor?.lastName || '');
         setPhone(donor?.phone || '');
         setEmail(donor?.email || '');
+        setCity(donor?.city || '');
+        setStreet(donor?.street || '');
+        setHouseNumber(donor?.houseNumber || '');
         const composed = `${donor?.firstName || ''} ${donor?.lastName || ''}`.trim();
         setDisplayName(donor?.displayName || composed);
         setDisplayNameEdited(Boolean(donor?.displayName) && donor.displayName !== composed);
@@ -42,7 +50,10 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
             email: updates.email ?? email,
             first_name: nextFirst,
             last_name: nextLast,
-            displayName: nextDisplay
+            displayName: nextDisplay,
+            city: updates.city ?? city,
+            street: updates.street ?? street,
+            houseNumber: updates.houseNumber ?? houseNumber
         });
     };
 
@@ -87,6 +98,24 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
         const newEmail = e.target.value;
         setEmail(newEmail);
         updateDonor({ email: newEmail });
+    };
+
+    const handleCityChange = (e) => {
+        const newCity = e.target.value;
+        setCity(newCity);
+        updateDonor({ city: newCity });
+    };
+
+    const handleStreetChange = (e) => {
+        const newStreet = e.target.value;
+        setStreet(newStreet);
+        updateDonor({ street: newStreet });
+    };
+
+    const handleHouseNumberChange = (e) => {
+        const newHouseNumber = e.target.value;
+        setHouseNumber(newHouseNumber);
+        updateDonor({ houseNumber: newHouseNumber });
     };
 
     return (
@@ -190,7 +219,70 @@ const DonorNameHeaderPublic = ({ donor, onDonorChange, isAnonymous, onAnonymousC
                     />
                 </div>
             </div>
-            
+
+            {/* Address details row (city / street / house number) - only when the
+                campaign requires address collection; all fields are mandatory */}
+            {showAddress && (
+                <div style={{
+                    display: 'flex',
+                    width: '100%',
+                    gap: '16px',
+                    flexWrap: 'wrap'
+                }}>
+                    <div style={{
+                        flex: '2 1 30%',
+                        minWidth: '120px'
+                    }}>
+                        <input
+                            type="text"
+                            placeholder={requiredPlaceholder(t('city'))}
+                            value={city}
+                            onChange={handleCityChange}
+                            dir={isRtl ? 'rtl' : 'ltr'}
+                            className={styles.donorInput}
+                            required
+                            style={{
+                                textAlign: isRtl ? 'right' : 'left'
+                            }}
+                        />
+                    </div>
+                    <div style={{
+                        flex: '2 1 30%',
+                        minWidth: '120px'
+                    }}>
+                        <input
+                            type="text"
+                            placeholder={requiredPlaceholder(t('street'))}
+                            value={street}
+                            onChange={handleStreetChange}
+                            dir={isRtl ? 'rtl' : 'ltr'}
+                            className={styles.donorInput}
+                            required
+                            style={{
+                                textAlign: isRtl ? 'right' : 'left'
+                            }}
+                        />
+                    </div>
+                    <div style={{
+                        flex: '1 1 15%',
+                        minWidth: '90px'
+                    }}>
+                        <input
+                            type="text"
+                            placeholder={requiredPlaceholder(t('houseNumber'))}
+                            value={houseNumber}
+                            onChange={handleHouseNumberChange}
+                            dir={isRtl ? 'rtl' : 'ltr'}
+                            className={styles.donorInput}
+                            required
+                            style={{
+                                textAlign: isRtl ? 'right' : 'left'
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
             {/* Display / receipt name box, with the anonymity toggle inside it.
                 When anonymous is on, the field shows "בעילום שם" and is locked. */}
             {!hideDonorDetails && (

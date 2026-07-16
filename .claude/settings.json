@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python -c \"import json; data=json.load\\(open\\(r'c:\\\\Users\\\\User\\\\Desktop\\\\projects 0925\\\\donext_website_13.1_new\\\\messages\\\\he.json', encoding='utf-8'\\)\\); print\\(json.dumps\\(data.get\\('navigation', {}\\), ensure_ascii=False, indent=2\\)\\)\")",
       "WebFetch(domain:api.kesherhk.co.il)",
-      "WebFetch(domain:kesherhk.info)"
+      "WebFetch(domain:kesherhk.info)",
+      "Bash(ls \"/c/Program Files/Google/Chrome/Application/chrome.exe\" \"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" 2>/dev/null; echo \"---npx playwright---\"; cd \"c:/Users/User/Desktop/projects 0925/donext_website_13.1_new\" && ls node_modules/.bin/ 2>/dev/null | grep -i -E \"playwright|puppeteer|sass\" )",
+      "Read(//c/Program Files/Google/Chrome/Application/**)"
     ]
   }
 }

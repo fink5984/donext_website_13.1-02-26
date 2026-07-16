@@ -1839,7 +1839,13 @@
     "dedication": "הקדשה",
     "firstNameRequired": "שם פרטי הוא שדה חובה",
     "lastNameRequired": "שם משפחה הוא שדה חובה",
-    "phoneRequired": "טלפון הוא שדה חובה"
+    "phoneRequired": "טלפון הוא שדה חובה",
+    "city": "עיר",
+    "street": "רחוב",
+    "houseNumber": "מספר בית",
+    "cityRequired": "עיר היא שדה חובה",
+    "streetRequired": "רחוב הוא שדה חובה",
+    "houseNumberRequired": "מספר בית הוא שדה חובה"
   },
   "donary": {
     "title": "אינטגרציה עם Donary",
