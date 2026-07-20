@@ -26,7 +26,8 @@ function mapCampaignToSnakeCase(campaign) {
         campaign_type: campaign.campaignType,
         has_operators: campaign.hasOperators,
         is_event: campaign.isEvent,
-        comparison_campaign_id: campaign.comparisonCampaignId || null
+        comparison_campaign_id: campaign.comparisonCampaignId || null,
+        community_tab_enabled: campaign.communityTabEnabled || false
     };
 }
 
@@ -106,6 +107,9 @@ export async function PUT(request, { params }) {
         }
         if (Object.prototype.hasOwnProperty.call(data, 'defaultHokMonths')) {
             updateData.defaultHokMonths = (data.defaultHokMonths !== null && data.defaultHokMonths !== undefined && data.defaultHokMonths !== '') ? parseInt(data.defaultHokMonths) : null;
+        }
+        if (Object.prototype.hasOwnProperty.call(data, 'communityTabEnabled') || Object.prototype.hasOwnProperty.call(data, 'community_tab_enabled')) {
+            updateData.communityTabEnabled = Boolean(data.communityTabEnabled ?? data.community_tab_enabled);
         }
 
         const updatedCampaign = await prisma.campaign.update({

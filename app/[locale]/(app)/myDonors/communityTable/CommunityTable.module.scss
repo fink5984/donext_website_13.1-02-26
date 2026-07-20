@@ -1,0 +1,202 @@
+.wrapper {
+    width: 100%;
+    border-radius: var(--Border-Radius-lg, 12px);
+    background: var(--other-White, #FFF);
+    display: flex;
+    flex-direction: column;
+    gap: var(--Spacing-Spacing-5, 16px);
+    flex: 1;
+    padding: var(--Spacing-Spacing-6, 24px) var(--Spacing-Spacing-8, 32px);
+}
+
+.tableTitle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: var(--Spacing-Spacing-8, 32px);
+    justify-content: space-between;
+    position: relative;
+}
+
+.searchCenterWrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    min-width: 320px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    @media (max-width: 768px) {
+        position: static;
+        transform: none;
+    }
+}
+
+.table {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--Spacing-Spacing-4, 12px);
+}
+
+.tableHeader,
+.tableRow {
+    display: grid;
+    grid-template-columns: 40px 150fr 150fr 130fr 190fr 130fr 90px;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 18px 4px 12px;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 32px 1fr 1fr 90px;
+        padding: 6px 8px;
+
+        > *:nth-child(5),
+        > *:nth-child(6) {
+            display: none;
+        }
+    }
+}
+
+.tableHeader {
+    background: var(--Gray-Blue-35, #F6F9FC);
+    color: var(--table-Header, #0C4AD5);
+    height: 40px;
+    border-radius: var(--Border-Radius-sm, 8px);
+
+    @media (max-width: 768px) {
+        display: none;
+    }
+}
+
+.headerCell {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tableBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--Spacing-Spacing-4, 12px);
+}
+
+.tableRow {
+    color: var(--table-cell, #6E99EC);
+    border-radius: var(--Border-Radius-sm, 8px);
+    background: var(--table-default, #FFF);
+    box-shadow: 0px 39px 11px 0px rgba(168, 188, 230, 0.00), 0px 25px 10px 0px rgba(168, 188, 230, 0.01), 0px 14px 8px 0px rgba(168, 188, 230, 0.03), 0px 6px 6px 0px rgba(168, 188, 230, 0.04), 0px 2px 3px 0px rgba(168, 188, 230, 0.05);
+
+    @media (max-width: 768px) {
+        font-size: 12px;
+    }
+}
+
+.cell {
+    display: flex;
+    align-items: center;
+    padding: 10px var(--Spacing-Spacing-2, 4px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.heartCell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actionsCell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+}
+
+.actionButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--Bg-Button-hover-2, #EDF5FD);
+    color: var(--Icon-able-Icon, #0C4AD5);
+    cursor: pointer;
+
+    &:hover {
+        background: var(--Gray-Blue-70, #EDF5FD);
+    }
+}
+
+.noteWrapper {
+    position: relative;
+}
+
+.quickNotePopover {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 240px;
+    background: var(--other-White, #FFF);
+    border: 1px solid var(--Gray-Blue-60, #F6F9FC);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quickNoteInput {
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    border: 1px solid var(--Gray-Blue-60, #F6F9FC);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.quickNoteActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.quickNoteSave, .quickNoteCancel {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.quickNoteSave {
+    background: var(--Bg-Button-Primary, #0C4AD5);
+    color: #FFF;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+.quickNoteCancel {
+    background: transparent;
+    color: var(--Text-Default, #6E99EC);
+}
+
+.stateMessage {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--Text-Default, #6E99EC);
+}

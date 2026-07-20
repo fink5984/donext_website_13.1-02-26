@@ -38,6 +38,7 @@ import AlertDeleteDonorComponent from '../Alerts/DeleteDonor';
 import DonorAssignment from '../Alerts/DonorAssignment';
 import ChangeFund from '../Alerts/ChangeFund';
 import DonorsCards from './cards';
+import { isQuickNoteText } from '@/app/constants/quickNotes';
 import MobileDonorCard from './MobileDonorCard';
 import AddEdit from '../AddEdit/AddEdit';
 import AddFromContactsModal from '../components/AddFromContactsModal';
@@ -406,6 +407,7 @@ export default observer(function DonorsPage() {
             titlesAfter: filters.titlesAfter || [],
             fundraiserNames: filters.fundraiserNames || [],
             trafficColors: filters.trafficColors || [],
+            quickNotes: filters.quickNotes || [],
             expectedRange: (filters.expectedMin !== undefined || filters.expectedMax !== undefined)
                 ? { min: filters.expectedMin ?? 0, max: filters.expectedMax ?? 1000000 }
                 : (store.donorsStore.filters?.expectedRange || { min: 0, max: 1000000 }),
@@ -854,6 +856,21 @@ export default observer(function DonorsPage() {
         return donorNotes.some(n => n.note && n.followUpDate && !n.noteCompleted);
     };
 
+    // ההערה העדכנית ביותר עם תאריך טיפול (donorNotes מגיע ממוין desc לפי created_at מהשרת)
+    const getLatestNoteWithFollowUp = (donorNotes) => {
+        if (!donorNotes || donorNotes.length === 0) return null;
+        return donorNotes.find(n => n.note && n.followUpDate) || null;
+    };
+
+    const isNoteOverdue = (note) => {
+        if (!note || note.noteCompleted || !note.followUpDate) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const followUp = new Date(note.followUpDate);
+        followUp.setHours(0, 0, 0, 0);
+        return followUp < today;
+    };
+
     const renderDonorRow = (donor, index) => {
         const fundsList = fundraisersForSelect || fundraisers;
         const selectedFundraiser = fundsList.find(f => String(f.fundraiser_id ?? f.id) === String(donor.assigned_fundraiser_id));
@@ -1061,33 +1078,65 @@ export default observer(function DonorsPage() {
                     </Select>
                 </span>
                 <div className={`${styles.cell} ${styles.notesCell}`}>
-                    {donor.donorNotes && donor.donorNotes.some(n => n.note && n.followUpDate) && (
-                        <div 
-                            className={styles.notesIcon}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenEditForm(donor);
-                            }}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <IconTooltip
-                                icon={<>
-                                    <Note />
-                                    {hasDonorOverdueNotes(donor.donorNotes) ? (
-                                        <div className={styles.overdueDot}></div>
-                                    ) : hasDonorActiveNotes(donor.donorNotes) ? (
-                                        <div className={styles.unreadDot}></div>
-                                    ) : null}
-                                </>}
-                                text={donor.donorNotes.filter(n => n.note && n.followUpDate).map(n => {
-                                    let text = n.note;
-                                    text += `\n${t('followUpDate')} - ${new Date(n.followUpDate).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US')}`;
-                                    if (n.noteCompleted) text += ` ✓`;
-                                    return text;
-                                }).join(' | ')}
-                            />
-                        </div>
-                    )}
+                    {donor.donorNotes && donor.donorNotes.some(n => n.note && n.followUpDate) && (() => {
+                        const tooltipText = donor.donorNotes.filter(n => n.note && n.followUpDate).map(n => {
+                            let text = n.note;
+                            text += `\n${t('followUpDate')} - ${new Date(n.followUpDate).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US')}`;
+                            if (n.noteCompleted) text += ` ✓`;
+                            return text;
+                        }).join(' | ');
+                        const latestNote = getLatestNoteWithFollowUp(donor.donorNotes);
+                        const latestOverdue = isNoteOverdue(latestNote);
+
+                        // תגית הערה מהירה - רק כשההערה העדכנית ביותר היא הערה מהירה
+                        if (latestNote && isQuickNoteText(latestNote.note)) {
+                            return (
+                                <div
+                                    className={`${styles.quickNoteTag} ${latestOverdue ? styles.quickNoteTagOverdue : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEditForm(donor);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <IconTooltip
+                                        icon={<>
+                                            <span className={styles.quickNoteTagText}>{latestNote.note}</span>
+                                            {latestOverdue ? (
+                                                <div className={styles.overdueDot}></div>
+                                            ) : !latestNote.noteCompleted ? (
+                                                <div className={styles.unreadDot}></div>
+                                            ) : null}
+                                        </>}
+                                        text={tooltipText}
+                                    />
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div
+                                className={styles.notesIcon}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEditForm(donor);
+                                }}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <IconTooltip
+                                    icon={<>
+                                        <Note />
+                                        {hasDonorOverdueNotes(donor.donorNotes) ? (
+                                            <div className={styles.overdueDot}></div>
+                                        ) : hasDonorActiveNotes(donor.donorNotes) ? (
+                                            <div className={styles.unreadDot}></div>
+                                        ) : null}
+                                    </>}
+                                    text={tooltipText}
+                                />
+                            </div>
+                        );
+                    })()}
                 </div>
                 <div className={styles.actions}>
                     <div className={styles.hiddenActions}>

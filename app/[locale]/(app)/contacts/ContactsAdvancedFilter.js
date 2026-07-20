@@ -13,6 +13,7 @@ import SourceCreditIcon from '@/app/icons/sourceCreditCard.svg';
 import MultiRangeSlider from "../filter/multiRangeSlider/multiRangeSlider";
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import { getTagColor } from '@/app/utils/tagColors';
+import { QUICK_NOTE_OPTIONS } from '@/app/constants/quickNotes';
 
 /* ============ Searchable Multi-Select Dropdown ============ */
 function SearchableMultiSelect({ options, selected, onChange, placeholder, label, extraItems = [] }) {
@@ -200,6 +201,9 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
   // Traffic Light Colors
   const [selectedTrafficColors, setSelectedTrafficColors] = useState([]);
 
+  // Quick Notes (הערות מהירות)
+  const [selectedQuickNotes, setSelectedQuickNotes] = useState([]);
+
   // Age
   const [ageFrom, setAgeFrom] = useState('');
   const [ageTo, setAgeTo] = useState('');
@@ -348,8 +352,11 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     // Traffic Light Colors
     if (selectedTrafficColors.length > 0) filters.trafficColors = selectedTrafficColors;
 
+    // Quick Notes
+    if (selectedQuickNotes.length > 0) filters.quickNotes = selectedQuickNotes;
+
     return filters;
-  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, selectedTrafficColors]);
+  }, [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, selectedTrafficColors, selectedQuickNotes]);
 
   // Apply filters
   const handleApply = () => {
@@ -408,6 +415,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setAgeFrom('');
     setAgeTo('');
     setSelectedTrafficColors([]);
+    setSelectedQuickNotes([]);
     if (onReset) onReset();
   };
 
@@ -459,6 +467,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
     setAgeFrom(storeFilters.ageFrom ? String(storeFilters.ageFrom) : '');
     setAgeTo(storeFilters.ageTo ? String(storeFilters.ageTo) : '');
     setSelectedTrafficColors(storeFilters.trafficColors || []);
+    setSelectedQuickNotes(storeFilters.quickNotes || []);
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -521,7 +530,8 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       (isFundraiser ? 1 : 0) +
       (rating > 0 ? 1 : 0) +
       selectedContactMethods.length +
-      selectedTrafficColors.length,
+      selectedTrafficColors.length +
+      selectedQuickNotes.length,
     additional:
       selectedFatherNames.length +
       selectedMotherNames.length +
@@ -533,7 +543,7 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
       (ageTo ? 1 : 0) +
       selectedTagIds.length +
       (noTag ? 1 : 0),
-  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, noTag, selectedTrafficColors]);
+  }), [selectedFirstNames, selectedLastNames, selectedCities, selectedStreets, selectedHouseNumbers, selectedTitlesBefore, selectedTitlesAfter, selectedFundraisers, selectedCampaignIds, selectedSources, standingOrder, expectedRange, actualRange, donationAmountType, selectedPaymentMethods, vsExpected, isFundraiser, rating, selectedContactMethods, selectedFatherNames, selectedMotherNames, selectedGroomAt, selectedWifeNames, selectedSynagogues, noSynagogue, ageFrom, ageTo, selectedTagIds, noTag, selectedTrafficColors, selectedQuickNotes]);
 
   const totalFilterCount = tabCounts.personal + tabCounts.campaigns + tabCounts.additional;
 
@@ -957,6 +967,31 @@ const ContactsAdvancedFilter = forwardRef(function ContactsAdvancedFilter(
                     })}
                   </div>
                 </div>
+
+                {/* Quick Notes */}
+                {hideCampaigns && (
+                  <div className={styles.filterField}>
+                    <h4 className={styles.sectionHeading}>סינון לפי הערה מהירה</h4>
+                    <div className={styles.tagFilterPills}>
+                      {QUICK_NOTE_OPTIONS.map((opt) => {
+                        const isSelected = selectedQuickNotes.includes(opt.text);
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className={`${styles.tagFilterPill} ${isSelected ? styles.tagFilterPillSelected : ''}`}
+                            onClick={() => setSelectedQuickNotes(prev =>
+                              isSelected ? prev.filter(v => v !== opt.text) : [...prev, opt.text]
+                            )}
+                          >
+                            {isSelected && <span className={styles.checkmark}>✓</span>}
+                            <span>{opt.text}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

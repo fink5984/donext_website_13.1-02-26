@@ -6,6 +6,8 @@ import styles from "./myDonors.module.scss"
 import Cards from './cards/cards';
 import Table from './table/table';
 import TotalProgressBar from './TotalProgressBar/TotalProgressBar';
+import CommunityTable from './communityTable/CommunityTable';
+import CommunityTabSwitch from './CommunityTabSwitch/CommunityTabSwitch';
 import { useAppContext } from '@/app/components/AppContext';
 import { observer } from "mobx-react-lite";
 import { StoreContext } from "@/stores/StoreContext";
@@ -14,11 +16,13 @@ import { usePageTitle } from '@/app/hooks/usePageTitle';
 import AddEdit from '../AddEdit/AddEdit';
 import { formStore } from "@/app/stores/formStore";
 import Excel from '../Excel/Excel';
+import fetchWithAuth from '@/app/utils/fetchWithAuth';
 
 export default observer(function MyDonorsPage() {
     const t = useTranslations('myDonors');
+    const tCommunity = useTranslations('myDonors.community');
     usePageTitle(t('pageTitle'));
-    const { fundraiserId, campaignId, clientId } = useAppContext();
+    const { fundraiserId, campaignId, clientId, isAdminOrManager } = useAppContext();
     const store = useContext(StoreContext);
     const isCrowdfunding = store.campaign?.campaign_type === 'crowdfunding';
     const searchParams = useSearchParams();
@@ -28,6 +32,11 @@ export default observer(function MyDonorsPage() {
     const [isExcelOpen, setIsExcelOpen] = useState(false);
     const fundraiser = store.fundraisersStore.currentFundraiser;
     const campaign = store.campaign;
+    const communityEnabled = !!campaign?.community_tab_enabled;
+    const [activeTab, setActiveTab] = useState('mine');
+    // "כל הקהילה": תרומה מהירה מהטבלה - מעביר actingFundraiserId כדי שהשרת יעביר בעלות
+    const [communityActionDonor, setCommunityActionDonor] = useState(null);
+    const [isCommunityDonationOpen, setIsCommunityDonationOpen] = useState(false);
 
     // בדיקת query parameter לפתיחת טופס תרומה
     useEffect(() => {
@@ -79,6 +88,56 @@ export default observer(function MyDonorsPage() {
             store.donorsStore.showInactive = true; // החזרה לברירת מחדל
         };
     }, [campaignId, fundraiserId]);
+
+    // "כל הקהילה" - טוען את מאגר הקהילה כשעוברים לטאב, או כשהדגל/המתרים משתנים בזמן שהטאב פתוח
+    useEffect(() => {
+        if (activeTab === 'community' && communityEnabled && fundraiserId) {
+            store.donorsStore.fetchCommunityDonors(fundraiserId);
+        }
+    }, [activeTab, communityEnabled, fundraiserId]);
+
+    // תורמים שהיו מוקצים לי ונעקפו ע"י מתרים אחר - מוצגים "כבוי" ב"רשימה שלי" (סעיף 5.1)
+    useEffect(() => {
+        if (communityEnabled && fundraiserId) {
+            store.donorsStore.fetchOverriddenDonors(fundraiserId);
+        }
+    }, [communityEnabled, fundraiserId]);
+
+    const handleToggleHeart = (donorId) => {
+        store.donorsStore.toggleHeart(donorId, fundraiserId);
+    };
+
+    const handleCommunityQuickDonation = (donor) => {
+        setCommunityActionDonor(donor);
+        setIsCommunityDonationOpen(true);
+    };
+
+    const handleCommunityDonationSuccess = () => {
+        if (communityActionDonor) {
+            store.donorsStore.removeFromCommunity(communityActionDonor.id);
+        }
+        setIsCommunityDonationOpen(false);
+        setCommunityActionDonor(null);
+        // "הרשימה שלי" עשויה לכלול כעת את התורם החדש שנתפס
+        store.donorsStore.fetchDonors({ noLimit: true, forceRefresh: true });
+    };
+
+    const handleCommunityQuickNote = async (donor, note) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const res = await fetchWithAuth('/api/donors/add-note', {
+            method: 'POST',
+            body: JSON.stringify({
+                donorId: donor.id,
+                note,
+                followUpDate: today,
+                actingFundraiserId: fundraiserId
+            })
+        });
+        if (res?.ok) {
+            store.donorsStore.removeFromCommunity(donor.id);
+            store.donorsStore.fetchDonors({ noLimit: true, forceRefresh: true });
+        }
+    };
 
     // פונקציות לטיפול באירועים - מעבירות לסטור
     const handleSearch = (term) => {
@@ -196,34 +255,77 @@ export default observer(function MyDonorsPage() {
 
                 />
             )}
+            {isCommunityDonationOpen && (
+                <DonationForm
+                    donor={communityActionDonor}
+                    onClose={() => { setIsCommunityDonationOpen(false); setCommunityActionDonor(null); }}
+                    onSuccess={handleCommunityDonationSuccess}
+                    isOpen={isCommunityDonationOpen}
+                    actingFundraiserId={fundraiserId}
+                />
+            )}
             <div className={styles.pageContainer}>
                 <div className={styles.cardsTableWrapper}>
-                    <Cards 
-                        fundraiserStatus={fundraiser} 
+                    <Cards
+                        fundraiserStatus={fundraiser}
                         donors={store.donorsStore.donors}
                         openDonationForm={openDonationForm}
                         isCrowdfunding={isCrowdfunding}
                         onAddDonor={handleOpenAddForm}
                     />
-                    <Table
-                        donors={store.donorsStore.donors}
-                        searchTerm={store.donorsStore.filters.search || ''}
-                        onSearch={handleSearch}
-                        onSort={handleSort}
-                        sortConfig={store.donorsStore.sortConfig}
-                        onRowsInPageChange={handleRowsInPageChange}
-                        rowsInPage={store.donorsStore.rowsInPage}
-                        currentPage={store.donorsStore.page}
-                        totalDonors={store.donorsStore.totalDonors}
-                        onPageChange={handlePageChange}
-                        filters={store.donorsStore.filters}
-                        setFilters={setFilters}
-                        campaign={campaign}
-                        isCrowdfunding={isCrowdfunding}
-                        onAddDonor={handleOpenAddForm}
-                        onImportExcel={isCrowdfunding ? handleOpenExcel : undefined}
-                    />
-                    <TotalProgressBar expected={totalExpected} actual={totalActual} />
+                    {activeTab === 'community' && communityEnabled ? (
+                        <CommunityTable
+                            donors={store.donorsStore.communityDonors}
+                            loading={store.donorsStore.loadingCommunityDonors}
+                            onToggleHeart={handleToggleHeart}
+                            onQuickDonation={handleCommunityQuickDonation}
+                            onQuickNote={handleCommunityQuickNote}
+                            isAdmin={isAdminOrManager}
+                            titleElement={communityEnabled && (
+                                <CommunityTabSwitch activeTab={activeTab} onChange={setActiveTab} />
+                            )}
+                        />
+                    ) : (
+                        <>
+                            <Table
+                                donors={store.donorsStore.donors}
+                                titleElement={communityEnabled && (
+                                    <CommunityTabSwitch activeTab={activeTab} onChange={setActiveTab} />
+                                )}
+                                searchTerm={store.donorsStore.filters.search || ''}
+                                onSearch={handleSearch}
+                                onSort={handleSort}
+                                sortConfig={store.donorsStore.sortConfig}
+                                onRowsInPageChange={handleRowsInPageChange}
+                                rowsInPage={store.donorsStore.rowsInPage}
+                                currentPage={store.donorsStore.page}
+                                totalDonors={store.donorsStore.totalDonors}
+                                onPageChange={handlePageChange}
+                                filters={store.donorsStore.filters}
+                                setFilters={setFilters}
+                                campaign={campaign}
+                                isCrowdfunding={isCrowdfunding}
+                                onAddDonor={handleOpenAddForm}
+                                onImportExcel={isCrowdfunding ? handleOpenExcel : undefined}
+                            />
+                            {communityEnabled && store.donorsStore.overriddenDonors.length > 0 && (
+                                <div className={styles.overriddenSection}>
+                                    <h3 className={styles.overriddenTitle}>{tCommunity('handledByOtherSection')}</h3>
+                                    <div className={styles.overriddenList}>
+                                        {store.donorsStore.overriddenDonors.map((donor) => (
+                                            <div key={donor.id} className={styles.overriddenRow}>
+                                                <span>{donor.first_name} {donor.last_name}</span>
+                                                <span className={styles.overriddenBadge}>
+                                                    {tCommunity('handledByOther')}{donor.handled_by_name ? ` (${donor.handled_by_name})` : ''}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <TotalProgressBar expected={totalExpected} actual={totalActual} />
+                        </>
+                    )}
                 </div>
             </div>
         </>

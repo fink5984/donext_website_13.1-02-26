@@ -31,7 +31,7 @@ import { exportToPdf, exportToCsv, printTable } from '@/app/utils/exportUtils';
 import { useCurrencySymbol } from '@/app/components/CurrencySymbol';
 import { useTranslations, useLocale } from 'next-intl';
 
-export default function Table({ donors, searchTerm, onSearch, filters, setFilters, campaign, isCrowdfunding, onAddDonor, onImportExcel }) {
+export default function Table({ donors, searchTerm, onSearch, filters, setFilters, campaign, isCrowdfunding, onAddDonor, onImportExcel, titleElement }) {
     const t = useTranslations('myDonors');
     const locale = useLocale();
     const showInvitationColumn = campaign?.showInvitationColumn || false;
@@ -401,7 +401,7 @@ export default function Table({ donors, searchTerm, onSearch, filters, setFilter
             />
             <div className={styles.wrapper}>
                 <div className={styles.tableTitle}>
-                    <h2 className="headline-2">{t('pageTitle')}</h2>
+                    {titleElement || <h2 className="headline-2">{t('pageTitle')}</h2>}
                     <div className={styles.searchCenterWrapper}>
                         <Search value={searchTerm} onSearch={onSearch} placeholder={t('searchPlaceholder')} />
                     </div>

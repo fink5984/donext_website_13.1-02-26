@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
+import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
 
 // 9 ספרות אחרונות של מספר טלפון - להשוואה עם המיקרו-פורמטים השונים שיכולים להישמר במסד
 function getLast9Digits(phone) {
@@ -154,12 +155,18 @@ export async function POST(request, { params }) {
             const existingPersonCityId = donorRecord.person?.cityId ?? null;
 
             // אם התורם תרם דרך קישור של מתרים מסוים והוא משויך כעת למתרים אחר -
-            // לעדכן את השיוך למתרים שדרכו תרם בפועל. גם isAnonymous מתעדכן אם השתנה.
+            // לעדכן את השיוך למתרים שדרכו תרם בפועל (פעולה ממשית - "כל הקהילה" סעיף 8,
+            // עקבי עם transferDonorOwnership: שומר previousFundraiserId לשורה ה"כבויה").
+            // גם isAnonymous מתעדכן אם השתנה.
             const incomingFundraiserId = validFundraiserId;
-            const updates = {};
             if (incomingFundraiserId && donorRecord.fundraiserId !== incomingFundraiserId) {
-                updates.fundraiserId = incomingFundraiserId;
+                const transferred = await transferDonorOwnership({
+                    donorId: donorRecord.id,
+                    actingFundraiserId: incomingFundraiserId,
+                });
+                if (transferred) donorRecord = { ...donorRecord, ...transferred };
             }
+            const updates = {};
             if (isAnonymous !== undefined && donorRecord.isAnonymous !== isAnonymous) {
                 updates.isAnonymous = isAnonymous;
             }

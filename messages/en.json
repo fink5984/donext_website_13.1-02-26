@@ -1362,6 +1362,25 @@
       "progress90to99": "One last push and you're there!",
       "progress100": "Amazing! You reached your goal!",
       "progressAbove100": "Incredible, you exceeded your goal!"
+    },
+    "community": {
+      "tabMine": "My Donors",
+      "tabCommunity": "Whole Community",
+      "loading": "Loading...",
+      "empty": "No donors in \"Whole Community\" right now",
+      "quickDonation": "Quick donation",
+      "quickNote": "Quick note",
+      "notePlaceholder": "Write a note...",
+      "noteSave": "Save",
+      "noteCancel": "Cancel",
+      "handledByOther": "Handled by another fundraiser",
+      "handledByOtherSection": "Donors handled by another fundraiser",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "searchPlaceholder": "Looking for someone?"
     }
   },
   "rankForm": {

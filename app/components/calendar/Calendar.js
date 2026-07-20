@@ -6,10 +6,10 @@ import GregorianCalendar from "./GregorianCalendar";
 import Input from '../Input';
 import CalendarIcon from '@/app/icons/calendar.svg'
 
-const Calendar = ({ onDateSelect, range = false, placeholder = 'בחר תאריך לאירוע', iconOnly = false }) => {
+const Calendar = ({ onDateSelect, range = false, placeholder = 'בחר תאריך לאירוע', iconOnly = false, value = null }) => {
     const [isHebrew, setIsHebrew] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(iconOnly ? null : new Date());
-    const [userHasSelected, setUserHasSelected] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(iconOnly ? (value || null) : new Date());
+    const [userHasSelected, setUserHasSelected] = useState(iconOnly ? Boolean(value) : false);
     const [startDay, setStartDay] = useState(() => {
         const initialStartDate = new Date();
         return initialStartDate;
@@ -26,6 +26,16 @@ const Calendar = ({ onDateSelect, range = false, placeholder = 'בחר תארי�
 
     const calendarRef = useRef(null);
     const iconBtnRef = useRef(null);
+
+    // Sync external value (e.g. auto-filled follow-up date) into the icon-only label
+    useEffect(() => {
+        if (!iconOnly) return;
+        setSelectedDate((prev) => {
+            if (value && prev && prev.getTime() === value.getTime()) return prev;
+            return value || null;
+        });
+        setUserHasSelected(Boolean(value));
+    }, [value, iconOnly]);
 
     useEffect(() => {
         if (range && savedRange) {

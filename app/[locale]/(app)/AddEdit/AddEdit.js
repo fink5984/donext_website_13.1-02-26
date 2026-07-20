@@ -31,11 +31,14 @@ import SaveComponent from "../Alerts/Save";
 import { useAppContext } from "@/app/components/AppContext";
 import { observer } from "mobx-react-lite";
 import { formStore } from "@/app/stores/formStore";
+import { sessionStore } from '@/stores/SessionStore';
+import { parseJwt } from '@/lib/auth';
 import fetchWithAuth from '@/app/utils/fetchWithAuth';
 import DonationForm from '@/components/DonationForm/DonationForm';
 import { RankForm } from "./RankForm";
 import InvitationProgress from '@/app/components/InvitationProgress/InvitationProgress';
 import { dbStatusToHebrew } from '@/lib/statusMappings';
+import { QUICK_NOTE_OPTIONS } from '@/app/constants/quickNotes';
 
 const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, notesOnly = false, donorProp = null, hideAddDonation = false }) => {
   // Constants
@@ -171,11 +174,14 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
   const [notesFocused, setNotesFocused] = useState(false);
   const [noteFollowUpDate, setNoteFollowUpDate] = useState("");
   const [noteAssignee, setNoteAssignee] = useState(null);
+  const [noteAutoComplete, setNoteAutoComplete] = useState(false);
   const [donorNotes, setDonorNotes] = useState([]);
   const [showAddDonorNote, setShowAddDonorNote] = useState(false);
   const [newDonorNoteText, setNewDonorNoteText] = useState("");
   const [newDonorNoteFollowUpDate, setNewDonorNoteFollowUpDate] = useState("");
   const [newDonorNoteAssignee, setNewDonorNoteAssignee] = useState(null);
+  const [donorNoteAutoComplete, setDonorNoteAutoComplete] = useState(false);
+  const [activeQuickNoteId, setActiveQuickNoteId] = useState(null);
   const [isSavingDonorNote, setIsSavingDonorNote] = useState(false);
   const [markingDonorNoteId, setMarkingDonorNoteId] = useState(null);
   const newDonorNoteRef = useRef(null);
@@ -324,6 +330,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
       setArrivalConfirmed(currentDonor.arrivalConfirmed || false);
       setActuallyArrived(currentDonor.actuallyArrived || false);
       setNotes(currentDonor.notes || "");
+      setActiveQuickNoteId(null);
       setDonorNotes(currentDonor.donorNotes || []);
       
       // Save original values
@@ -350,6 +357,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
       setNotes("");
       setNoteFollowUpDate("");
       setNoteAssignee(null);
+      setNoteAutoComplete(false);
+      setActiveQuickNoteId(null);
       setDonorNotes([]);
       
       // Reset original values for new donor
@@ -371,6 +380,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
       setNotes("");
       setNoteFollowUpDate("");
       setNoteAssignee(null);
+      setNoteAutoComplete(false);
+      setActiveQuickNoteId(null);
       setDonorNotes([]);
       formStore.setDirty(false);
     }
@@ -554,6 +565,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
         notes,
         noteFollowUpDate,
         noteAssignee,
+        noteCompleted: noteAutoComplete,
         titleBefore: data.titleBefore,
         titleAfter: data.titleAfter,
         englishName: {
@@ -588,6 +600,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
           donorId: resolvedDonorId,
           note: newDonorNoteText.trim(),
           followUpDate: newDonorNoteFollowUpDate,
+          noteCompleted: donorNoteAutoComplete,
           ...(newDonorNoteAssignee?.userId ? { assignedToUserId: newDonorNoteAssignee.userId } : {}),
           ...(newDonorNoteAssignee?.name ? { assignedToName: newDonorNoteAssignee.name } : {})
         })
@@ -599,6 +612,8 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
         setNewDonorNoteText('');
         setNewDonorNoteFollowUpDate('');
         setNewDonorNoteAssignee(null);
+        setDonorNoteAutoComplete(false);
+        setActiveQuickNoteId(null);
       }
     } catch (error) {
       console.error('Error saving donor note:', error);
@@ -632,7 +647,59 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
       setMarkingDonorNoteId(null);
     }
   };
-  
+
+  // המשתמש המחובר (מהטוקן) - לשיוך אוטומטי של הערות מהירות
+  const getCurrentUserAssignee = () => {
+    try {
+      const payload = parseJwt(sessionStore.token);
+      if (!payload?.userId) return null;
+      return {
+        userId: payload.userId,
+        name: payload.userName || (payload.email ? payload.email.split('@')[0] : '')
+      };
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const getTodayDateStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  // לחיצה על כפתור הערה מהירה - ממלאת את ההערה, ובקטגוריות סגורות (לא ענה/לא מעוניין/פרטים שגויים)
+  // גם ממלאת אוטומטית תאריך היום ומשייכת למשתמש הנוכחי, כדי שהמשימה תיסגר כבוצעה.
+  // בקטגוריות פתוחות (יתן בהמשך/צריך לחשוב/לקחת פרטי אשראי) יש לבחור תאריך המשך ומשויך ידנית.
+  const handleQuickNoteClick = (option) => {
+    const isEditModeNotes = formStore.mode === 'edit' || notesOnly;
+    const assignee = option.autoComplete ? getCurrentUserAssignee() : null;
+    const dateStr = option.autoComplete ? getTodayDateStr() : '';
+
+    setActiveQuickNoteId(option.id);
+
+    if (isEditModeNotes) {
+      setShowAddDonorNote(true);
+      setNewDonorNoteText(option.text);
+      setNewDonorNoteFollowUpDate(dateStr);
+      setNewDonorNoteAssignee(assignee);
+      setDonorNoteAutoComplete(option.autoComplete);
+      requestAnimationFrame(() => {
+        const el = newDonorNoteRef.current;
+        if (el) {
+          el.style.height = 'auto';
+          el.style.height = `${el.scrollHeight}px`;
+          el.focus();
+        }
+      });
+    } else {
+      setNotes(option.text);
+      setNoteFollowUpDate(dateStr);
+      setNoteAssignee(assignee);
+      setNoteAutoComplete(option.autoComplete);
+      formStore.setDirty(true);
+    }
+  };
+
   // Special function to update only invitation status
   const updateInvitationOnly = async () => {
     setIsSaving(true);
@@ -1002,7 +1069,22 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                           {(!invitationOnly || notesOnly) && (
                             <div ref={notesSectionRef} className={styles.notesBox}>
                               <h2 className={`${styles.notesTitle} table-1`}>{t('notes')}</h2>
-                              
+
+                              {/* כפתורי הערה מהירה - לחיצה ממלאת את ההערה אוטומטית */}
+                              <div className={styles.quickNotesRow}>
+                                {QUICK_NOTE_OPTIONS.map((option) => (
+                                  <button
+                                    key={option.id}
+                                    type="button"
+                                    className={`${styles.quickNoteBtn} ${activeQuickNoteId === option.id ? styles.quickNoteBtnActive : ''}`}
+                                    onClick={() => handleQuickNoteClick(option)}
+                                    title={option.autoComplete ? 'ימולא עם תאריך היום ויסומן כבוצע' : 'יש לבחור תאריך המשך וגורם משויך'}
+                                  >
+                                    {option.text}
+                                  </button>
+                                ))}
+                              </div>
+
                               {/* Add mode: NoteInput-style textarea with calendar and assignee */}
                               {formStore.mode !== 'edit' && !notesOnly && (
                                 <>
@@ -1028,6 +1110,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                         }}
                                         onChange={(e) => {
                                           setNotes(e.target.value);
+                                          setActiveQuickNoteId(null);
                                           formStore.setDirty(true);
                                         }}
                                         disabled={isSaving}
@@ -1048,6 +1131,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                               setNoteFollowUpDate(`${yyyy}-${mm}-${dd}`);
                                             }
                                           }}
+                                          value={noteFollowUpDate ? new Date(noteFollowUpDate) : null}
                                           range={false}
                                           iconOnly
                                         />
@@ -1147,7 +1231,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                             className={`${styles.addNoteTextarea} table-2`}
                                             placeholder={t('addNote') || 'הוסף הערה...'}
                                             value={newDonorNoteText}
-                                            onChange={(e) => setNewDonorNoteText(e.target.value)}
+                                            onChange={(e) => { setNewDonorNoteText(e.target.value); setActiveQuickNoteId(null); }}
                                             rows={1}
                                             dir="rtl"
                                             onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
@@ -1168,6 +1252,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                                   setNewDonorNoteFollowUpDate(`${yyyy}-${mm}-${dd}`);
                                                 }
                                               }}
+                                              value={newDonorNoteFollowUpDate ? new Date(newDonorNoteFollowUpDate) : null}
                                               range={false}
                                               iconOnly
                                             />
@@ -1197,7 +1282,7 @@ const AddEdit = observer(({ isOpen, onClose, onSubmit, invitationOnly = false, n
                                           <button
                                             type="button"
                                             className={styles.addNoteCancelBtn}
-                                            onClick={() => { setShowAddDonorNote(false); setNewDonorNoteText(''); setNewDonorNoteFollowUpDate(''); setNewDonorNoteAssignee(null); }}
+                                            onClick={() => { setShowAddDonorNote(false); setNewDonorNoteText(''); setNewDonorNoteFollowUpDate(''); setNewDonorNoteAssignee(null); setDonorNoteAutoComplete(false); setActiveQuickNoteId(null); }}
                                           >
                                             {t('cancel')}
                                           </button>

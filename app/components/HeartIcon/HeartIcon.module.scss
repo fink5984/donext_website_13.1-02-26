@@ -1,0 +1,34 @@
+.heartButton {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--Icon-difample-icon, #B9C4D4);
+
+    &.filled {
+        color: var(--Gray-Blue-325, #98B8FF);
+    }
+
+    &.mine {
+        color: var(--Bg-Button-Primary, #0C4AD5);
+    }
+
+    &.disabled {
+        cursor: default;
+    }
+
+    &:not(.disabled):hover {
+        opacity: 0.8;
+    }
+}
+
+.count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--Text-Default, #6E99EC);
+}

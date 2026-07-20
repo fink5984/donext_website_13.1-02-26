@@ -1,3 +1,37 @@
+.overriddenSection {
+    margin-top: 16px;
+}
+
+.overriddenTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--Text-Default, #6E99EC);
+    margin-bottom: 8px;
+}
+
+.overriddenList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.overriddenRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--Gray-Blue-35, #F6F9FC);
+    color: #94a3b8;
+    opacity: 0.65;
+    pointer-events: none;
+    font-size: 13px;
+}
+
+.overriddenBadge {
+    font-size: 12px;
+}
+
 .pageContainer {
     padding: 60px;
     background: var(--Surface-01);

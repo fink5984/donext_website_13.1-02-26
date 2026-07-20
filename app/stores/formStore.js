@@ -185,6 +185,7 @@ class FormStore {
                                     donorId: newDonorId,
                                     note: formData.notes,
                                     followUpDate: formData.noteFollowUpDate,
+                                    noteCompleted: formData.noteCompleted || false,
                                     ...(formData.noteAssignee?.userId ? { assignedToUserId: formData.noteAssignee.userId } : {}),
                                     ...(formData.noteAssignee?.name ? { assignedToName: formData.noteAssignee.name } : {})
                                 })

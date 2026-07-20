@@ -936,62 +936,62 @@
                     .tableHeader,
                     .tableRow {
                         display: grid;
-                        grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 26px 166px 50px 108px;
+                        grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 26px 166px 90px 108px;
                         align-items: center;
                         position: relative;
                         padding: var(--Spacing-Spacing-2) var(--Spacing-Spacing-5);
                         
                         &.noInvitation {
-                            grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 26px 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 26px 166px 90px 108px;
                         }
 
                         &.noCommitment {
-                            grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 260fr 138fr 180fr 100px 120fr 120fr 166px 90px 108px;
                         }
 
                         &.noInvitation.noCommitment {
-                            grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 260fr 138fr 220fr 120fr 120fr 166px 90px 108px;
                         }
 
                         &.withComparison {
-                            grid-template-columns: 43px 16px 32px 280fr 180fr 100px 120fr 120fr 26px 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 280fr 180fr 100px 120fr 120fr 26px 166px 90px 108px;
                         }
                         &.withComparison.noInvitation {
-                            grid-template-columns: 43px 16px 32px 280fr 180fr 120fr 120fr 26px 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 280fr 180fr 120fr 120fr 26px 166px 90px 108px;
                         }
                         &.withComparison.noCommitment {
-                            grid-template-columns: 43px 16px 32px 280fr 180fr 100px 120fr 120fr 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 280fr 180fr 100px 120fr 120fr 166px 90px 108px;
                         }
                         &.withComparison.noInvitation.noCommitment {
-                            grid-template-columns: 43px 16px 32px 280fr 180fr 120fr 120fr 166px 50px 108px;
+                            grid-template-columns: 43px 16px 32px 280fr 180fr 120fr 120fr 166px 90px 108px;
                         }
 
                         @media (max-width: 1400px) {
-                            grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 24px 140px 50px 100px;
+                            grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 24px 140px 84px 100px;
 
                             &.noCommitment {
-                                grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 140px 50px 100px;
+                                grid-template-columns: 40px 16px 30px 200fr 120fr 150fr 90px 100fr 100fr 140px 84px 100px;
                             }
                             &.withComparison {
-                                grid-template-columns: 40px 16px 30px 220fr 150fr 90px 100fr 100fr 24px 140px 50px 100px;
+                                grid-template-columns: 40px 16px 30px 220fr 150fr 90px 100fr 100fr 24px 140px 84px 100px;
                             }
                             &.withComparison.noCommitment {
-                                grid-template-columns: 40px 16px 30px 220fr 150fr 90px 100fr 100fr 140px 50px 100px;
+                                grid-template-columns: 40px 16px 30px 220fr 150fr 90px 100fr 100fr 140px 84px 100px;
                             }
                         }
 
                         @media (max-width: 1200px) {
-                            grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 22px 120px 45px 90px;
+                            grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 22px 120px 76px 90px;
                             font-size: 13px;
 
                             &.noCommitment {
-                                grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 120px 45px 90px;
+                                grid-template-columns: 40px 16px 28px 180fr 100fr 130fr 80px 90fr 90fr 120px 76px 90px;
                             }
                             &.withComparison {
-                                grid-template-columns: 40px 16px 28px 200fr 130fr 80px 90fr 90fr 22px 120px 45px 90px;
+                                grid-template-columns: 40px 16px 28px 200fr 130fr 80px 90fr 90fr 22px 120px 76px 90px;
                             }
                             &.withComparison.noCommitment {
-                                grid-template-columns: 40px 16px 28px 200fr 130fr 80px 90fr 90fr 120px 45px 90px;
+                                grid-template-columns: 40px 16px 28px 200fr 130fr 80px 90fr 90fr 120px 76px 90px;
                             }
                         }
                         
@@ -1524,7 +1524,28 @@
                                 position: relative;
                                 display: flex;
                                 align-items: center;
-                                justify-content: center;
+                                justify-content: flex-start;
+                                padding-right: 26px;
+
+                                .unreadDot {
+                                    position: absolute;
+                                    top: 3px;
+                                    right: 1px;
+                                    width: 3.33px;
+                                    height: 3.33px;
+                                    background-color: var(--Icon-able-Icon, #0C4AD5);
+                                    border-radius: 50%;
+                                }
+
+                                .overdueDot {
+                                    position: absolute;
+                                    top: 3px;
+                                    right: 1px;
+                                    width: 5px;
+                                    height: 5px;
+                                    background-color: #E53E3E;
+                                    border-radius: 50%;
+                                }
 
                                 .notesIcon {
                                     position: relative;
@@ -1535,28 +1556,49 @@
                                     color: var(--Icon-disable-Icon, #C5D7F8);
                                     transition: color 0.2s ease;
 
-                                    .unreadDot {
-                                        position: absolute;
-                                        top: 3px;
-                                        right: 1px;
-                                        width: 3.33px;
-                                        height: 3.33px;
-                                        background-color: var(--Icon-able-Icon, #0C4AD5);
-                                        border-radius: 50%;
+                                    &:hover {
+                                        color: var(--Icon-able-Icon, #0C4AD5);
                                     }
+                                }
 
-                                    .overdueDot {
-                                        position: absolute;
-                                        top: 3px;
-                                        right: 1px;
-                                        width: 5px;
-                                        height: 5px;
-                                        background-color: #E53E3E;
-                                        border-radius: 50%;
+                                .quickNoteTag {
+                                    position: relative;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    padding: 3px 8px;
+                                    max-width: 82px;
+                                    min-width: 0;
+                                    flex-shrink: 1;
+                                    box-sizing: border-box;
+                                    border-radius: 999px;
+                                    font-size: 11px;
+                                    line-height: 1.3;
+                                    background: var(--Bg-Button-disable, #FFF);
+                                    border: 1px solid var(--Border-Default, #6E99EC);
+                                    color: var(--Text-able-Text, #0C4AD5);
+                                    transition: border-color 0.2s ease, color 0.2s ease;
+
+                                    .quickNoteTagText {
+                                        max-width: 55px;
+                                        min-width: 0;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        white-space: nowrap;
                                     }
 
                                     &:hover {
-                                        color: var(--Icon-able-Icon, #0C4AD5);
+                                        border-color: var(--Text-able-Text, #0C4AD5);
+                                    }
+
+                                    &.quickNoteTagOverdue {
+                                        border-color: #E53E3E;
+                                        color: #E53E3E;
+
+                                        &:hover {
+                                            border-color: #E53E3E;
+                                        }
                                     }
                                 }
                             }

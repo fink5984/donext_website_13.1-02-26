@@ -97,7 +97,7 @@ const showDoneXTErrorNotification = (message, title = 'External system error') =
     }, 6000);
 };
 
-const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mode = 'add', scrollToNotes = false }) => {
+const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mode = 'add', scrollToNotes = false, actingFundraiserId = null }) => {
     const t = useTranslations('donationForm');
     const { campaign, stores } = useAppContext();
     const { ranksStore } = stores;
@@ -1224,7 +1224,12 @@ const DonationForm = observer(({ donor, donation, isOpen, onClose, onSuccess, mo
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ ...donationData, isAnonymous })
+                body: JSON.stringify({
+                    ...donationData,
+                    isAnonymous,
+                    // "כל הקהילה": מסמן שהתרומה מוזנת מ"כל הקהילה" - מפעיל מעבר בעלות בשרת
+                    ...(actingFundraiserId ? { actingFundraiserId } : {})
+                })
             });
 
             if (response.ok) {

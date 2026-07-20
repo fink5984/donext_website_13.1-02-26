@@ -32,6 +32,12 @@ class DonorsStore {
   synagogues = [];
   loadingSynagogues = false;
   selectedSynagogue = null;
+
+  // "כל הקהילה" - מאגר תורמים פתוח (ראה DoNext_Feature_Spec_Kol_HaKehila)
+  communityDonors = [];
+  loadingCommunityDonors = false;
+  errorCommunityDonors = null;
+  overriddenDonors = []; // תורמים שהיו מוקצים לי ונעקפו ע"י מתרים אחר (מוצגים "כבוי")
   // Caching
   donorsCache = new Map(); // key -> { ts, data, total }
   donorsSummaryCache = new Map(); // key -> { ts, data }
@@ -88,6 +94,9 @@ class DonorsStore {
     }
     if (filters.trafficColors && Array.isArray(filters.trafficColors) && filters.trafficColors.length > 0) {
       url += `&trafficColors=${encodeURIComponent(JSON.stringify(filters.trafficColors))}`;
+    }
+    if (filters.quickNotes && Array.isArray(filters.quickNotes) && filters.quickNotes.length > 0) {
+      url += `&quickNotes=${encodeURIComponent(JSON.stringify(filters.quickNotes))}`;
     }
     if (filters.tagIds && Array.isArray(filters.tagIds) && filters.tagIds.length > 0) {
       url += `&tagIds=${encodeURIComponent(JSON.stringify(filters.tagIds))}`;
@@ -1117,6 +1126,78 @@ class DonorsStore {
     this.donorsSummaryCache.clear();
   }
 
+  // ===== "כל הקהילה" =====
+
+  async fetchCommunityDonors(fundraiserId) {
+    this.loadingCommunityDonors = true;
+    this.errorCommunityDonors = null;
+    try {
+      const url = `/api/donors/community${fundraiserId ? `?fundraiserId=${fundraiserId}` : ''}`;
+      const res = await fetchWithAuth(url);
+      const json = await res.json();
+      runInAction(() => {
+        if (json.success) {
+          this.communityDonors = json.data.donors || [];
+        } else {
+          this.errorCommunityDonors = json.error?.message || 'שגיאה בטעינת כל הקהילה';
+        }
+        this.loadingCommunityDonors = false;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.errorCommunityDonors = error.message;
+        this.loadingCommunityDonors = false;
+      });
+    }
+  }
+
+  // מסיר תורם מהתצוגה המקומית של "כל הקהילה" (אחרי פעולה ממשית שהעבירה בעלות)
+  removeFromCommunity(donorId) {
+    this.communityDonors = this.communityDonors.filter((d) => d.id !== donorId);
+  }
+
+  async fetchOverriddenDonors(fundraiserId) {
+    if (!fundraiserId) return;
+    try {
+      const res = await fetchWithAuth(`/api/donors/overridden?fundraiserId=${fundraiserId}`);
+      const json = await res.json();
+      runInAction(() => {
+        if (json.success) this.overriddenDonors = json.data.donors || [];
+      });
+    } catch (error) {
+      console.error('Error fetching overridden donors:', error);
+    }
+  }
+
+  async toggleHeart(donorId, fundraiserId) {
+    const donor = this.communityDonors.find((d) => d.id === donorId);
+    if (!donor || !donor.heart_can_toggle) return;
+
+    // עדכון אופטימי
+    const wasMine = donor.heart_state === 'mine';
+    const previousState = donor.heart_state;
+    const previousCount = donor.heart_count;
+    runInAction(() => {
+      donor.heart_state = wasMine ? (donor.heart_count > 1 ? 'others' : 'none') : 'mine';
+      donor.heart_count = wasMine ? Math.max(0, donor.heart_count - 1) : donor.heart_count + 1;
+    });
+
+    try {
+      const res = await fetchWithAuth('/api/donors/community/heart', {
+        method: 'POST',
+        body: JSON.stringify({ donorId, fundraiserId }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'שגיאה בסימון לב');
+    } catch (error) {
+      // שחזור במקרה של כשלון
+      runInAction(() => {
+        donor.heart_state = previousState;
+        donor.heart_count = previousCount;
+      });
+    }
+  }
+
   // פונקציה לאיפוס הסטור
   reset() {
     runInAction(() => {
@@ -1140,6 +1221,10 @@ class DonorsStore {
       this.navigationFundraiserId = null;
       this.synagogues = [];
       this.loadingSynagogues = false;
+      this.communityDonors = [];
+      this.loadingCommunityDonors = false;
+      this.errorCommunityDonors = null;
+      this.overriddenDonors = [];
     });
   }
 }

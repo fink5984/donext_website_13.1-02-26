@@ -265,6 +265,7 @@ model Campaign {
   hasOperators         Boolean?               @default(false) @map("has_operators")
   isEvent              Boolean?               @default(false) @map("is_event")
   comparisonCampaignId Int?                   @map("comparison_campaign_id")
+  communityTabEnabled  Boolean?               @default(false) @map("community_tab_enabled")
   screenSettings       CampaignScreenSetting?
   category             CampaignCategory?      @relation(fields: [categoryId], references: [id])
   client               Client                 @relation(fields: [clientId], references: [id])
@@ -296,6 +297,8 @@ model Fundraiser {
   operatorExpected        Decimal?        @map("operator_expected")
   lastForecastByOperatorId Int?           @map("last_forecast_by_operator_id")
   donors              Donor[]
+  previouslyOwnedDonors Donor[]       @relation("DonorPreviousFundraiser")
+  donorInterests      DonorInterest[]
   emojiReactionsFrom  EmojiReaction[] @relation("EmojiReactionFrom")
   emojiReactionsTo    EmojiReaction[] @relation("EmojiReactionTo")
   user                User?           @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "fk_fundraisers_user")
@@ -311,6 +314,7 @@ model Donor {
   campaignId                      Int              @map("campaign_id")
   expected                        Decimal?         @map("expected")
   fundraiserId                    Int?             @map("fundraiser_id")
+  previousFundraiserId            Int?             @map("previous_fundraiser_id")
   lastForecastByFundraiserId      Int?             @map("last_forecast_by_fundraiser_id")
   lastQuestionnaireByFundraiserId Int?             @map("last_questionnaire_by_fundraiser_id")
   active                          Boolean?         @map("active")
@@ -326,8 +330,10 @@ model Donor {
   updated_at                      DateTime?        @default(now()) @updatedAt @db.Timestamp(6)
   donations                       Donation[]
   donorNotes                      DonorNote[]
+  interests                       DonorInterest[]
   campaign                        Campaign         @relation(fields: [campaignId], references: [id])
   fundraiser                      Fundraiser?      @relation(fields: [fundraiserId], references: [id])
+  previousFundraiser              Fundraiser?      @relation("DonorPreviousFundraiser", fields: [previousFundraiserId], references: [id])
   person                          Person?          @relation(fields: [personId], references: [id])
   questionAnswers                 QuestionAnswer[]
 
@@ -389,6 +395,20 @@ model DonorNote {
   @@index([donorId], map: "idx_donor_notes_donor_id")
   @@index([assignedToUserId], map: "idx_donor_notes_assigned_to")
   @@map("donor_notes")
+}
+
+model DonorInterest {
+  id           Int        @id @default(autoincrement())
+  donorId      Int        @map("donor_id")
+  fundraiserId Int        @map("fundraiser_id")
+  created_at   DateTime   @default(now()) @db.Timestamp(6)
+  donor        Donor      @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  fundraiser   Fundraiser @relation(fields: [fundraiserId], references: [id], onDelete: Cascade)
+
+  @@unique([donorId, fundraiserId])
+  @@index([donorId], map: "idx_donor_interests_donor_id")
+  @@index([fundraiserId], map: "idx_donor_interests_fundraiser_id")
+  @@map("donor_interests")
 }
 
 model DonationNote {

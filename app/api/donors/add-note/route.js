@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { handlePrismaError } from '@/lib/prisma/utils';
+import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { donorId, note, followUpDate, assignedToUserId, assignedToName } = body;
+        const { donorId, note, followUpDate, assignedToUserId, assignedToName, noteCompleted, actingFundraiserId } = body;
 
         // וולידציה
         if (!donorId) {
@@ -32,13 +33,21 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
+        // "כל הקהילה": הערה שנרשמת ע"י מתרים על תורם היא פעולה ממשית
+        // שמעבירה בעלות (כל הערה מכל מקור נחשבת פעולה ממשית - ראו מסמך האפיון)
+        if (actingFundraiserId) {
+            await transferDonorOwnership({ donorId, actingFundraiserId });
+        }
+
         // יצירת הערה חדשה בטבלת donor_notes
+        const isCompleted = Boolean(noteCompleted);
         const donorNote = await prisma.donorNote.create({
             data: {
                 donorId: parseInt(donorId),
                 note: note.trim(),
                 followUpDate: new Date(followUpDate),
-                noteCompleted: false,
+                noteCompleted: isCompleted,
+                ...(isCompleted ? { noteCompletedAt: new Date() } : {}),
                 ...(assignedToUserId ? { assignedToUserId: parseInt(assignedToUserId) } : {}),
                 ...(assignedToName ? { assignedToName } : {})
             }

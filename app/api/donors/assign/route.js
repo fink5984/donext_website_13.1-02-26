@@ -41,6 +41,7 @@ const donorSelectMinimal = {
     id: true,
     personId: true,
     fundraiserId: true,
+    previousFundraiserId: true,
     campaignId: true,
     expected: true,
     active: true,
@@ -98,10 +99,11 @@ export async function POST(request) {
             }
 
             const resetFields = buildResetFields(before, newFundraiserId);
-            // 2) עדכון (לפי id בלבד)
+            // 2) עדכון (לפי id בלבד) - הקצאה ידנית ע"י מנהל מנקה גם previousFundraiserId
+            // (שורת "כבוי" ב"כל הקהילה" הופכת לא רלוונטית כשמנהל משייך מחדש)
             const updated = await prisma.donor.update({
                 where: { id },
-                data: { fundraiserId: newFundraiserId, ...resetFields },
+                data: { fundraiserId: newFundraiserId, previousFundraiserId: null, ...resetFields },
                 select: donorSelectMinimal,
             });
 
@@ -143,7 +145,7 @@ export async function POST(request) {
                 const resetFields = buildResetFields(before, newFundraiserId);
                 return prisma.donor.update({
                     where: { id },
-                    data: { fundraiserId: newFundraiserId, ...resetFields },
+                    data: { fundraiserId: newFundraiserId, previousFundraiserId: null, ...resetFields },
                     select: donorSelectMinimal,
                 });
             });
@@ -176,6 +178,7 @@ function mapDonorToFrontendMinimal(donor) {
         id: donor.id,
         person_id: donor.personId,
         fundraiser_id: donor.fundraiserId,
+        previous_fundraiser_id: donor.previousFundraiserId,
         campaign_id: donor.campaignId,
         expected: donor.expected,
         active: donor.active,

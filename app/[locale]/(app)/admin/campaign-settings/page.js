@@ -11,7 +11,8 @@ export default observer(function CampaignSettings() {
     const { campaignId, campaign, stores } = useAppContext();
     const [settings, setSettings] = useState({
         showInvitationColumn: false,
-        dailyTasksEmailEnabled: false
+        dailyTasksEmailEnabled: false,
+        communityTabEnabled: false
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -33,7 +34,8 @@ export default observer(function CampaignSettings() {
                 const data = await response.json();
                 setSettings({
                     showInvitationColumn: data.showInvitationColumn || false,
-                    dailyTasksEmailEnabled: data.dailyTasksEmailEnabled || false
+                    dailyTasksEmailEnabled: data.dailyTasksEmailEnabled || false,
+                    communityTabEnabled: data.communityTabEnabled || false
                 });
             } else {
                 setErrorMessage('שגיאה בטעינת הגדרות הקמפיין');
@@ -62,9 +64,10 @@ export default observer(function CampaignSettings() {
 
             if (response.ok) {
                 // עדכן את ה-campaign ב-RootStore
-                stores.updateCampaign({ 
+                stores.updateCampaign({
                     showInvitationColumn: settings.showInvitationColumn,
-                    dailyTasksEmailEnabled: settings.dailyTasksEmailEnabled
+                    dailyTasksEmailEnabled: settings.dailyTasksEmailEnabled,
+                    community_tab_enabled: settings.communityTabEnabled
                 });
                 
                 setSuccessMessage('ההגדרות נשמרו בהצלחה!');
@@ -154,6 +157,30 @@ export default observer(function CampaignSettings() {
                                 <span className={styles.labelDescription}>
                                     שליחת מייל יומי בבוקר עם רשימת המשימות לטיפול (הערות תורמים ותרומות עם תאריך מעקב).
                                     המנהל מקבל את כל המשימות, והאחראים מקבלים את המשימות שלהם בלבד.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div className={styles.settingsSection}>
+                    <h2>כל הקהילה</h2>
+
+                    <div className={styles.settingItem}>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={settings.communityTabEnabled}
+                                onChange={(e) => setSettings({
+                                    ...settings,
+                                    communityTabEnabled: e.target.checked
+                                })}
+                            />
+                            <div className={styles.labelContent}>
+                                <span className={styles.labelTitle}>הפעל טאב "כל הקהילה"</span>
+                                <span className={styles.labelDescription}>
+                                    מציג למתרימים טאב נוסף עם מאגר כלל תורמי הקמפיין שטרם נרשמה עבורם תרומה או הערה,
+                                    ומאפשר להם לסמן עניין (לב) ולתפוס תורם ע"י תרומה או הערה - ללא צורך במילוי שאלון הרמזור.
                                 </span>
                             </div>
                         </label>

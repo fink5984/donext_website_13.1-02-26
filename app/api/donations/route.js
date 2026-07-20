@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
+import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
 
 // פונקציה לקיבוץ תרומות לפי תורמים עם חישוב נכון לפי סוג קמפיין
 function groupDonationsByDonor(donations, campaign) {
@@ -736,7 +737,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
 
-        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, dedication, followUpDate, noteAssignee, isAnonymous, displayName, mode = 'add', transactionId } = body;
+        const { donorId, donationId, monthlyAmount, numberOfPayments, isUnlimited, hasPaymentMethod, paymentMethod, note, dedication, followUpDate, noteAssignee, isAnonymous, displayName, mode = 'add', transactionId, actingFundraiserId } = body;
 
         // זיהוי המשתמש הנוכחי
         const currentUser = getCurrentUserFromRequest(request);
@@ -896,6 +897,12 @@ export async function POST(request) {
                 if (existingDonation) {
                     return NextResponse.json({ success: true, data: existingDonation, duplicate: true });
                 }
+            }
+
+            // "כל הקהילה": תרומה שמוזנת ע"י מתרים על תורם מהמאגר הפתוח היא פעולה
+            // ממשית שמעבירה בעלות (ראו lib/donors/transferOwnership.js)
+            if (actingFundraiserId) {
+                await transferDonorOwnership({ donorId, actingFundraiserId });
             }
 
             donation = await prisma.donation.create({

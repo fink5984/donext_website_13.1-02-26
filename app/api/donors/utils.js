@@ -74,6 +74,17 @@ function parseRequestParams(searchParams, campaignId) {
         } catch (_) {}
     }
 
+    // quickNotes - JSON array (טקסטים של הערות מהירות מהתורם)
+    const quickNotesParam = searchParams.get('quickNotes');
+    if (quickNotesParam) {
+        try {
+            const parsed = JSON.parse(quickNotesParam);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                filters.quickNotes = parsed;
+            }
+        } catch (_) {}
+    }
+
     // מיון ופגינציה
     const sorting = {
         sortField: searchParams.get('sortField'),
@@ -331,6 +342,7 @@ function buildWhereConditions(params) {
         }),
         ...(filters.trafficLight && { trafficLightColor: filters.trafficLight }),
         ...(filters.trafficColors?.length > 0 && { trafficLightColor: { in: filters.trafficColors } }),
+        ...(filters.quickNotes?.length > 0 && { donorNotes: { some: { note: { in: filters.quickNotes } } } }),
         ...(Object.keys(expectedCondition).length > 0 && expectedCondition),
         ...activeCondition
     };

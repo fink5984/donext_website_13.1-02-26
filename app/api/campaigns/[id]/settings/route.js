@@ -9,7 +9,8 @@ export async function GET(request, { params }) {
             where: { id: parseInt(id) },
             select: {
                 showInvitationColumn: true,
-                dailyTasksEmailEnabled: true
+                dailyTasksEmailEnabled: true,
+                communityTabEnabled: true
             }
         });
 
@@ -19,7 +20,8 @@ export async function GET(request, { params }) {
 
         return NextResponse.json({
             showInvitationColumn: campaign.showInvitationColumn || false,
-            dailyTasksEmailEnabled: campaign.dailyTasksEmailEnabled || false
+            dailyTasksEmailEnabled: campaign.dailyTasksEmailEnabled || false,
+            communityTabEnabled: campaign.communityTabEnabled || false
         });
     } catch (error) {
         console.error('Error fetching campaign settings:', error);
@@ -31,19 +33,21 @@ export async function PUT(request, { params }) {
     try {
         const { id } = await params;
         const data = await request.json();
-        const { showInvitationColumn, dailyTasksEmailEnabled } = data;
+        const { showInvitationColumn, dailyTasksEmailEnabled, communityTabEnabled } = data;
 
         const updated = await prisma.campaign.update({
             where: { id: parseInt(id) },
             data: {
                 showInvitationColumn: showInvitationColumn !== undefined ? showInvitationColumn : false,
-                dailyTasksEmailEnabled: dailyTasksEmailEnabled !== undefined ? dailyTasksEmailEnabled : false
+                dailyTasksEmailEnabled: dailyTasksEmailEnabled !== undefined ? dailyTasksEmailEnabled : false,
+                communityTabEnabled: communityTabEnabled !== undefined ? communityTabEnabled : false
             }
         });
 
         return NextResponse.json({
             showInvitationColumn: updated.showInvitationColumn,
-            dailyTasksEmailEnabled: updated.dailyTasksEmailEnabled
+            dailyTasksEmailEnabled: updated.dailyTasksEmailEnabled,
+            communityTabEnabled: updated.communityTabEnabled
         });
     } catch (error) {
         console.error('Error updating campaign settings:', error);

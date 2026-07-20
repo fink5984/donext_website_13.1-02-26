@@ -955,10 +955,63 @@
     margin-bottom: var(--Spacing-Spacing-2);
     text-align: right;
     width: 100%;
-    
+
     @media (max-width: 768px) {
       font-size: 14px;
     }
+  }
+
+  .quickNotesRow {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    direction: rtl;
+    justify-content: flex-start;
+    gap: 5px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: var(--Spacing-Spacing-2, 8px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .quickNoteBtn {
+    flex: 0 1 auto;
+    min-width: 0;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: var(--Bg-Button-disable, #FFF);
+    border: 1px solid var(--Border-Default, #6E99EC);
+    color: var(--Text-able-Text, #0C4AD5);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--Surface-01, #F6F9FC);
+      color: var(--Text-able-Text, #0C4AD5);
+      border-color: var(--Text-able-Text, #0C4AD5);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+
+  .quickNoteBtnActive {
+    background: var(--Surface-01, #F6F9FC);
+    color: var(--Text-able-Text, #0C4AD5);
+    border-color: var(--Text-able-Text, #0C4AD5);
+    font-weight: 600;
   }
 
   .row {

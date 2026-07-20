@@ -1384,6 +1384,25 @@
       "progress90to99": "פוש אחרון ואתה שם!",
       "progress100": "מדהים! הגעת ליעד שלך!",
       "progressAbove100": "מטורף, עברת את היעד שלך!"
+    },
+    "community": {
+      "tabMine": "התורמים שלי",
+      "tabCommunity": "כל הקהילה",
+      "loading": "טוען...",
+      "empty": "אין כרגע תורמים ב\"כל הקהילה\"",
+      "quickDonation": "תרומה מהירה",
+      "quickNote": "הערה מהירה",
+      "notePlaceholder": "כתוב הערה...",
+      "noteSave": "שמור",
+      "noteCancel": "ביטול",
+      "handledByOther": "טופל ע\"י מתרים אחר",
+      "handledByOtherSection": "תורמים שטופלו ע\"י מתרים אחר",
+      "firstName": "שם פרטי",
+      "lastName": "שם משפחה",
+      "phone": "טלפון",
+      "address": "כתובת",
+      "city": "עיר",
+      "searchPlaceholder": "מחפש מישהו?"
     }
   },
   "rankForm": {
