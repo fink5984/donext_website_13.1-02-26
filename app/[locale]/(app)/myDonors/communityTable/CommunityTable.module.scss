@@ -9,6 +9,10 @@
     padding: var(--Spacing-Spacing-6, 24px) var(--Spacing-Spacing-8, 32px);
 }
 
+.content {
+    flex: 1;
+}
+
 .tableTitle {
     display: flex;
     align-items: center;
@@ -253,4 +257,23 @@
     padding: 32px 16px;
     text-align: center;
     color: var(--Text-Default, #6E99EC);
+}
+
+.legend {
+    display: flex;
+    gap: var(--Spacing-Spacing-3, 12px);
+    align-self: flex-start;
+    color: var(--Text-Default, #6E99EC);
+    flex-wrap: wrap;
+
+    @media (max-width: 480px) {
+        gap: var(--Spacing-Spacing-2, 8px);
+    }
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
 }

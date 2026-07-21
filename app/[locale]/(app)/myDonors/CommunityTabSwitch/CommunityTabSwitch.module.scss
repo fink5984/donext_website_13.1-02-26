@@ -22,7 +22,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-inline-start: -24px;
+    margin-inline-start: -8px;
     position: relative;
     z-index: 1;
 
@@ -44,6 +44,6 @@
     @media (max-width: 768px) {
         padding: 8px 16px;
         font-size: 14px;
-        margin-inline-start: -12px;
+        margin-inline-start: -4px;
     }
 }

@@ -126,6 +126,7 @@ export default function CommunityTable({ donors, loading, onToggleHeart, onQuick
                     <Search value={searchTerm} onSearch={setSearchTerm} placeholder={t('searchPlaceholder')} />
                 </div>
             </div>
+            <div className={styles.content}>
             {loading ? (
                 <div className={styles.stateMessage}>{t('loading')}</div>
             ) : !sortedDonors || sortedDonors.length === 0 ? (
@@ -133,7 +134,7 @@ export default function CommunityTable({ donors, loading, onToggleHeart, onQuick
             ) : (
                 <div className={styles.table}>
                     <div className={`${styles.tableHeader} table-4`}>
-                        <div className={styles.heartCell}>
+                        <div className={styles.headerCell}>
                             <div className={styles.sortButtons}>
                                 <button
                                     type="button"
@@ -229,6 +230,21 @@ export default function CommunityTable({ donors, loading, onToggleHeart, onQuick
                     </div>
                 </div>
             )}
+            </div>
+            <div className={styles.legend}>
+                <span className={styles.legendItem}>
+                    <HeartIcon heartState="none" canToggle={false} />
+                    {t('legendNone')}
+                </span>
+                <span className={styles.legendItem}>
+                    <HeartIcon heartState="others" heartCount={1} canToggle={false} />
+                    {t('legendOthers')}
+                </span>
+                <span className={styles.legendItem}>
+                    <HeartIcon heartState="mine" heartCount={1} canToggle={false} />
+                    {t('legendMine')}
+                </span>
+            </div>
         </div>
     );
 }
