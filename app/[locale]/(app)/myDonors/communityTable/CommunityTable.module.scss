@@ -45,17 +45,17 @@
 .tableHeader,
 .tableRow {
     display: grid;
-    grid-template-columns: 40px 150fr 150fr 130fr 190fr 130fr 90px;
+    grid-template-columns: 40px 260fr 210fr 150fr 120fr 50px 50px;
     align-items: center;
     gap: 8px;
     padding: 4px 18px 4px 12px;
 
     @media (max-width: 768px) {
-        grid-template-columns: 32px 1fr 1fr 90px;
+        grid-template-columns: 32px 1fr 40px 40px;
         padding: 6px 8px;
 
-        > *:nth-child(5),
-        > *:nth-child(6) {
+        > *:nth-child(3),
+        > *:nth-child(4) {
             display: none;
         }
     }
@@ -75,7 +75,37 @@
 .headerCell {
     display: flex;
     align-items: center;
+    gap: 4px;
     white-space: nowrap;
+}
+
+.sortButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5px;
+    width: 16px;
+    align-items: center;
+}
+
+.sortButton {
+    display: flex;
+    color: var(--Gray-Blue-325, #98B8FF);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--Icon-able-Icon, #0C4AD5);
+    }
+
+    &.active {
+        color: var(--Brand-Primary-blue, #0C4AD5);
+    }
+}
+
+.donorName {
+    color: var(--Donor-default);
 }
 
 .tableBody {
@@ -110,28 +140,40 @@
     justify-content: center;
 }
 
-.actionsCell {
+.notesColumnCell {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    position: relative;
+    height: 100%;
 }
 
-.actionButton {
+.notesButton {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    background: none;
     border: none;
-    background: var(--Bg-Button-hover-2, #EDF5FD);
-    color: var(--Icon-able-Icon, #0C4AD5);
+    padding: 0;
+    color: var(--Icon-difault-icon, #6E99EC);
     cursor: pointer;
 
     &:hover {
-        background: var(--Gray-Blue-70, #EDF5FD);
+        color: var(--Icon-able-Icon, #0C4AD5);
+    }
+}
+
+.coins {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--Icon-donor-Default, #B97A00);
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.8;
     }
 }
 
@@ -164,6 +206,18 @@
     padding: 6px 8px;
     font-size: 13px;
     font-family: inherit;
+}
+
+.quickNoteDateRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.quickNoteDateLabel {
+    font-size: 13px;
+    color: var(--Text-Default, #6E99EC);
 }
 
 .quickNoteActions {

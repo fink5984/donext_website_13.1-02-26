@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
-import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
+import { transferDonorOwnership, markDonorCaptured } from '@/lib/donors/transferOwnership';
 
 // 9 ספרות אחרונות של מספר טלפון - להשוואה עם המיקרו-פורמטים השונים שיכולים להישמר במסד
 function getLast9Digits(phone) {
@@ -216,6 +216,9 @@ export async function POST(request, { params }) {
                 }
             });
         }
+
+        // תרומה ציבורית היא תמיד פעולה ממשית - מוציאה את התורם מ"כל הקהילה"
+        await markDonorCaptured(donorRecord.id);
 
         // אם הועבר transactionId (למשל מ-Nedarim Plus), נשמור אותו כ-externalDonationId כדי
         // שה-callback של ספק התשלום יזהה שהתרומה כבר נוצרה ולא ייצר כפילות.

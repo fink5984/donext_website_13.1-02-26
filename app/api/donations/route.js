@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { sendDonationToPixelArt } from '@/lib/services/pixelArtService';
 import { sendDonationToMoney } from '@/lib/services/moneyApiService';
 import { toBigIntOrNull } from '@/lib/utils/bigint';
-import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
+import { transferDonorOwnership, markDonorCaptured } from '@/lib/donors/transferOwnership';
 
 // פונקציה לקיבוץ תרומות לפי תורמים עם חישוב נכון לפי סוג קמפיין
 function groupDonationsByDonor(donations, campaign) {
@@ -903,6 +903,9 @@ export async function POST(request) {
             // ממשית שמעבירה בעלות (ראו lib/donors/transferOwnership.js)
             if (actingFundraiserId) {
                 await transferDonorOwnership({ donorId, actingFundraiserId });
+            } else {
+                // כל תרומה (גם מ"הרשימה שלי" הרגילה) מוציאה את התורם מ"כל הקהילה"
+                await markDonorCaptured(donorId);
             }
 
             donation = await prisma.donation.create({

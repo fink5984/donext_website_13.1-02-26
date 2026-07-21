@@ -100,10 +100,17 @@ export async function POST(request) {
 
             const resetFields = buildResetFields(before, newFundraiserId);
             // 2) עדכון (לפי id בלבד) - הקצאה ידנית ע"י מנהל מנקה גם previousFundraiserId
-            // (שורת "כבוי" ב"כל הקהילה" הופכת לא רלוונטית כשמנהל משייך מחדש)
+            // (שורת "כבוי" ב"כל הקהילה" הופכת לא רלוונטית כשמנהל משייך מחדש).
+            // ביטול שיוך מפורש (newFundraiserId === null) מחזיר את התורם ל"כל הקהילה"
+            // גם אם כבר נרשמה לו פעולה - זו החלטת מנהל מפורשת לשחרר אותו מחדש למאגר.
             const updated = await prisma.donor.update({
                 where: { id },
-                data: { fundraiserId: newFundraiserId, previousFundraiserId: null, ...resetFields },
+                data: {
+                    fundraiserId: newFundraiserId,
+                    previousFundraiserId: null,
+                    ...(newFundraiserId === null ? { inCommunityPool: true } : {}),
+                    ...resetFields,
+                },
                 select: donorSelectMinimal,
             });
 
@@ -145,7 +152,12 @@ export async function POST(request) {
                 const resetFields = buildResetFields(before, newFundraiserId);
                 return prisma.donor.update({
                     where: { id },
-                    data: { fundraiserId: newFundraiserId, previousFundraiserId: null, ...resetFields },
+                    data: {
+                        fundraiserId: newFundraiserId,
+                        previousFundraiserId: null,
+                        ...(newFundraiserId === null ? { inCommunityPool: true } : {}),
+                        ...resetFields,
+                    },
                     select: donorSelectMinimal,
                 });
             });

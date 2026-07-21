@@ -3,7 +3,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     background: none;
     border: none;
     padding: 4px;
@@ -28,7 +27,17 @@
 }
 
 .count {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--Text-Default, #6E99EC);
+    position: absolute;
+    top: 44%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--other-White, #FFF);
+    pointer-events: none;
+}
+
+.countOnBrand {
+    color: var(--other-White, #FFF);
 }

@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { handlePrismaError } from '@/lib/prisma/utils';
-import { transferDonorOwnership } from '@/lib/donors/transferOwnership';
+import { transferDonorOwnership, markDonorCaptured } from '@/lib/donors/transferOwnership';
+import { getCurrentUserFromRequest } from '@/lib/auth';
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { donorId, note, followUpDate, assignedToUserId, assignedToName, noteCompleted, actingFundraiserId } = body;
+        let { donorId, note, followUpDate, assignedToUserId, assignedToName, noteCompleted, actingFundraiserId } = body;
+
+        // אם לא נשלח מוקצה מפורש - משייכים אוטומטית למשתמש הנוכחי (למשל הערה מהירה מ"כל הקהילה")
+        if (!assignedToUserId) {
+            const currentUser = getCurrentUserFromRequest(request);
+            if (currentUser?.userId) {
+                const user = await prisma.user.findUnique({ where: { id: currentUser.userId }, select: { name: true } });
+                assignedToUserId = currentUser.userId;
+                assignedToName = user?.name || assignedToName || null;
+            }
+        }
 
         // וולידציה
         if (!donorId) {
@@ -37,6 +48,9 @@ export async function POST(request) {
         // שמעבירה בעלות (כל הערה מכל מקור נחשבת פעולה ממשית - ראו מסמך האפיון)
         if (actingFundraiserId) {
             await transferDonorOwnership({ donorId, actingFundraiserId });
+        } else {
+            // כל הערה (גם מ"הרשימה שלי" הרגילה) מוציאה את התורם מ"כל הקהילה"
+            await markDonorCaptured(donorId);
         }
 
         // יצירת הערה חדשה בטבלת donor_notes

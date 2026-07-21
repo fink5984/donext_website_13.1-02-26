@@ -315,6 +315,7 @@ model Donor {
   expected                        Decimal?         @map("expected")
   fundraiserId                    Int?             @map("fundraiser_id")
   previousFundraiserId            Int?             @map("previous_fundraiser_id")
+  inCommunityPool                 Boolean?         @default(true) @map("in_community_pool")
   lastForecastByFundraiserId      Int?             @map("last_forecast_by_fundraiser_id")
   lastQuestionnaireByFundraiserId Int?             @map("last_questionnaire_by_fundraiser_id")
   active                          Boolean?         @map("active")

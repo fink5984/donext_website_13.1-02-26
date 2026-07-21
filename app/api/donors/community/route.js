@@ -26,8 +26,7 @@ export async function GET(request) {
             where: {
                 campaignId: Number(campaignId),
                 active: true,
-                donations: { none: { deleted_at: null } },
-                donorNotes: { none: {} },
+                inCommunityPool: true,
             },
             select: {
                 id: true,
@@ -73,10 +72,13 @@ export async function GET(request) {
                 ...selfFundraiserIds,
             ]).size;
 
-            const isMine =
-                (viewingFundraiserId && donor.fundraiserId === viewingFundraiserId) ||
-                selfFundraiserIds.includes(viewingFundraiserId);
-            const isAssignedToOther = !!donor.fundraiserId && donor.fundraiserId !== viewingFundraiserId;
+            const selfHearted = selfFundraiserIds.includes(viewingFundraiserId);
+            const assignedToMe = !!viewingFundraiserId && donor.fundraiserId === viewingFundraiserId;
+            const isMine = assignedToMe || selfHearted;
+            // אפשר תמיד לסמן/לבטל לב עצמי - גם אם התורם משויך למתרים אחר (עדיין ברשימה,
+            // כלומר עדיין אין עליו הערה/תרומה). לא ניתן לבטל לב שהוא "שלי" רק בגלל
+            // הקצאת מנהל - זו אינה בעלות שהמתרים יכול לוותר עליה בעצמו (סעיף 4.1).
+            const canToggle = selfHearted || !assignedToMe;
 
             return {
                 id: donor.id,
@@ -88,7 +90,7 @@ export async function GET(request) {
                     : '',
                 city: donor.person?.city?.name ?? '',
                 heart_state: isMine ? 'mine' : heartCount > 0 ? 'others' : 'none',
-                heart_can_toggle: !isAssignedToOther,
+                heart_can_toggle: canToggle,
                 heart_count: heartCount,
                 heart_names: heartNames,
                 _sortMine: isMine ? 0 : 1,

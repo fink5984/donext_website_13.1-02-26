@@ -32,9 +32,15 @@ export async function GET(request) {
             }
         });
 
-        // Count fundraisers assigned to each operator + sum their operatorExpected
+        // Fundraisers assigned to each operator, with their donors, so the operator's
+        // row can reflect what their whole team actually raised - not just donors
+        // assigned to the operator personally.
         const assignedFundraisersCountMap = {};
         const operatorForecastSumMap = {};
+        const teamDonorsCountMap = {};
+        const teamExpectedSumMap = {};
+        const teamActualDonationSumMap = {};
+        const teamActualDonorsCountMap = {};
         const allFundraisers = await prisma.fundraiser.findMany({
             where: {
                 campaignId,
@@ -42,12 +48,47 @@ export async function GET(request) {
                 assignedOperatorId: { not: null },
                 person: { status: null }
             },
-            select: { assignedOperatorId: true, operatorExpected: true }
+            select: {
+                assignedOperatorId: true,
+                operatorExpected: true,
+                donors: {
+                    where: { active: true },
+                    select: {
+                        expected: true,
+                        campaign: { select: { donationType: true } },
+                        donations: {
+                            where: { deleted_at: null },
+                            select: { monthlyAmount: true, numberOfPayments: true, isUnlimited: true }
+                        }
+                    }
+                }
+            }
         });
+
+        const sumDonorDonations = (donor) => donor.donations.reduce((sum, donation) => {
+            const monthlyAmount = Number(donation.monthlyAmount) || 0;
+            const isMonthlyCampaign = donor.campaign?.donationType === 'monthly';
+            if (isMonthlyCampaign || donation.isUnlimited) {
+                return sum + monthlyAmount;
+            }
+            const numberOfPayments = Number(donation.numberOfPayments) || 0;
+            return sum + (monthlyAmount * numberOfPayments);
+        }, 0);
+
         for (const f of allFundraisers) {
-            if (f.assignedOperatorId) {
-                assignedFundraisersCountMap[f.assignedOperatorId] = (assignedFundraisersCountMap[f.assignedOperatorId] || 0) + 1;
-                operatorForecastSumMap[f.assignedOperatorId] = (operatorForecastSumMap[f.assignedOperatorId] || 0) + (Number(f.operatorExpected) || 0);
+            const opId = f.assignedOperatorId;
+            if (!opId) continue;
+            assignedFundraisersCountMap[opId] = (assignedFundraisersCountMap[opId] || 0) + 1;
+            operatorForecastSumMap[opId] = (operatorForecastSumMap[opId] || 0) + (Number(f.operatorExpected) || 0);
+
+            const teamDonors = f.donors || [];
+            teamDonorsCountMap[opId] = (teamDonorsCountMap[opId] || 0) + teamDonors.length;
+            teamExpectedSumMap[opId] = (teamExpectedSumMap[opId] || 0) + teamDonors.reduce((sum, d) => sum + (Number(d.expected) || 0), 0);
+            for (const donor of teamDonors) {
+                if (donor.donations && donor.donations.length > 0) {
+                    teamActualDonorsCountMap[opId] = (teamActualDonorsCountMap[opId] || 0) + 1;
+                    teamActualDonationSumMap[opId] = (teamActualDonationSumMap[opId] || 0) + sumDonorDonations(donor);
+                }
             }
         }
 
@@ -58,16 +99,7 @@ export async function GET(request) {
             for (const donor of donors) {
                 if (donor.donations && donor.donations.length > 0) {
                     actualDonorsCount++;
-                    const donorDonations = donor.donations.reduce((sum, donation) => {
-                        const monthlyAmount = Number(donation.monthlyAmount) || 0;
-                        const isMonthlyCampaign = donor.campaign?.donationType === 'monthly';
-                        if (isMonthlyCampaign || donation.isUnlimited) {
-                            return sum + monthlyAmount;
-                        }
-                        const numberOfPayments = Number(donation.numberOfPayments) || 0;
-                        return sum + (monthlyAmount * numberOfPayments);
-                    }, 0);
-                    actualDonationSum += donorDonations;
+                    actualDonationSum += sumDonorDonations(donor);
                 }
             }
 
@@ -84,10 +116,10 @@ export async function GET(request) {
                 city: f.person?.city?.name,
                 street_name: f.person?.street?.name,
                 house_number: f.person?.houseNumber,
-                donors_count: donors.length,
-                expected_sum: donors.reduce((sum, d) => sum + (Number(d.expected) || 0), 0),
-                actual_donation_sum: actualDonationSum,
-                actual_donors_count: actualDonorsCount,
+                donors_count: donors.length + (teamDonorsCountMap[f.id] || 0),
+                expected_sum: donors.reduce((sum, d) => sum + (Number(d.expected) || 0), 0) + (teamExpectedSumMap[f.id] || 0),
+                actual_donation_sum: actualDonationSum + (teamActualDonationSumMap[f.id] || 0),
+                actual_donors_count: actualDonorsCount + (teamActualDonorsCountMap[f.id] || 0),
                 red_count: donors.filter(d => d.trafficLightColor === 'red').length,
                 orange_count: donors.filter(d => d.trafficLightColor === 'orange').length,
                 green_count: donors.filter(d => d.trafficLightColor === 'green').length,

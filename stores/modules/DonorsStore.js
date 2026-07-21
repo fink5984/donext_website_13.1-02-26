@@ -1173,14 +1173,22 @@ class DonorsStore {
     const donor = this.communityDonors.find((d) => d.id === donorId);
     if (!donor || !donor.heart_can_toggle) return;
 
-    // עדכון אופטימי
+    // עדכון אופטימי - מחליף את המערך/האובייקט (ולא מוטציה במקום), כדי ש-React
+    // יזהה את השינוי ב-props וירנדר מחדש גם ברכיבים שאינם mobx observer
     const wasMine = donor.heart_state === 'mine';
     const previousState = donor.heart_state;
     const previousCount = donor.heart_count;
-    runInAction(() => {
-      donor.heart_state = wasMine ? (donor.heart_count > 1 ? 'others' : 'none') : 'mine';
-      donor.heart_count = wasMine ? Math.max(0, donor.heart_count - 1) : donor.heart_count + 1;
-    });
+    const applyState = (state, count) => {
+      runInAction(() => {
+        this.communityDonors = this.communityDonors.map((d) =>
+          d.id === donorId ? { ...d, heart_state: state, heart_count: count } : d
+        );
+      });
+    };
+    applyState(
+      wasMine ? (previousCount > 1 ? 'others' : 'none') : 'mine',
+      wasMine ? Math.max(0, previousCount - 1) : previousCount + 1
+    );
 
     try {
       const res = await fetchWithAuth('/api/donors/community/heart', {
@@ -1191,10 +1199,7 @@ class DonorsStore {
       if (!json.success) throw new Error(json.error?.message || 'שגיאה בסימון לב');
     } catch (error) {
       // שחזור במקרה של כשלון
-      runInAction(() => {
-        donor.heart_state = previousState;
-        donor.heart_count = previousCount;
-      });
+      applyState(previousState, previousCount);
     }
   }
 

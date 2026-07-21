@@ -122,14 +122,13 @@ export default observer(function MyDonorsPage() {
         store.donorsStore.fetchDonors({ noLimit: true, forceRefresh: true });
     };
 
-    const handleCommunityQuickNote = async (donor, note) => {
-        const today = new Date().toISOString().slice(0, 10);
+    const handleCommunityQuickNote = async (donor, note, followUpDate) => {
         const res = await fetchWithAuth('/api/donors/add-note', {
             method: 'POST',
             body: JSON.stringify({
                 donorId: donor.id,
                 note,
-                followUpDate: today,
+                followUpDate,
                 actingFundraiserId: fundraiserId
             })
         });
