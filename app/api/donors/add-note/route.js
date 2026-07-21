@@ -9,13 +9,27 @@ export async function POST(request) {
         const body = await request.json();
         let { donorId, note, followUpDate, assignedToUserId, assignedToName, noteCompleted, actingFundraiserId } = body;
 
-        // אם לא נשלח מוקצה מפורש - משייכים אוטומטית למשתמש הנוכחי (למשל הערה מהירה מ"כל הקהילה")
+        // אם לא נשלח מוקצה מפורש - משייכים אוטומטית למי שביצע את הפעולה.
+        // "הערה מהירה" מ"כל הקהילה" מגיעה עם actingFundraiserId - השם נלקח מהמתרים
+        // עצמו (person.firstName/lastName), כי ל-User של מתרים בד"כ אין name מוגדר.
         if (!assignedToUserId) {
-            const currentUser = getCurrentUserFromRequest(request);
-            if (currentUser?.userId) {
-                const user = await prisma.user.findUnique({ where: { id: currentUser.userId }, select: { name: true } });
-                assignedToUserId = currentUser.userId;
-                assignedToName = user?.name || assignedToName || null;
+            if (actingFundraiserId) {
+                const fundraiser = await prisma.fundraiser.findUnique({
+                    where: { id: parseInt(actingFundraiserId) },
+                    select: { userId: true, person: { select: { firstName: true, lastName: true } } }
+                });
+                if (fundraiser) {
+                    assignedToUserId = fundraiser.userId || null;
+                    const fullName = `${fundraiser.person?.firstName ?? ''} ${fundraiser.person?.lastName ?? ''}`.trim();
+                    assignedToName = fullName || assignedToName || null;
+                }
+            } else {
+                const currentUser = getCurrentUserFromRequest(request);
+                if (currentUser?.userId) {
+                    const user = await prisma.user.findUnique({ where: { id: currentUser.userId }, select: { name: true, email: true } });
+                    assignedToUserId = currentUser.userId;
+                    assignedToName = user?.name || user?.email || assignedToName || null;
+                }
             }
         }
 
