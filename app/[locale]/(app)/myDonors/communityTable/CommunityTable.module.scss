@@ -6,11 +6,23 @@
     flex-direction: column;
     gap: var(--Spacing-Spacing-5, 16px);
     flex: 1;
+    min-height: 0;
     padding: var(--Spacing-Spacing-6, 24px) var(--Spacing-Spacing-8, 32px);
+
+    @media (max-width: 768px) {
+        flex: none;
+    }
 }
 
 .content {
     flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: 768px) {
+        flex: none;
+    }
 }
 
 .tableTitle {
@@ -44,6 +56,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--Spacing-Spacing-4, 12px);
+    flex: 1;
+    min-height: 0;
+
+    @media (max-width: 768px) {
+        flex: none;
+    }
 }
 
 .tableHeader,
@@ -116,6 +134,14 @@
     display: flex;
     flex-direction: column;
     gap: var(--Spacing-Spacing-4, 12px);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+
+    @media (max-width: 768px) {
+        flex: none;
+        overflow-y: visible;
+    }
 }
 
 .tableRow {
