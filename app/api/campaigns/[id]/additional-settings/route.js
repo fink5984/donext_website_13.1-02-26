@@ -51,6 +51,7 @@ export async function GET(request, { params }) {
                 otherAmountInMoney: false,
                 otherAmountIsTotal: false,
                 minDonationAmount: null,
+                publicDisplayMinAmount: null,
                 gaugeRaisedOnly: false,
                 showOnlyProgressCircle: false,
                 bonusGoalEnabled: false,
@@ -90,6 +91,7 @@ export async function GET(request, { params }) {
             otherAmountInMoney: settings.otherAmountInMoney ?? false,
             otherAmountIsTotal: settings.otherAmountIsTotal ?? false,
             minDonationAmount: settings.minDonationAmount != null ? Number(settings.minDonationAmount) : null,
+            publicDisplayMinAmount: settings.publicDisplayMinAmount != null ? Number(settings.publicDisplayMinAmount) : null,
             gaugeRaisedOnly: settings.gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: settings.showOnlyProgressCircle ?? false,
             bonusGoalEnabled: settings.bonusGoalEnabled ?? false,
@@ -120,7 +122,7 @@ export async function PUT(request, { params }) {
         const campaignId = parseInt(resolvedParams.id);
         const body = await request.json();
 
-        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitGaugeInMoney, unitLabel, unitLabelPlural, unitPrice, unitRemainingCircle, requireAddress, otherAmountInMoney, otherAmountIsTotal, minDonationAmount, gaugeRaisedOnly, showOnlyProgressCircle, bonusGoalEnabled, bonusGoalAmount, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
+        const { publicScreenRanks, publicScreenAbout, publicScreenPhone, publicScreenEmail, publicScreenBanners, publicScreenStartDate, publicScreenEndDate, publicScreenRanksBackgroundColor, isEnabled, showDonationDetails, promoVideoUrl, monthsCalculation, donationsCalculation, unitMode, unitDonationMode, unitGaugeInMoney, unitLabel, unitLabelPlural, unitPrice, unitRemainingCircle, requireAddress, otherAmountInMoney, otherAmountIsTotal, minDonationAmount, publicDisplayMinAmount, gaugeRaisedOnly, showOnlyProgressCircle, bonusGoalEnabled, bonusGoalAmount, publicScreenHeaderLogos, bankName, bankBranch, bankAccountNumber, bankAccountHolder, bankAdditionalText } = body;
 
         // הגדרות חישוב היעד נשלטות מ-/donations/ranks. כאן נעדכן רק אם נשלחו במפורש,
         // אחרת נשמור את הערך הקיים על המודל בעת ה-upsert.
@@ -170,6 +172,7 @@ export async function PUT(request, { params }) {
             otherAmountInMoney: otherAmountInMoney ?? false,
             otherAmountIsTotal: otherAmountIsTotal ?? false,
             minDonationAmount: toPositiveNumber(minDonationAmount),
+            publicDisplayMinAmount: toPositiveNumber(publicDisplayMinAmount),
             gaugeRaisedOnly: gaugeRaisedOnly ?? false,
             showOnlyProgressCircle: showOnlyProgressCircle ?? false,
             bonusGoalEnabled: bonusGoalEnabled ?? false,

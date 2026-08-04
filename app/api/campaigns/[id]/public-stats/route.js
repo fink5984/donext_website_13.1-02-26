@@ -154,11 +154,15 @@ export async function GET(request, { params }) {
             .map(r => Number(r.amount) || 0)
             .filter(a => a > 0);
         const minRankAmount = rankAmounts.length > 0 ? Math.min(...rankAmounts) : 0;
+        // סכום מינימום מפורש להצגת תרומה בדף הציבורי (נקבע ב-admin/additional-settings),
+        // עצמאי מהגדרת ה-HIDE שמבוססת על הדרגה התחתונה
+        const publicDisplayMinAmount = Number(publicScreenSettings?.publicDisplayMinAmount) || 0;
         const isLowDonation = (donation) => {
-            if (!hideLowDonations || minRankAmount <= 0) return false;
             const amounts = computeAmounts(donation);
             // קמפיין חודשי - השוואה לערך החודשי. קמפיין פרויקט - השוואה לסה"כ.
             const compareValue = isMonthlyCampaign ? amounts.monthlyDisplay : amounts.totalAmount;
+            if (publicDisplayMinAmount > 0 && compareValue < publicDisplayMinAmount) return true;
+            if (!hideLowDonations || minRankAmount <= 0) return false;
             return compareValue < minRankAmount;
         };
 
@@ -581,6 +585,8 @@ export async function GET(request, { params }) {
                     // the number of payments), false = it's charged per payment (multiplied)
                     otherAmountIsTotal: publicScreenSettings?.otherAmountIsTotal ?? false,
                     minDonationAmount: publicScreenSettings?.minDonationAmount != null ? Number(publicScreenSettings.minDonationAmount) : null,
+                    // סכום מינימום להצגת תרומה בדף הציבורי (רשימת תרומות/תורמים מובילים)
+                    publicDisplayMinAmount: publicDisplayMinAmount > 0 ? publicDisplayMinAmount : null,
                     // Gauge display: show only the raised amount (no % / no goal line)
                     gaugeRaisedOnly: publicScreenSettings?.gaugeRaisedOnly ?? false,
                     // Bonus goal: alternate the gauge with bonus-goal progress once past 100%

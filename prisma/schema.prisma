@@ -736,6 +736,7 @@ model PublicScreenSettings {
   otherAmountInMoney   Boolean   @default(false) @map("other_amount_in_money")
   otherAmountIsTotal   Boolean   @default(false) @map("other_amount_is_total")
   minDonationAmount    Decimal?  @map("min_donation_amount")
+  publicDisplayMinAmount Decimal? @map("public_display_min_amount")
   gaugeRaisedOnly         Boolean @default(false) @map("gauge_raised_only")
   showOnlyProgressCircle  Boolean @default(false) @map("show_only_progress_circle")
   bonusGoalEnabled        Boolean @default(false) @map("bonus_goal_enabled")

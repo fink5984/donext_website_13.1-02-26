@@ -50,6 +50,7 @@ export default function AdditionalSettingsPage() {
         otherAmountInMoney: false,
         otherAmountIsTotal: false,
         minDonationAmount: '',
+        publicDisplayMinAmount: '',
         gaugeRaisedOnly: false,
         showOnlyProgressCircle: false,
         bonusGoalEnabled: false,
@@ -167,6 +168,7 @@ export default function AdditionalSettingsPage() {
                     otherAmountInMoney: data.otherAmountInMoney ?? false,
                     otherAmountIsTotal: data.otherAmountIsTotal ?? false,
                     minDonationAmount: data.minDonationAmount != null ? String(data.minDonationAmount) : '',
+                    publicDisplayMinAmount: data.publicDisplayMinAmount != null ? String(data.publicDisplayMinAmount) : '',
                     gaugeRaisedOnly: data.gaugeRaisedOnly ?? false,
                     showOnlyProgressCircle: data.showOnlyProgressCircle ?? false,
                     bonusGoalEnabled: data.bonusGoalEnabled ?? false,
@@ -767,6 +769,30 @@ export default function AdditionalSettingsPage() {
                                 placeholder="ללא הגבלה"
                                 value={formData.minDonationAmount}
                                 onChange={(e) => handleInputChange('minDonationAmount', e.target.value)}
+                                className={styles.input}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* סכום מינימום להצגה בדף הציבורי */}
+                <div className={styles.settingsSection}>
+                    <h2><EyeIcon className={styles.sectionTitleIcon} />סכום מינימום להצגת תרומה בדף הציבורי</h2>
+                    <p className={styles.sectionDesc}>
+                        תרומות מתחת לסכום זה לא יופיעו ברשימת התרומות, בתורמים המובילים ובכרטיסי המתרימים בדף הציבורי
+                        (הן עדיין נספרות בסך הכולל שנאסף). השאר ריק כדי להציג את כל התרומות.
+                    </p>
+
+                    <div className={styles.contactForm}>
+                        <div className={styles.formGroup}>
+                            <label>סכום מינימום להצגה (₪)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="ללא הגבלה - מציג הכל"
+                                value={formData.publicDisplayMinAmount}
+                                onChange={(e) => handleInputChange('publicDisplayMinAmount', e.target.value)}
                                 className={styles.input}
                             />
                         </div>
