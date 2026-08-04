@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from 'next-intl';
 import styles from "./CommunityTable.module.scss";
 import Search from '@/app/components/Search';
@@ -56,8 +56,16 @@ function QuickNotePopover({ onSave, onClose, t }) {
 export default function CommunityTable({ donors, loading, onToggleHeart, onQuickDonation, onQuickNote, isAdmin = false, titleElement }) {
     const t = useTranslations('myDonors.community');
     const [openNoteFor, setOpenNoteFor] = useState(null);
+    // הקלדה מוצגת מיידית ב-searchInput; הסינון הכבד רץ על searchTerm שמתעדכן עם דיליי קצר
+    // (debounce), כדי שהקלדה בטבלה גדולה תישאר חלקה ולא תיתקע על כל תו
+    const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+    useEffect(() => {
+        const handle = setTimeout(() => setSearchTerm(searchInput), 200);
+        return () => clearTimeout(handle);
+    }, [searchInput]);
 
     const columns = [
         { key: 'name', label: t('donorName') },
@@ -78,9 +86,12 @@ export default function CommunityTable({ donors, loading, onToggleHeart, onQuick
         if (!donors) return [];
         const term = searchTerm.trim().toLowerCase();
         if (!term) return donors;
+        // מפרק לחלקים כדי שהחיפוש יעבוד גם "שם משפחה שם פרטי" וגם "שם פרטי שם משפחה"
+        const words = term.split(/\s+/).filter(Boolean);
         return donors.filter((donor) => {
-            const fullName = `${donor.first_name} ${donor.last_name}`.toLowerCase();
-            return fullName.includes(term) || (donor.phone || '').includes(term) || (donor.city || '').toLowerCase().includes(term);
+            const fullName = `${donor.first_name || ''} ${donor.last_name || ''}`.toLowerCase();
+            const nameMatches = words.every((word) => fullName.includes(word));
+            return nameMatches || (donor.phone || '').includes(term) || (donor.city || '').toLowerCase().includes(term);
         });
     }, [donors, searchTerm]);
 
@@ -123,7 +134,7 @@ export default function CommunityTable({ donors, loading, onToggleHeart, onQuick
             <div className={styles.tableTitle}>
                 {titleElement || <h2 className="headline-2">{t('tabCommunity')}</h2>}
                 <div className={styles.searchCenterWrapper}>
-                    <Search value={searchTerm} onSearch={setSearchTerm} placeholder={t('searchPlaceholder')} />
+                    <Search value={searchInput} onSearch={setSearchInput} placeholder={t('searchPlaceholder')} />
                 </div>
             </div>
             <div className={styles.content}>
