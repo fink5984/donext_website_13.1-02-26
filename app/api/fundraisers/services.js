@@ -7,6 +7,11 @@ import { NextResponse } from 'next/server';
 const STATUS_ORDER = ['NOT_SENT', 'RECEIVED', 'OPENED', 'SUCCESS'];
 const normalizeStatus = (s) => (s || '').replace(/\s/g, '_');
 
+// מסיר תווי בקרה בלתי נראים (RLM/LRM, LRE..PDF, isolates, zero-width, BOM) שנכנסים
+// לפעמים למייל בהעתקה מטלפון/וואטסאפ. בלעדי זה נוצר משתמש כפול "רפאים" שלא ניתן
+// להתחבר איתו, כי המייל לא תואם בהשוואה למשתמש הקיים בעל אותו מייל "נקי".
+const cleanEmail = (s) => s == null ? s : s.replace(/[​-‏‪-‮⁠-⁩﻿]/g, '').trim();
+
 const getStatusValue = (status) => {
     const normalized = normalizeStatus(status);
     const index = STATUS_ORDER.indexOf(normalized);
@@ -622,9 +627,10 @@ async function createFundraiser({ personId, activeDonor, campaignId }) {
         return { data: existingFundraiser, status: 200 };
     }
     
-    const hasEmail = person.email && person.email.trim() !== '';
+    const email = cleanEmail(person.email);
+    const hasEmail = email && email !== '';
     const hasIssueStatus = !!person.status; // אם יש סטטוס בעיה (missing_email וכו') - עדיין ניצור מתרים
-    
+
     // חסימת יצירת מתרים ללא מייל רק אם אין סטטוס בעיה (כלומר לא הגיע מייבוא אקסל)
     if (!hasEmail && !hasIssueStatus) {
         return { error: 'Cannot add fundraiser without email', status: 400 };
@@ -634,7 +640,7 @@ async function createFundraiser({ personId, activeDonor, campaignId }) {
     if (hasEmail) {
         // בדיקה אם כבר קיים משתמש עם המייל הזה (case-insensitive)
         existingUser = await prisma.user.findFirst({
-            where: { email: { equals: person.email, mode: 'insensitive' } }
+            where: { email: { equals: email, mode: 'insensitive' } }
         });
     }
 
@@ -649,7 +655,7 @@ async function createFundraiser({ personId, activeDonor, campaignId }) {
 
     // יצירת/עדכון משתמש ושליחת התראה - רק אם יש מייל
     if (hasEmail) {
-        const userId = await createAndNotifyClient(person, campaignId, existingUser);
+        const userId = await createAndNotifyClient({ ...person, email }, campaignId, existingUser);
 
         // עדכון המתרים עם מזהה המשתמש אם נוצר עכשיו
         if (userId && !existingUser) {
@@ -727,7 +733,7 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
     const existingDonorPersonIds = new Set(existingDonors.map(d => d.personId));
 
     // שליפת משתמשים קיימים לפי מיילים בקריאה אחת (case-insensitive)
-    const emails = people.filter(p => p.email?.trim()).map(p => p.email.trim().toLowerCase());
+    const emails = people.filter(p => cleanEmail(p.email)).map(p => cleanEmail(p.email).toLowerCase());
     const existingUsers = emails.length > 0 ? await prisma.user.findMany({
         where: { email: { in: emails, mode: 'insensitive' } }
     }) : [];
@@ -756,14 +762,15 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
             continue;
         }
 
-        const hasEmail = person.email && person.email.trim() !== '';
+        const email = cleanEmail(person.email);
+        const hasEmail = email && email !== '';
         const hasIssueStatus = !!person.status;
         if (!hasEmail && !hasIssueStatus) {
             errors.push({ personId: pid, error: 'No email and no issue status' });
             continue;
         }
 
-        const existingUser = hasEmail ? userByEmail.get(person.email.toLowerCase()) : null;
+        const existingUser = hasEmail ? userByEmail.get(email.toLowerCase()) : null;
 
         newFundraiserData.push({
             personId: pid,
@@ -786,7 +793,7 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
                     usersToUpdate.push(existingUser);
                 }
             } else {
-                usersToCreate.push(person);
+                usersToCreate.push({ ...person, email });
             }
         }
     }
@@ -829,7 +836,7 @@ async function createFundraisersInBatch({ personIds, campaignId, activeDonor = f
             try {
                 const newUser = await prisma.user.create({
                     data: {
-                        email: person.email,
+                        email: cleanEmail(person.email),
                         password: hashedPassword,
                         role: ['fundraiser'],
                         phone: person.mainMobile || null
@@ -883,7 +890,7 @@ async function createAndNotifyClient(person, campaignId, existingUser) {
         // יצירת משתמש חדש
         const user = await prisma.user.create({
             data: {
-                email: person.email,
+                email: cleanEmail(person.email),
                 password: hashedPassword,
                 role: ['fundraiser'],
                 phone: person.mainMobile || null
